@@ -11,6 +11,7 @@
           class="hotels__top-search"
           placeholder="Введите название"
           after-icon="lupa"
+          v-model="filters.search"
         ></UiInput>
         <p class="hotels__top-text" @click="openFilterMobile">Фильтр</p>
       </div>
@@ -51,6 +52,7 @@
                 placeholder="Введите название"
                 after-icon="lupa"
                 icon-color="surface-900"
+                v-model="filters.search"
               ></UiInput>
 
               <div class="hotels__filters-range">
@@ -82,7 +84,7 @@
                 <UiSelect></UiSelect>
               </div>
 
-              <UiHashTag :tags="tags" label="Тип отдыха"></UiHashTag>
+              <!-- <UiHashTag :tags="tags" label="Тип отдыха"></UiHashTag> -->
             </div>
           </section>
           <TheCommonAdBanner class="hotels__ad"></TheCommonAdBanner>
@@ -112,7 +114,7 @@
             >
               <TheHotelsBlock
                 v-for="hotel in hotels"
-                :key="hotel.id"
+                :key="hotel._id || hotel.id"
                 :hotel="hotel"
                 :view-type="selectedTabMobile.id === 1 ? 'tablet' : 'list'"
               ></TheHotelsBlock>
@@ -156,14 +158,22 @@
         <div class="hotels__filters-inner">
           <span>от</span>
           <!-- <UiInput class="hotels__filters-input"></UiInput> -->
-          <UiCalendar class="hotels__filters-calendar" label="Дата от" />
+          <UiCalendar
+            class="hotels__filters-calendar"
+            label="Дата от"
+            v-model="filters.checkIn"
+          />
           <span>₸</span>
         </div>
 
         <div class="hotels__filters-inner">
           <span>до</span>
           <!-- <UiInput class="hotels__filters-input"></UiInput> -->
-          <UiCalendar class="hotels__filters-calendar" label="Дата до" />
+          <UiCalendar
+            class="hotels__filters-calendar"
+            label="Дата до"
+            v-model="filters.checkOut"
+          />
           <span>₸</span>
         </div>
       </div>
@@ -178,7 +188,7 @@
         <UiSelect></UiSelect>
       </div>
 
-      <UiHashTag :tags="tags" label="Тип отдыха"></UiHashTag>
+      <!-- <UiHashTag :tags="tags" label="Тип отдыха"></UiHashTag> -->
     </div>
   </UiOverlay>
 
@@ -197,12 +207,22 @@
 
 <script setup>
 const { createMap } = useYandexMaps();
+const api = useApi();
+const route = useRoute();
+const router = useRouter();
 const mapContainer = ref(null);
 const mapContainerMobile = ref(null);
 const desktopMap = shallowRef(null);
 const mobileMap = shallowRef(null);
 const isOpenFilterMobile = ref(false);
 const isOpenPartialLocationCards = ref(false);
+const hotels = ref(null);
+const filters = reactive({
+  search: "",
+  checkIn: null,
+  checkOut: null,
+});
+let isSyncingFiltersFromRoute = false;
 const tabs = reactive([
   {
     id: 1,
@@ -234,6 +254,11 @@ const tabsMobile = reactive([
   },
 ]);
 const selectedTabMobile = ref(tabsMobile[0]);
+const hotelsQuery = computed(() => ({
+  search: filters.search || undefined,
+  checkIn: formatQueryDate(filters.checkIn) || undefined,
+  checkOut: formatQueryDate(filters.checkOut) || undefined,
+}));
 
 const options = [
   { label: "по цене", value: "price" },
@@ -258,7 +283,6 @@ const tags = reactive([
     name: "активный",
   },
 ]);
-const hotels = ref(null);
 const mapCenter = [76.889709, 43.238949];
 
 useSeoMeta({
@@ -268,12 +292,48 @@ useSeoMeta({
   ogDescription: "FlyAway - сайт для бронирования туров и отелей",
 });
 
-useFetchSsr({
-  url: "/hotels",
-  method: "get",
-}).then((res) => {
+const syncFiltersFromRoute = () => {
+  isSyncingFiltersFromRoute = true;
+  filters.search = String(route.query.search || "");
+  filters.checkIn = parseQueryDate(route.query.checkIn);
+  filters.checkOut = parseQueryDate(route.query.checkOut);
+};
+
+const updateRouteFilters = async () => {
+  if (isSyncingFiltersFromRoute) {
+    isSyncingFiltersFromRoute = false;
+    return;
+  }
+
+  const normalizedRange = normalizeDateRange(filters.checkIn, filters.checkOut);
+  filters.checkIn = normalizedRange.from;
+  filters.checkOut = normalizedRange.to;
+
+  const nextQuery = buildQueryObject({
+    search: filters.search,
+    checkIn: formatQueryDate(filters.checkIn),
+    checkOut: formatQueryDate(filters.checkOut),
+  });
+
+  if (areQueriesEqual(nextQuery, route.query)) {
+    return;
+  }
+
+  await router.replace({ query: nextQuery });
+};
+
+const loadHotels = async () => {
+  const res = await api.client({
+    url: "/hotels",
+    method: "get",
+    query: hotelsQuery.value,
+  });
+
   hotels.value = res.data;
-});
+};
+
+syncFiltersFromRoute();
+await loadHotels();
 
 const openFilterMobile = () => {
   isOpenFilterMobile.value = true;
@@ -358,6 +418,30 @@ watch(
   () => selectedTabMobile.value,
   (newVal) => {
     newVal.id === 3 ? openPartialLocationCards() : null;
+  },
+);
+
+watch(
+  () => route.query,
+  async () => {
+    syncFiltersFromRoute();
+    await loadHotels();
+  },
+  { deep: true },
+);
+
+useWatchDebounced(
+  () => filters.search,
+  async () => {
+    await updateRouteFilters();
+  },
+  350,
+);
+
+watch(
+  () => [filters.checkIn, filters.checkOut],
+  async () => {
+    await updateRouteFilters();
   },
 );
 </script>

@@ -1,10 +1,5 @@
 <template>
   <section>
-    <TheAdminCommonPageHeader
-      title="Создать отель"
-      description="Подготовьте отель для каталога: привязка к партнеру, локация, описание и фото."
-    />
-
     <form class="admin-form" @submit.prevent="submitHotel">
       <div class="admin-form__intro">
         <p class="admin-form__eyebrow">Каталог и карточка</p>

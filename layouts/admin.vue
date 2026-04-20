@@ -40,10 +40,11 @@ watch(
 .admin-layout {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 248px minmax(0, 1fr);
+  grid-template-columns: 286px minmax(0, 1fr);
   background:
-    linear-gradient(180deg, rgba($red-500, 0.05) 0, rgba($red-500, 0) 180px),
-    #fafafb;
+    radial-gradient(circle at top left, rgba($red-500, 0.12), transparent 26%),
+    radial-gradient(circle at top right, rgba($orange-200, 0.12), transparent 22%),
+    linear-gradient(180deg, #fffaf8 0%, #f8f4f2 52%, #f6f3f1 100%);
 
   &__aside {
     position: relative;
@@ -62,6 +63,18 @@ watch(
     min-width: 0;
     display: flex;
     flex-direction: column;
+    position: relative;
+  }
+
+  &__main::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 220px;
+    pointer-events: none;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0)),
+      linear-gradient(135deg, rgba($red-500, 0.04), transparent 55%);
   }
 
   &__header {
@@ -72,15 +85,15 @@ watch(
 
   &__content {
     width: 100%;
-    max-width: 1360px;
+    max-width: 1480px;
     margin: 0 auto;
-    padding: 32px 32px 44px;
+    padding: 28px 32px 48px;
   }
 
   &__content-inner {
     display: flex;
     flex-direction: column;
-    gap: 28px;
+    gap: 24px;
     animation: adminAppear 0.24s ease;
   }
 }
@@ -103,10 +116,13 @@ watch(
 :deep(.admin-contacts),
 :deep(.admin-list__item),
 :deep(.admin-dashboard__panel) {
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba($red-500, 0.1);
-  border-radius: 8px;
-  box-shadow: 0 20px 48px rgba(32, 36, 38, 0.09);
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba($red-500, 0.08);
+  border-radius: 24px;
+  box-shadow:
+    0 18px 42px rgba(32, 36, 38, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(12px);
 }
 
 :deep(.admin-form),
@@ -114,7 +130,7 @@ watch(
 :deep(.partner-profile),
 :deep(.partner-profile__empty),
 :deep(.admin-contacts) {
-  padding: 24px;
+  padding: 26px;
 }
 
 :deep(.admin-form .input__wrapper),
@@ -124,9 +140,9 @@ watch(
   min-height: 48px;
   padding: 10px 14px;
   background: #fff;
-  border: 1px solid rgba($surface-300, 0.9);
+  border: 1px solid rgba($surface-300, 0.85);
   border-radius: 26px;
-  box-shadow: 0 10px 22px rgba(32, 36, 38, 0.07);
+  box-shadow: 0 6px 18px rgba(32, 36, 38, 0.05);
 }
 
 :deep(.admin-form .textarea__wrapper),
@@ -134,9 +150,9 @@ watch(
 :deep(.partner-profile .textarea__wrapper),
 :deep(.admin-contacts .textarea__wrapper) {
   border: 1px solid rgba($surface-300, 0.9);
-  border-radius: 16px;
+  border-radius: 20px;
   background: #fff;
-  box-shadow: 0 10px 22px rgba(32, 36, 38, 0.07);
+  box-shadow: 0 6px 18px rgba(32, 36, 38, 0.05);
 }
 
 :deep(.admin-form .select),
@@ -149,7 +165,7 @@ watch(
 :deep(.tour-editor__card .select__wrapper),
 :deep(.partner-profile .select__wrapper) {
   border-radius: 26px;
-  box-shadow: 0 10px 22px rgba(32, 36, 38, 0.07);
+  box-shadow: 0 6px 18px rgba(32, 36, 38, 0.05);
 }
 
 @media (max-width: 1024px) {

@@ -1,10 +1,5 @@
 <template>
   <section>
-    <TheAdminCommonPageHeader
-      title="Партнеры"
-      description="Список партнеров, контакты и связанные туры."
-    />
-
     <UiTable :columns="columns" :rows="partners" :loading="isLoading" />
   </section>
 </template>

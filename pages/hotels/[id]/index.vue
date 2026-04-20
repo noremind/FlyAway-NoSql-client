@@ -859,8 +859,6 @@ const openPaymentModal = () => {
 const closePaymentModal = () => {
   isOpenPayment.value = false;
 };
-
- 
 </script>
 
 <style lang="scss" scoped>
@@ -1274,7 +1272,7 @@ const closePaymentModal = () => {
     }
     &-inner {
       display: grid;
-      grid-template-columns: repeat(2, 200px);
+      grid-template-columns: repeat(2, 1fr);
       gap: 16px;
     }
     &-info {

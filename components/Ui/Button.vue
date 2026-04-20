@@ -17,7 +17,7 @@
       :style="{ color: backgroundColor }"
       class="button__btn"
       :disabled="disabled || isLoading"
-      type="button"
+      :type="type"
     >
       {{ label }}
     </button>
@@ -40,6 +40,10 @@ const props = defineProps({
   iconColor: String,
   disabled: Boolean,
   isLoading: Boolean,
+  type: {
+    type: String,
+    default: "button",
+  },
 });
 </script>
 

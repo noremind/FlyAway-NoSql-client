@@ -5,6 +5,7 @@ const partnerAllowedPaths = [
   "/admin/tours/create",
   "/admin/hotels",
   "/admin/hotels/create",
+  "/admin/promocodes",
 ];
 
 const canPartnerOpenAdminPath = (path) => {

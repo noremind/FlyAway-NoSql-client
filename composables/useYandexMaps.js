@@ -133,7 +133,7 @@ export const useYandexMaps = () => {
 		}
 	}
 
-	const createPlacemark = (ymaps, coordinates, title) => {
+	const createPlacemark = (ymaps, coordinates, title, options = {}) => {
 		const yandexCoords = toYandexCoords(coordinates)
 
 		if (!yandexCoords) {
@@ -146,7 +146,7 @@ export const useYandexMaps = () => {
 				balloonContent: title,
 			},
 			{
-				preset: "islands#redIcon",
+				preset: options.preset || "islands#redIcon",
 			},
 		)
 	}
@@ -157,6 +157,7 @@ export const useYandexMaps = () => {
 		zoom = 15,
 		markerCoordinates = null,
 		markerText = "",
+		markers = [],
 		selectable = false,
 		onSelect = null,
 	}) => {
@@ -175,6 +176,7 @@ export const useYandexMaps = () => {
 
 		let marker = null
 		let markerTitle = markerText
+		let placemarks = []
 
 		const syncMarker = (coordinates = null) => {
 			if (marker) {
@@ -193,8 +195,51 @@ export const useYandexMaps = () => {
 			}
 		}
 
+		const syncMarkers = (items = []) => {
+			placemarks.forEach((placemark) => map.geoObjects.remove(placemark))
+			placemarks = []
+
+			const nextPlacemarks = (Array.isArray(items) ? items : [])
+				.map((item) => {
+					const placemark = createPlacemark(
+						ymaps,
+						item?.coordinates,
+						item?.title || "",
+						{
+							preset: item?.preset,
+						},
+					)
+
+					if (!placemark) {
+						return null
+					}
+
+					if (typeof item?.onClick === "function") {
+						placemark.events.add("click", () => item.onClick(item))
+					}
+
+					return placemark
+				})
+				.filter(Boolean)
+
+			nextPlacemarks.forEach((placemark) => map.geoObjects.add(placemark))
+			placemarks = nextPlacemarks
+
+			const bounds = map.geoObjects.getBounds?.()
+			if (bounds && placemarks.length > 1) {
+				map.setBounds(bounds, {
+					checkZoomRange: true,
+					zoomMargin: 36,
+				})
+			}
+		}
+
 		if (Array.isArray(markerCoordinates) && markerCoordinates.length >= 2) {
 			syncMarker(markerCoordinates)
+		}
+
+		if (Array.isArray(markers) && markers.length) {
+			syncMarkers(markers)
 		}
 
 		let clickHandler = null
@@ -250,6 +295,9 @@ export const useYandexMaps = () => {
 					syncMarker(currentCoordinates)
 				}
 			},
+			setMarkers(nextMarkers) {
+				syncMarkers(nextMarkers)
+			},
 			destroy() {
 				if (clickHandler) {
 					map.events.remove("click", clickHandler)
@@ -258,6 +306,9 @@ export const useYandexMaps = () => {
 				if (marker) {
 					map.geoObjects.remove(marker)
 				}
+
+				placemarks.forEach((placemark) => map.geoObjects.remove(placemark))
+				placemarks = []
 
 				if (typeof map.destroy === "function") {
 					map.destroy()

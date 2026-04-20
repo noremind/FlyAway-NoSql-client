@@ -11,6 +11,7 @@
           class="tours__top-search"
           placeholder="Введите название"
           after-icon="lupa"
+          v-model="filters.search"
         ></UiInput>
         <p class="tours__top-text" @click="openFilterMobile">Фильтр</p>
       </div>
@@ -45,10 +46,28 @@
 
             <div class="tours__filters-box">
               <UiInput
+                label="Название"
                 placeholder="Введите название"
                 after-icon="lupa"
                 icon-color="surface-900"
+                v-model="filters.search"
               ></UiInput>
+
+              <div>
+                <p class="tours__filters-text">Дата поездки</p>
+                <div class="tours__filters-dates">
+                  <UiCalendar
+                    class="tours__filters-calendar"
+                    label="Дата от"
+                    v-model="filters.dateFrom"
+                  />
+                  <UiCalendar
+                    class="tours__filters-calendar"
+                    label="Дата до"
+                    v-model="filters.dateTo"
+                  />
+                </div>
+              </div>
 
               <div class="tours__filters-range">
                 <div>
@@ -58,28 +77,42 @@
 
                 <div class="tours__filters-inner">
                   <span>от</span>
-                  <UiInput></UiInput>
+                  <UiInput
+                    type="number"
+                    placeholder="0"
+                    v-model="filters.priceFrom"
+                  ></UiInput>
                   <span>₸</span>
                 </div>
 
                 <div class="tours__filters-inner">
                   <span>до</span>
-                  <UiInput></UiInput>
+                  <UiInput
+                    type="number"
+                    placeholder="0"
+                    v-model="filters.priceTo"
+                  ></UiInput>
                   <span>₸</span>
                 </div>
               </div>
 
-              <div>
+              <!-- <div>
                 <p class="tours__filters-text">Продолжительность</p>
-                <UiSelect></UiSelect>
-              </div>
+                <UiInput
+                  placeholder="Например, 1 день"
+                  v-model="filters.duration"
+                ></UiInput>
+              </div> -->
 
-              <div>
+              <!-- <div>
                 <p class="tours__filters-text">Локация</p>
-                <UiTreeSelect></UiTreeSelect>
-              </div>
+                <UiInput
+                  placeholder="Алматы или точка отправления"
+                  v-model="filters.location"
+                ></UiInput>
+              </div> -->
 
-              <UiHashTag :tags="tags" label="Тип отдыха"></UiHashTag>
+              <!-- <UiHashTag :tags="tags" label="Тип отдыха"></UiHashTag> -->
             </div>
           </section>
           <TheCommonAdBanner class="tours__ad"></TheCommonAdBanner>
@@ -88,9 +121,9 @@
           <section class="tours__sort">
             <h2 class="tours__sort-title">Сортировка</h2>
             <UiCheckbox
-              v-for="(item, index) in options"
-              :key="index"
-              :label="item.label"
+              :options="sortOptions"
+              :model-value="selectedSortOption"
+              @update:model-value="selectSortOption"
             ></UiCheckbox>
           </section>
           <template v-if="tours?.length">
@@ -116,7 +149,7 @@
                 <div class="tours__scroll-cards">
                   <TheCommonTourCard
                     v-for="tour in tours"
-                    :key="tour.id"
+                    :key="tour._id || tour.id"
                     :tour="tour"
                   ></TheCommonTourCard>
                   <div class="tours__scroll-pagination">
@@ -149,6 +182,13 @@
               class="tours__pagination"
             ></UiPagination>
           </template>
+          <div v-else class="tours__empty">
+            <h3 class="tours__empty-title">Туры не найдены</h3>
+            <p class="tours__empty-text">
+              Сервер не вернул туры по выбранным фильтрам. Попробуйте изменить
+              даты, цену или поисковый запрос.
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -164,10 +204,34 @@
         <p class="tours__filters-text">Сортировка</p>
         <div class="tours__filters-checkboxs">
           <UiCheckbox
-            v-for="(item, index) in options"
-            :key="index"
-            :label="item.label"
+            :options="sortOptions"
+            :model-value="selectedSortOption"
+            @update:model-value="selectSortOption"
           ></UiCheckbox>
+        </div>
+      </div>
+
+      <UiInput
+        label="Название"
+        placeholder="Введите название"
+        after-icon="lupa"
+        icon-color="surface-900"
+        v-model="filters.search"
+      ></UiInput>
+
+      <div>
+        <p class="tours__filters-text">Дата поездки</p>
+        <div class="tours__filters-dates">
+          <UiCalendar
+            class="tours__filters-calendar"
+            label="Дата от"
+            v-model="filters.dateFrom"
+          />
+          <UiCalendar
+            class="tours__filters-calendar"
+            label="Дата до"
+            v-model="filters.dateTo"
+          />
         </div>
       </div>
 
@@ -179,28 +243,42 @@
 
         <div class="tours__filters-inner">
           <span>от</span>
-          <UiInput></UiInput>
+          <UiInput
+            type="number"
+            placeholder="0"
+            v-model="filters.priceFrom"
+          ></UiInput>
           <span>₸</span>
         </div>
 
         <div class="tours__filters-inner">
           <span>до</span>
-          <UiInput></UiInput>
+          <UiInput
+            type="number"
+            placeholder="0"
+            v-model="filters.priceTo"
+          ></UiInput>
           <span>₸</span>
         </div>
       </div>
 
-      <div>
+      <!-- <div>
         <p class="tours__filters-text">Продолжительность</p>
-        <UiSelect></UiSelect>
-      </div>
+        <UiInput
+          placeholder="Например, 1 день"
+          v-model="filters.duration"
+        ></UiInput>
+      </div> -->
 
-      <div>
+      <!-- <div>
         <p class="tours__filters-text">Локация</p>
-        <UiTreeSelect></UiTreeSelect>
-      </div>
+        <UiInput
+          placeholder="Алматы или точка отправления"
+          v-model="filters.location"
+        ></UiInput>
+      </div> -->
 
-      <UiHashTag :tags="tags" label="Тип отдыха"></UiHashTag>
+      <!-- <UiHashTag :tags="tags" label="Тип отдыха"></UiHashTag> -->
     </div>
   </UiOverlay>
 
@@ -229,6 +307,20 @@ const isOpenPartialLocationCards = ref(false);
 const tours = ref(null);
 const pagination = reactive({});
 const currentPage = ref(1);
+const route = useRoute();
+const router = useRouter();
+const api = useApi();
+const filters = reactive({
+  search: "",
+  dateFrom: null,
+  dateTo: null,
+  priceFrom: "",
+  priceTo: "",
+  duration: "",
+  location: "",
+  sortBy: "newest",
+});
+let syncSearchFromRoute = false;
 
 const tabs = reactive([
   {
@@ -261,13 +353,14 @@ const tabsMobile = reactive([
 ]);
 const selectedTab = ref(tabs[0]);
 const selectedTabMobile = ref(tabsMobile[0]);
-const api = useApi();
 const mapCenter = [76.889709, 43.238949];
 const desktopMap = shallowRef(null);
 const mobileMap = shallowRef(null);
-const options = [
-  { label: "по цене", value: "price" },
-  { label: "по популярности", value: "popularity" },
+const sortOptions = [
+  { label: "Сначала новые", value: "newest" },
+  { label: "По цене: дешевле", value: "price_asc" },
+  { label: "По цене: дороже", value: "price_desc" },
+  { label: "По рейтингу", value: "rating_desc" },
 ];
 
 const tags = reactive([
@@ -298,21 +391,102 @@ useSeoMeta({
 
 const { createMap } = useYandexMaps();
 
-const getTours = () => {
-  api
-    .client({
-      url: "/tours",
-      method: "get",
-      query: { page: currentPage.value },
-    })
-    .then((res) => {
-      tours.value = res.data;
-      // pagination.last_page = res.data.last_page;
-      // pagination.total_items = res.data.total;
-      // pagination.per_page = res.data.per_page;
-    });
+const normalizeNumberInput = (value) => {
+  if (value === null || value === undefined || value === "") {
+    return "";
+  }
+
+  const parsed = Math.max(0, Number(value) || 0);
+  return parsed ? String(parsed) : "";
 };
-getTours();
+
+const selectedSortOption = computed(() => {
+  return (
+    sortOptions.find((option) => option.value === filters.sortBy) ||
+    sortOptions[0]
+  );
+});
+
+const selectSortOption = (option) => {
+  filters.sortBy = option?.value || "newest";
+};
+
+const syncFiltersFromRoute = () => {
+  syncSearchFromRoute = true;
+  filters.search = String(route.query.search || "");
+  filters.dateFrom = parseQueryDate(route.query.dateFrom);
+  filters.dateTo = parseQueryDate(route.query.dateTo);
+  filters.priceFrom = normalizeNumberInput(route.query.priceFrom);
+  filters.priceTo = normalizeNumberInput(route.query.priceTo);
+  filters.duration = String(route.query.duration || "");
+  filters.location = String(route.query.location || "");
+  filters.sortBy = String(route.query.sortBy || "newest");
+};
+
+const updateRouteFilters = async () => {
+  if (syncSearchFromRoute) {
+    syncSearchFromRoute = false;
+    return;
+  }
+
+  const normalizedRange = normalizeDateRange(filters.dateFrom, filters.dateTo);
+  filters.dateFrom = normalizedRange.from;
+  filters.dateTo = normalizedRange.to;
+
+  const priceFrom = normalizeNumberInput(filters.priceFrom);
+  const priceTo = normalizeNumberInput(filters.priceTo);
+
+  if (priceFrom && priceTo && Number(priceFrom) > Number(priceTo)) {
+    filters.priceFrom = priceTo;
+    filters.priceTo = priceFrom;
+  } else {
+    filters.priceFrom = priceFrom;
+    filters.priceTo = priceTo;
+  }
+
+  const nextQuery = buildQueryObject({
+    search: filters.search,
+    dateFrom: formatQueryDate(filters.dateFrom),
+    dateTo: formatQueryDate(filters.dateTo),
+    priceFrom: filters.priceFrom,
+    priceTo: filters.priceTo,
+    duration: filters.duration,
+    location: filters.location,
+    sortBy: filters.sortBy !== "newest" ? filters.sortBy : "",
+  });
+
+  if (areQueriesEqual(nextQuery, route.query)) {
+    return;
+  }
+
+  await router.replace({ query: nextQuery });
+};
+
+const getTours = async () => {
+  const res = await api.client({
+    url: "/tours",
+    method: "get",
+    query: {
+      page: currentPage.value,
+      search: filters.search || undefined,
+      dateFrom: formatQueryDate(filters.dateFrom) || undefined,
+      dateTo: formatQueryDate(filters.dateTo) || undefined,
+      priceFrom: filters.priceFrom || undefined,
+      priceTo: filters.priceTo || undefined,
+      duration: filters.duration || undefined,
+      location: filters.location || undefined,
+      sortBy: filters.sortBy || undefined,
+    },
+  });
+
+  tours.value = res.data;
+  // pagination.last_page = res.data.last_page;
+  // pagination.total_items = res.data.total;
+  // pagination.per_page = res.data.per_page;
+};
+
+syncFiltersFromRoute();
+await getTours();
 
 const paginationPage = (page) => {
   currentPage.value = page;
@@ -337,13 +511,33 @@ const mountMap = async (containerRef, mapRef) => {
       container: containerRef.value,
       center: mapCenter,
       zoom: 10,
-      markerCoordinates: mapCenter,
-      markerText: "Алматы",
+      markers: mapMarkers.value,
     });
   } catch (error) {
     console.error(error);
   }
 };
+
+const mapMarkers = computed(() => {
+  return (Array.isArray(tours.value) ? tours.value : [])
+    .map((tour) => {
+      const x = Number(tour?.departureLocation?.x);
+      const y = Number(tour?.departureLocation?.y);
+      const id = String(tour?._id || "");
+
+      if (!Number.isFinite(x) || !Number.isFinite(y) || !id) {
+        return null;
+      }
+
+      return {
+        id,
+        coordinates: [x, y],
+        title: tour?.title || "Тур",
+        onClick: () => router.push(`/tours/${id}`),
+      };
+    })
+    .filter(Boolean);
+});
 
 onMounted(async () => {
   await nextTick();
@@ -365,6 +559,15 @@ watch(
       await mountMap(mapContainer, desktopMap);
     }
   },
+);
+
+watch(
+  mapMarkers,
+  (markers) => {
+    desktopMap.value?.setMarkers?.(markers);
+    mobileMap.value?.setMarkers?.(markers);
+  },
+  { deep: true },
 );
 
 watch(
@@ -402,7 +605,36 @@ watch(
   () => selectedTabMobile.value,
   (newVal) => {
     newVal.id === 3 ? openPartialLocationCards() : null;
-  }
+  },
+);
+
+watch(
+  () => route.query,
+  async () => {
+    syncFiltersFromRoute();
+    currentPage.value = 1;
+    await getTours();
+  },
+  { deep: true },
+);
+
+useWatchDebounced(
+  () =>
+    JSON.stringify({
+      search: filters.search,
+      dateFrom: formatQueryDate(filters.dateFrom),
+      dateTo: formatQueryDate(filters.dateTo),
+      priceFrom: filters.priceFrom,
+      priceTo: filters.priceTo,
+      duration: filters.duration,
+      location: filters.location,
+      sortBy: filters.sortBy,
+    }),
+  async () => {
+    currentPage.value = 1;
+    await updateRouteFilters();
+  },
+  350,
 );
 </script>
 
@@ -455,6 +687,14 @@ watch(
       flex-direction: column;
       gap: 4px;
     }
+    &-dates {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    &-calendar {
+      width: 100%;
+    }
     &-range {
       display: flex;
       flex-direction: column;
@@ -501,7 +741,9 @@ watch(
     border-radius: 16px;
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 24px;
+    padding-right: 24px;
     box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.04);
     &-title {
       padding: 26px;
@@ -512,11 +754,29 @@ watch(
       margin-right: 16px;
     }
   }
+  &__empty {
+    background-color: $white;
+    border-radius: 16px;
+    padding: 36px 28px;
+    box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.04);
+  }
+  &__empty-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: $surface-900;
+    margin-bottom: 10px;
+  }
+  &__empty-text {
+    max-width: 520px;
+    color: $surface-500;
+    line-height: 1.5;
+  }
   &__cards {
     background-color: $white;
     border-radius: 16px;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
+    align-items: start;
     padding: 16px;
     gap: 16px;
     box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.04);
@@ -582,6 +842,7 @@ watch(
     left: 0;
     height: 60px;
     border-bottom-right-radius: 16px;
+    display: none;
   }
   &__top {
     display: none;

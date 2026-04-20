@@ -1,33 +1,91 @@
 <template>
-  <section class="ticket ticket--nonactive">
+  <section
+    class="ticket"
+    :class="{ 'ticket--nonactive': bookingStatus !== 'active' }"
+  >
     <div class="ticket__wrapper">
       <div class="ticket__info">
-        <p class="ticket__number">Билет №12345</p>
-        <nuxt-link to="/profile/my-tours/1">
-          <h2 class="ticket__title title">Однодевный тур на Кольсай</h2>
+        <p class="ticket__number">Билет №{{ ticketNumber }}</p>
+        <nuxt-link :to="detailsLink">
+          <h2 class="ticket__title title">{{ bookingTitle }}</h2>
         </nuxt-link>
         <div class="ticket__info-box">
           <p class="ticket__date">Дата</p>
-          <p class="ticket__day">25 декабря 2024</p>
+          <p class="ticket__day">{{ bookingDate }}</p>
         </div>
         <div class="ticket__info-box">
           <p class="ticket__date ticket__date--mobile ticket__date--bold">
             Сумма
           </p>
           <p class="ticket__price ticket__price--mobile ticket__price--mobile">
-            24 800 ₸
+            {{ bookingTotal }}
           </p>
         </div>
       </div>
       <div class="ticket__total">
         <p class="ticket__total-text">Итого</p>
-        <p class="ticket__price">24 800 ₸</p>
+        <p class="ticket__price">{{ bookingTotal }}</p>
       </div>
     </div>
   </section>
 </template>
 
-<script setup></script>
+<script setup>
+const props = defineProps({
+  booking: {
+    type: Object,
+    default: () => ({}),
+  },
+});
+
+const normalizeString = (value) => String(value || "").trim();
+
+const formatMoney = (value) => `${Number(value || 0).toLocaleString("ru-RU")} ₸`;
+
+const parseDateValue = (value) => {
+  const text = normalizeString(value);
+  if (!text) return null;
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+    const parsed = new Date(`${text}T00:00:00`);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  const parsed = new Date(text);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const bookingStatus = computed(() => normalizeString(props.booking?.status) || "active");
+
+const bookingTitle = computed(() => {
+  return normalizeString(props.booking?.tour?.title) || "Тур FlyAway";
+});
+
+const bookingDate = computed(() => {
+  const parsed = parseDateValue(props.booking?.date);
+
+  if (!parsed) {
+    return normalizeString(props.booking?.date) || "Дата уточняется";
+  }
+
+  return new Intl.DateTimeFormat("ru-RU", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  }).format(parsed);
+});
+
+const bookingTotal = computed(() => formatMoney(props.booking?.total));
+
+const ticketNumber = computed(() => {
+  return String(props.booking?._id || "").slice(-6).toUpperCase() || "000000";
+});
+
+const detailsLink = computed(() => {
+  const id = props.booking?.tour?._id;
+  return id ? `/tours/${id}` : "/profile/my-tours";
+});
+</script>
 
 <style lang="scss" scoped>
 .ticket {

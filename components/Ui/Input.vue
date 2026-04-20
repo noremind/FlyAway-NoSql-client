@@ -3,7 +3,13 @@
     <label class="input__label" for="" v-if="label">{{ label }}</label>
     <div
       class="input__wrapper"
-      :class="[customClass, { 'input__wrapper--error': isError }]"
+      :class="[
+        customClass,
+        {
+          'input__wrapper--error': isError,
+          'input__wrapper--with-clear': showClear,
+        },
+      ]"
     >
       <UiIcons
         v-if="beforeIcon"
@@ -16,6 +22,7 @@
         :class="{
           'input__field--center': isCenter,
           'input__field--disabled': disabled,
+          'input__field--center': position === 'center',
         }"
         :type="type"
         :name="name"
@@ -26,6 +33,15 @@
         :placeholder="placeholder"
         :disabled="disabled"
       />
+      <button
+        v-if="showClear"
+        type="button"
+        class="input__clear"
+        aria-label="Сбросить поле"
+        @click="clearValue"
+      >
+        <UiIcons icon="circle-close" size="size-16" color="surface-400" />
+      </button>
       <UiIcons
         v-if="afterIcon"
         :icon="afterIcon"
@@ -37,7 +53,7 @@
 </template>
 
 <script setup>
-defineProps({
+const props = defineProps({
   type: {
     type: String,
     default: "text",
@@ -61,7 +77,27 @@ defineProps({
   isCenter: Boolean,
   isError: Boolean,
   name: String,
+  position: String,
+  clearable: {
+    type: Boolean,
+    default: true,
+  },
 });
+
+const emit = defineEmits(["update:modelValue", "clear"]);
+
+const hasValue = computed(() => {
+  return props.modelValue !== null && props.modelValue !== undefined && props.modelValue !== "";
+});
+
+const showClear = computed(() => {
+  return props.clearable && !props.disabled && hasValue.value;
+});
+
+const clearValue = () => {
+  emit("update:modelValue", "");
+  emit("clear");
+};
 </script>
 
 <style lang="scss" scoped>
@@ -89,6 +125,12 @@ defineProps({
 
     &--error {
       border-color: $orange-200;
+    }
+
+    &--with-clear {
+      .input__field {
+        padding-right: 4px;
+      }
     }
   }
   &__label {
@@ -121,6 +163,25 @@ defineProps({
     &::placeholder {
       color: $surface-400;
       font-weight: 500;
+    }
+  }
+
+  &__clear {
+    width: 24px;
+    height: 24px;
+    flex: 0 0 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: rgba($surface-300, 0.18);
+    transition:
+      background-color 0.2s ease,
+      transform 0.2s ease;
+
+    &:hover {
+      transform: scale(1.04);
+      background: rgba($red-500, 0.08);
     }
   }
 }

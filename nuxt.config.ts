@@ -1,8 +1,19 @@
-const devApiTarget = "http://localhost:3001"
+const trimTrailingSlashes = (value?: string | null) =>
+	String(value || "").replace(/\/+$/, "")
 
-const publicApiBase = process.env.NODE_ENV === "production"
-		? process.env.SERVER_URL
-		: "http://localhost:3001/api"
+const ensureApiBase = (value?: string | null, fallback = "http://localhost:3001") => {
+	const normalized = trimTrailingSlashes(value) || fallback
+	return normalized.endsWith("/api") ? normalized : `${normalized}/api`
+}
+
+const devApiBase = ensureApiBase(
+	"http://localhost:3001"
+)
+
+const publicApiBase =
+	process.env.NODE_ENV === "production"
+		? ensureApiBase(process.env.SERVER_URL, "https://api-flyaway-project.vercel.app/api")
+		: devApiBase
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -60,7 +71,7 @@ export default defineNuxtConfig({
 	nitro: {
 		devProxy: {
 			"/api": {
-				target: `${devApiTarget}/api`,
+				target: devApiBase,
 				changeOrigin: true,
 			},
 		},
@@ -95,10 +106,7 @@ export default defineNuxtConfig({
 	],
 
 	runtimeConfig: {
-		apiProxyTarget:
-			process.env.NUXT_API_PROXY_TARGET ||
-			process.env.NUXT_DEV_API_TARGET ||
-			process.env.SERVER_URL,
+		apiProxyTarget: publicApiBase,
 		public: {
 			baseURL: publicApiBase,
 			yandexMapsApiKey: process.env.NUXT_PUBLIC_YANDEX_MAPS_API_KEY || "",

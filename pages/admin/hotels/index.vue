@@ -1,10 +1,5 @@
 <template>
   <section>
-    <TheAdminCommonPageHeader
-      title="Отели"
-      description="Список отелей, локации, рейтинг и описание."
-    />
-
     <UiTable :columns="columns" :rows="hotels" :loading="isLoading" />
   </section>
 </template>

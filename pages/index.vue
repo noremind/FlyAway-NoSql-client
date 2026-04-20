@@ -24,6 +24,7 @@
       <UiSwiper
         :pagination="{ clickable: true }"
         :autoplay="true"
+        :autoHeight="true"
         :breakpoints="{
           1100: {
             slidesPerView: 4,
@@ -148,6 +149,24 @@ useFetchSsr({
 </script>
 
 <style lang="scss" scoped>
-.main__reviews {
+.main__tours-slider {
+  :deep(.swiper) {
+    height: 100%;
+  }
+
+  :deep(.swiper-wrapper) {
+    align-items: stretch;
+  }
+
+  :deep(.swiper-slide) {
+    height: auto !important;
+    display: flex;
+    align-items: stretch;
+  }
+
+  :deep(.swiper-slide > *) {
+    width: 100%;
+    height: 100%;
+  }
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div v-for="option in options" :key="option.value">
+  <div v-for="option in normalizedOptions" :key="option.value">
     <label
       class="checkbox-container"
       :class="{ 'checkbox-container--checkmark': type === 'checkmark' }"
@@ -8,7 +8,6 @@
         type="radio"
         :value="option.value"
         v-model="model"
-        @change="emit('update:modelValue', option)"
       />
       <span class="custom-checkbox"></span>
       {{ option.label }}
@@ -34,7 +33,34 @@ const props = defineProps({
     default: "circle",
   },
 });
-const model = ref(props.modelValue);
+
+const normalizedOptions = computed(() => {
+  if (Array.isArray(props.options) && props.options.length) {
+    return props.options;
+  }
+
+  if (props.label) {
+    return [{ label: props.label, value: props.label }];
+  }
+
+  return [];
+});
+
+const resolveModelValue = (value) => {
+  if (value && typeof value === "object" && "value" in value) {
+    return value.value;
+  }
+
+  return value;
+};
+
+const model = computed({
+  get: () => resolveModelValue(props.modelValue),
+  set: (value) => {
+    const option = normalizedOptions.value.find((item) => item.value === value);
+    emit("update:modelValue", option || value);
+  },
+});
 </script>
 
 <style lang="scss" scoped>

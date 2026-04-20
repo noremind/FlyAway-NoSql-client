@@ -5,43 +5,39 @@
 
       <div class="search__filter">
         <div class="search__box">
-          <p class="search__text">Поиск тура</p>
           <UiInput
             placeholder="Введите название"
             after-icon="lupa"
             icon-color="surface-900"
+            :label="searchLabel"
+            v-model="searchValue"
           ></UiInput>
         </div>
         <div class="search__box">
-          <p class="search__text">Дата начала</p>
-
           <div class="search__box-calendar">
             <UiCalendar
               class="search__start-date"
-              placeholder="17.12.2024"
+              placeholder=""
               :have-icon="false"
-              label="Дата от"
+              :label="dateFromLabel"
+              v-model="dateFrom"
             ></UiCalendar>
-            <UiIcons icon="arrow" color="red-500" size="size-14"></UiIcons>
+            <!-- <UiIcons icon="arrow" color="red-500" size="size-14"></UiIcons> -->
             <UiCalendar
               class="search__start-date"
-              placeholder="17.12.2024"
-              label="Дата до"
+              placeholder=""
+              :label="dateToLabel"
+              :have-icon="false"
+              v-model="dateTo"
             ></UiCalendar>
           </div>
         </div>
-        <!-- <div class="search__box">
-          <p class="search__text">Дата конца</p>
-          <UiCalendar
-            class="search__end-date"
-            placeholder="17.12.2024"
-          ></UiCalendar>
-        </div> -->
         <UiButton
           class="search__btn button-secondary"
-          label="Найти туры"
+          :label="buttonLabel"
           before-icon="lupa"
           icon-color="red-500"
+          @click="submitSearch"
         ></UiButton>
       </div>
     </div>
@@ -49,6 +45,9 @@
 </template>
 
 <script setup>
+const route = useRoute();
+const router = useRouter();
+
 const tabs = reactive([
   {
     id: 1,
@@ -60,13 +59,47 @@ const tabs = reactive([
     name: "Отели",
     value: "hotels",
   },
-  {
-    id: 3,
-    name: "Активности",
-    value: "actives",
-  },
 ]);
 const selectedTab = ref(tabs[0]);
+const searchValue = ref(String(route.query.search || ""));
+const dateFrom = ref(
+  parseQueryDate(route.query.dateFrom || route.query.checkIn),
+);
+const dateTo = ref(parseQueryDate(route.query.dateTo || route.query.checkOut));
+
+const isHotelsTab = computed(() => selectedTab.value?.value === "hotels");
+
+const searchLabel = computed(() =>
+  isHotelsTab.value ? "Поиск отеля" : "Поиск тура",
+);
+const dateFromLabel = computed(() => (isHotelsTab.value ? "Заезд" : "Дата от"));
+const dateToLabel = computed(() => (isHotelsTab.value ? "Выезд" : "Дата до"));
+const buttonLabel = computed(() =>
+  isHotelsTab.value ? "Найти отели" : "Найти туры",
+);
+
+const submitSearch = async () => {
+  const normalizedRange = normalizeDateRange(dateFrom.value, dateTo.value);
+  dateFrom.value = normalizedRange.from;
+  dateTo.value = normalizedRange.to;
+
+  const query = isHotelsTab.value
+    ? buildQueryObject({
+        search: searchValue.value,
+        checkIn: formatQueryDate(dateFrom.value),
+        checkOut: formatQueryDate(dateTo.value),
+      })
+    : buildQueryObject({
+        search: searchValue.value,
+        dateFrom: formatQueryDate(dateFrom.value),
+        dateTo: formatQueryDate(dateTo.value),
+      });
+
+  await router.push({
+    path: isHotelsTab.value ? "/hotels" : "/tours",
+    query,
+  });
+};
 </script>
 
 <style lang="scss" scoped>
@@ -100,8 +133,8 @@ const selectedTab = ref(tabs[0]);
     min-width: 0;
 
     &-calendar {
-      display: grid;
-      grid-template-columns: minmax(190px, 1fr) auto minmax(190px, 1fr);
+      display: flex;
+      // grid-template-columns: minmax(190px, 1fr) auto minmax(190px, 1fr);
       gap: 12px;
       align-items: end;
       padding: 3px;
@@ -147,6 +180,8 @@ const selectedTab = ref(tabs[0]);
   .search {
     min-height: 250px;
     top: -10px;
+    &__wrapper {
+    }
     &__filter {
       gap: 12px;
     }

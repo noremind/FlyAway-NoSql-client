@@ -345,6 +345,7 @@ watchEffect(() => {
   &__tours {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
+    align-items: start;
     gap: 16px;
     &--mobile {
       display: none;
@@ -463,6 +464,7 @@ watchEffect(() => {
       &--mobile {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
+        align-items: start;
         gap: 6px;
       }
     }

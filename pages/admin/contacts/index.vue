@@ -1,17 +1,10 @@
 <template>
   <section>
-    <TheAdminCommonPageHeader
-      title="Контакты"
-      description="Раздел для управления публичными контактами FlyAway."
-    />
-
     <form class="admin-contacts">
       <UiInput label="Email" placeholder="info@flyaway.kz" />
       <UiInput label="Телефон" placeholder="+7 700 000 00 00" />
       <UiInput label="Адрес" placeholder="Алматы" />
-      <div class="admin-contacts__map">
-        Yandex Map
-      </div>
+      <div class="admin-contacts__map">Yandex Map</div>
     </form>
   </section>
 </template>

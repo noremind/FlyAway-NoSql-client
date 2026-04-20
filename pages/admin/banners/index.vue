@@ -1,10 +1,5 @@
 <template>
   <section class="admin-banners">
-    <TheAdminCommonPageHeader
-      title="Баннеры"
-      description="Плакаты hero и промо-блоки для главной."
-    />
-
     <div class="admin-banners__grid">
       <section class="admin-banners__panel">
         <div class="admin-banners__head">
@@ -16,8 +11,16 @@
 
         <div class="admin-banners__stack">
           <UiInput label="Заголовок" v-model="posterForm.title" />
-          <UiTextarea label="Описание" v-model="posterForm.description" :rows="3" />
-          <UiInput label="Ссылка" placeholder="/tours/..." v-model="posterForm.link" />
+          <UiTextarea
+            label="Описание"
+            v-model="posterForm.description"
+            :rows="3"
+          />
+          <UiInput
+            label="Ссылка"
+            placeholder="/tours/..."
+            v-model="posterForm.link"
+          />
           <UiInput
             label="Текст кнопки"
             placeholder="Подробнее"
@@ -47,7 +50,11 @@
             alt="Плакат"
           />
 
-          <button class="admin-banners__submit" type="button" @click="createPoster">
+          <button
+            class="admin-banners__submit"
+            type="button"
+            @click="createPoster"
+          >
             Создать плакат
           </button>
         </div>
@@ -58,7 +65,11 @@
             :key="poster._id"
             class="admin-banners__item"
           >
-            <img class="admin-banners__item-image" :src="poster.image" :alt="poster.title" />
+            <img
+              class="admin-banners__item-image"
+              :src="poster.image"
+              :alt="poster.title"
+            />
             <div class="admin-banners__item-body">
               <strong>{{ poster.title }}</strong>
               <p>{{ poster.description || poster.link }}</p>
@@ -138,7 +149,11 @@
             alt="Баннер"
           />
 
-          <button class="admin-banners__submit" type="button" @click="createPromo">
+          <button
+            class="admin-banners__submit"
+            type="button"
+            @click="createPromo"
+          >
             Создать баннер
           </button>
         </div>
@@ -149,7 +164,11 @@
             :key="promo._id"
             class="admin-banners__item"
           >
-            <img class="admin-banners__item-image" :src="promo.image" :alt="promo.title" />
+            <img
+              class="admin-banners__item-image"
+              :src="promo.image"
+              :alt="promo.title"
+            />
             <div class="admin-banners__item-body">
               <strong>{{ promo.title }}</strong>
               <p>{{ promo.type }}</p>

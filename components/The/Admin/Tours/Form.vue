@@ -5,6 +5,25 @@
     <form v-else class="tour-editor__shell" @submit.prevent="submitTour">
       <div class="tour-editor__main">
         <section class="tour-editor__card tour-editor__card--hero">
+          <div class="tour-editor__hero-head">
+            <div>
+              <p class="tour-editor__eyebrow">Шаг 1</p>
+              <h2 class="tour-editor__hero-title">Основные параметры тура</h2>
+              <p class="tour-editor__hero-text">
+                Сначала задайте базу: название, партнера, длительность и статус.
+              </p>
+            </div>
+
+            <div class="tour-editor__hero-pills">
+              <span class="tour-editor__hero-pill">
+                {{ form.title ? "Название заполнено" : "Название не заполнено" }}
+              </span>
+              <span class="tour-editor__hero-pill">
+                {{ selectedPartnerId ? "Партнер выбран" : "Нужно выбрать партнера" }}
+              </span>
+            </div>
+          </div>
+
           <div class="tour-editor__hero-grid">
             <UiInput
               label="Название тура*"
@@ -86,7 +105,8 @@
 
         <section v-if="selectedTab.id === 1" class="tour-editor__card">
           <div class="tour-editor__section-head">
-            <div>
+            <div class="tour-editor__section-meta">
+              <p class="tour-editor__eyebrow">Шаг 2</p>
               <h2 class="tour-editor__section-title">О туре</h2>
               <p class="tour-editor__section-text">
                 База карточки и программа.
@@ -109,9 +129,23 @@
               :default-item="''"
             />
 
+            <div class="tour-editor__grid">
+              <UiInput
+                label="Город отправления"
+                placeholder="Алматы"
+                v-model="form.departureCity"
+              />
+              <UiInput
+                label="Точка отправления"
+                placeholder="Площадь Республики, парковка у монумента"
+                v-model="form.departurePoint"
+              />
+            </div>
+
             <div class="tour-editor__map">
               <div class="tour-editor__section-head">
-                <div>
+                <div class="tour-editor__section-meta">
+                  <p class="tour-editor__eyebrow">Локация</p>
                   <h3 class="tour-editor__section-title">Точка отправления</h3>
                   <p class="tour-editor__section-text">
                     Выберите место прямо на карте.
@@ -134,20 +168,55 @@
               />
             </div>
 
+            <UiMediaField
+              label="Схема места отправления"
+              :preview="departureMapPreview"
+              :has-modes="false"
+            >
+              <div class="tour-editor__upload-box">
+                <UiFileUpload
+                  v-model="departureMapFiles"
+                  title="Загрузить схему или фото точки отправления"
+                  accept="image/png,image/jpeg,image/webp"
+                />
+              </div>
+            </UiMediaField>
+
             <TheAdminToursListEditor
               v-model="form.dates"
-              add-label="Добавить день"
-              placeholder="25 декабря 2026"
+              add-label="Добавить дату для карточки"
+              placeholder="Каждую субботу"
               item-label-prefix="Дата"
-              :default-item="{ date: null }"
-              :fields="dateFields"
+              :default-item="''"
+            />
+
+            <TheAdminToursListEditor
+              v-model="form.dateDetails"
+              add-label="Добавить дату с описанием"
+              item-label-prefix="Выезд"
+              :default-item="{ date: null, text: '' }"
+              :fields="dateDetailFields"
+            />
+
+            <TheAdminToursListEditor
+              v-model="form.availabilityDates"
+              add-label="Добавить слот доступности"
+              item-label-prefix="Слот"
+              :default-item="{
+                date: null,
+                timeFrom: '',
+                timeTo: '',
+                seats: '',
+                bookedSeats: '',
+              }"
+              :fields="availabilityDateFields"
             />
 
             <TheAdminToursListEditor
               v-model="form.program"
               add-label="Добавить шаг программы"
-              item-label-prefix="Шаг"
-              :default-item="{ startDate: null, endDate: null, text: '' }"
+              item-label-prefix="Пункт"
+              :default-item="{ time: '', text: '' }"
               :fields="programFields"
             />
           </div>
@@ -155,7 +224,8 @@
 
         <section v-else-if="selectedTab.id === 2" class="tour-editor__card">
           <div class="tour-editor__section-head">
-            <div>
+            <div class="tour-editor__section-meta">
+              <p class="tour-editor__eyebrow">Шаг 3</p>
               <h2 class="tour-editor__section-title">Маршрут</h2>
               <p class="tour-editor__section-text">
                 Точки маршрута и карта тура.
@@ -190,7 +260,8 @@
 
         <section v-else-if="selectedTab.id === 3" class="tour-editor__card">
           <div class="tour-editor__section-head">
-            <div>
+            <div class="tour-editor__section-meta">
+              <p class="tour-editor__eyebrow">Шаг 4</p>
               <h2 class="tour-editor__section-title">Для туристов</h2>
               <p class="tour-editor__section-text">
                 Что взять, что включено и что важно.
@@ -237,7 +308,8 @@
 
         <section v-else class="tour-editor__card">
           <div class="tour-editor__section-head">
-            <div>
+            <div class="tour-editor__section-meta">
+              <p class="tour-editor__eyebrow">Шаг 5</p>
               <h2 class="tour-editor__section-title">Контакты</h2>
               <p class="tour-editor__section-text">
                 Контакты для карточки тура.
@@ -321,6 +393,10 @@
               </span>
             </div>
 
+            <div class="tour-editor__summary-note">
+              Карточка обновляется автоматически по мере заполнения формы.
+            </div>
+
             <div class="tour-editor__summary-preview">
               <img
                 v-if="coverImage"
@@ -367,9 +443,37 @@
             </div>
           </div>
 
+          <div class="tour-editor__checklist">
+            <div class="tour-editor__section-head">
+              <div class="tour-editor__section-meta">
+                <p class="tour-editor__eyebrow">Готовность</p>
+                <h3 class="tour-editor__section-title">Проверка разделов</h3>
+                <p class="tour-editor__section-text">
+                  Видно, какие части карточки уже наполнены.
+                </p>
+              </div>
+            </div>
+
+            <div class="tour-editor__checklist-list">
+              <div
+                v-for="item in sectionChecklist"
+                :key="item.title"
+                class="tour-editor__checklist-item"
+                :class="{ 'tour-editor__checklist-item--done': item.done }"
+              >
+                <span class="tour-editor__checklist-dot"></span>
+                <div class="tour-editor__checklist-meta">
+                  <strong>{{ item.title }}</strong>
+                  <span>{{ item.text }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="tour-editor__tickets">
             <div class="tour-editor__section-head">
-              <div>
+              <div class="tour-editor__section-meta">
+                <p class="tour-editor__eyebrow">Продажи</p>
                 <h3 class="tour-editor__section-title">Билеты</h3>
                 <p class="tour-editor__section-text">
                   Правая колонка карточки.
@@ -425,29 +529,69 @@ const tabs = [
   { id: 4, name: "Контакты" },
 ];
 
-const dateFields = [
+const dateDetailFields = [
+  {
+    key: "date",
+    label: "Дата",
+    component: "calendar",
+    placeholder: "Выберите дату выезда",
+  },
+  {
+    key: "text",
+    label: "Описание дня",
+    component: "textarea",
+    placeholder: "Сбор группы в Алматы в 06:30, выезд в 07:00",
+    rows: 3,
+  },
+];
+
+const availabilityDateFields = [
   {
     key: "date",
     label: "Дата",
     component: "calendar",
     placeholder: "Выберите дату",
   },
+  {
+    key: "timeFrom",
+    label: "Время от",
+    placeholder: "07:00",
+    type: "time",
+  },
+  {
+    key: "timeTo",
+    label: "Время до",
+    placeholder: "21:30",
+    type: "time",
+  },
+  {
+    key: "seats",
+    label: "Всего мест",
+    placeholder: "18",
+    type: "number",
+  },
+  {
+    key: "bookedSeats",
+    label: "Забронировано",
+    placeholder: "6",
+    type: "number",
+    disabled: true,
+  },
 ];
 
 const programFields = [
   {
-    key: "startDate",
-    label: "Дата от",
-    component: "calendar",
-    placeholder: "Выберите дату начала",
+    key: "time",
+    label: "Время или период",
+    placeholder: "06:30",
   },
   {
-    key: "endDate",
-    label: "Дата до",
-    component: "calendar",
-    placeholder: "Выберите дату окончания",
+    key: "text",
+    label: "Описание",
+    component: "textarea",
+    placeholder: "Сбор группы и посадка в автобус",
+    rows: 3,
   },
-  { key: "text", label: "Описание", placeholder: "Сбор на месте отправления" },
 ];
 
 const routeFields = [
@@ -488,11 +632,16 @@ const createFormState = () => ({
   discount: "",
   is_hot: true,
   highlights: [""],
-  dates: [{ date: null }],
+  dates: [""],
+  dateDetails: [{ date: null, text: "" }],
+  availabilityDates: [
+    { date: null, timeFrom: "", timeTo: "", seats: "", bookedSeats: "" },
+  ],
   departureCity: "",
   departurePoint: "",
   departureLocation: null,
-  program: [{ startDate: null, endDate: null, text: "" }],
+  departureMapImage: "",
+  program: [{ time: "", text: "" }],
   routePlaces: [{ title: "", image: "" }],
   routeMapImage: "",
   packingList: [""],
@@ -569,41 +718,63 @@ const formatCalendarDate = (value) => {
   return date.toLocaleDateString("ru-RU");
 };
 
-const parseProgramPeriod = (value) => {
-  if (!value || typeof value !== "string") {
-    return {
-      startDate: null,
-      endDate: null,
-    };
-  }
+const formatApiDate = (value) => {
+  if (!value) return "";
 
-  const [startText, endText] = value
-    .split(" - ")
-    .map((item) => String(item || "").trim());
+  const date = value instanceof Date ? value : new Date(value);
 
-  if (!startText && !endText) {
-    return {
-      startDate: null,
-      endDate: null,
-    };
-  }
+  if (Number.isNaN(date.getTime())) return "";
 
-  return {
-    startDate: parseCalendarDate(startText),
-    endDate: parseCalendarDate(endText),
-  };
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
 };
 
-const normalizeDateItems = (value) => {
+const normalizeDateDetailItems = (value) => {
   return (value || [])
     .map((item) => {
-      const date = formatCalendarDate(item?.date);
+      const date = formatApiDate(item?.date);
+      const text = String(item?.text ?? "").trim();
 
-      if (!date) {
+      if (!date && !text) {
         return null;
       }
 
-      return { date };
+      return { date, text };
+    })
+    .filter(Boolean);
+};
+
+const normalizeAvailabilityDateItems = (value) => {
+  return (value || [])
+    .map((item) => {
+      const date = formatApiDate(item?.date);
+      const timeFrom = String(item?.timeFrom ?? "").trim();
+      const timeTo = String(item?.timeTo ?? "").trim();
+      const seats =
+        item?.seats === "" || item?.seats === null || item?.seats === undefined
+          ? 0
+          : Number(item?.seats) || 0;
+      const bookedSeats =
+        item?.bookedSeats === "" ||
+        item?.bookedSeats === null ||
+        item?.bookedSeats === undefined
+          ? 0
+          : Number(item?.bookedSeats) || 0;
+
+      if (!date && !timeFrom && !timeTo && !seats && !bookedSeats) {
+        return null;
+      }
+
+      return {
+        date,
+        timeFrom,
+        timeTo,
+        seats,
+        bookedSeats,
+      };
     })
     .filter(Boolean);
 };
@@ -611,17 +782,15 @@ const normalizeDateItems = (value) => {
 const normalizeProgramItems = (value) => {
   return (value || [])
     .map((item) => {
-      const startDate = formatCalendarDate(item?.startDate);
-      const endDate = formatCalendarDate(item?.endDate);
+      const time = String(item?.time ?? "").trim();
       const text = String(item?.text ?? "").trim();
-      const normalizedTime = [startDate, endDate].filter(Boolean).join(" - ");
 
-      if (!normalizedTime && !text) {
+      if (!time && !text) {
         return null;
       }
 
       return {
-        time: normalizedTime,
+        time,
         text,
       };
     })
@@ -637,8 +806,10 @@ const isSubmitting = ref(false);
 const isBooting = ref(props.mode === "edit");
 const coverFiles = ref([]);
 const galleryFiles = ref([]);
+const departureMapFiles = ref([]);
 const routeMapFiles = ref([]);
 const localCoverPreview = ref("");
+const localDepartureMapPreview = ref("");
 const localRouteMapPreview = ref("");
 
 const isPartnerUser = computed(() => userStore.getUser?.role === "partner");
@@ -691,6 +862,10 @@ const routeMapPreview = computed(() => {
   return localRouteMapPreview.value || form.routeMapImage || "";
 });
 
+const departureMapPreview = computed(() => {
+  return localDepartureMapPreview.value || form.departureMapImage || "";
+});
+
 const discountedPrice = computed(() => {
   const price = Number(form.price) || 0;
   const discount = Number(form.discount) || 0;
@@ -711,6 +886,52 @@ const ticketCount = computed(() => {
   return form.ticketTypes.filter((item) => item?.title || item?.price).length;
 });
 
+const sectionChecklist = computed(() => {
+  const hasAbout =
+    Boolean(form.title.trim()) &&
+    Boolean(form.description.trim()) &&
+    (form.dates.some((item) => String(item || "").trim()) ||
+      form.dateDetails.some((item) => formatApiDate(item?.date)) ||
+      form.availabilityDates.some((item) => formatApiDate(item?.date)));
+  const hasRoute =
+    form.routePlaces.some((item) => item?.title || item?.image) ||
+    Boolean(form.routeMapImage) ||
+    Boolean(localRouteMapPreview.value);
+  const hasTravelerInfo =
+    form.highlights.some((item) => String(item || "").trim()) ||
+    form.includes.some((item) => String(item || "").trim()) ||
+    form.recommendations.some((item) => String(item || "").trim());
+  const hasContacts =
+    Boolean(form.contacts.phone.trim()) ||
+    Boolean(form.contacts.address.trim()) ||
+    Boolean(form.contacts.website.trim());
+
+  return [
+    {
+      title: "О туре",
+      text: hasAbout ? "Описание и даты заполнены" : "Добавьте описание и даты",
+      done: hasAbout,
+    },
+    {
+      title: "Маршрут",
+      text: hasRoute ? "Точки или карта уже есть" : "Добавьте точки маршрута",
+      done: hasRoute,
+    },
+    {
+      title: "Для туристов",
+      text: hasTravelerInfo
+        ? "Условия и рекомендации заполнены"
+        : "Не хватает полезной информации",
+      done: hasTravelerInfo,
+    },
+    {
+      title: "Контакты",
+      text: hasContacts ? "Контакты для связи готовы" : "Укажите контакты тура",
+      done: hasContacts,
+    },
+  ];
+});
+
 const applyFormState = (tour) => {
   Object.assign(form, createFormState(), {
     title: tour?.title || "",
@@ -722,20 +943,39 @@ const applyFormState = (tour) => {
     discount: tour?.discount?.toString?.() || "",
     is_hot: Boolean(tour?.is_hot),
     highlights: ensureStringList(tour?.highlights),
-    dates: ensureStringList(tour?.dates).map((date) => ({
-      date: parseCalendarDate(date),
+    dates: ensureStringList(tour?.dates),
+    dateDetails: ensureObjectList(tour?.dateDetails, {
+      date: null,
+      text: "",
+    }).map((item) => ({
+      date: parseCalendarDate(item?.date),
+      text: item?.text || "",
+    })),
+    availabilityDates: ensureObjectList(tour?.availabilityDates, {
+      date: null,
+      timeFrom: "",
+      timeTo: "",
+      seats: "",
+      bookedSeats: "",
+    }).map((item) => ({
+      date: parseCalendarDate(item?.date),
+      timeFrom: item?.timeFrom || "",
+      timeTo: item?.timeTo || "",
+      seats:
+        item?.seats === null || item?.seats === undefined ? "" : String(item.seats),
+      bookedSeats:
+        item?.bookedSeats === null || item?.bookedSeats === undefined
+          ? ""
+          : String(item.bookedSeats),
     })),
     departureCity: tour?.departureCity || "",
     departurePoint: tour?.departurePoint || "",
     departureLocation: tour?.departureLocation || null,
+    departureMapImage: tour?.departureMapImage || "",
     program: ensureObjectList(tour?.program, {
-      startDate: null,
-      endDate: null,
+      time: "",
       text: "",
-    }).map((item) => ({
-      ...item,
-      ...parseProgramPeriod(item.time),
-    })),
+    }),
     routePlaces: ensureObjectList(tour?.routePlaces, { title: "", image: "" }),
     routeMapImage: tour?.routeMapImage || "",
     packingList: ensureStringList(tour?.packingList),
@@ -770,10 +1010,13 @@ const buildPayload = () => ({
   discount: Number(form.discount) || 0,
   is_hot: Boolean(form.is_hot),
   highlights: normalizeStringArray(form.highlights),
-  dates: normalizeDateItems(form.dates).map((item) => item.date),
+  dates: normalizeStringArray(form.dates),
+  dateDetails: normalizeDateDetailItems(form.dateDetails),
+  availabilityDates: normalizeAvailabilityDateItems(form.availabilityDates),
   departureCity: form.departureCity.trim(),
   departurePoint: form.departurePoint.trim(),
   departureLocation: form.departureLocation,
+  departureMapImage: form.departureMapImage.trim(),
   program: normalizeProgramItems(form.program),
   routePlaces: normalizeObjectArray(form.routePlaces, ["title", "image"]),
   routeMapImage: form.routeMapImage.trim(),
@@ -822,6 +1065,15 @@ watch(
 );
 
 watch(
+  departureMapFiles,
+  (files) => {
+    revokeLocalPreview(localDepartureMapPreview);
+    localDepartureMapPreview.value = buildLocalPreview(files?.[0]);
+  },
+  { deep: true },
+);
+
+watch(
   routeMapFiles,
   (files) => {
     revokeLocalPreview(localRouteMapPreview);
@@ -850,9 +1102,19 @@ const uploadPendingMedia = async () => {
         scope: "gallery",
       })
     : [];
+  const departureMapUpload = departureMapFiles.value.length
+    ? await uploadFiles({
+        files: departureMapFiles.value,
+        bucket: "tours",
+        entityId,
+        scope: "departure-map",
+      })
+    : [];
 
   const coverUrl = coverUploads.map((item) => item.url).find(Boolean) || "";
   const galleryUrls = galleryUploads.map((item) => item.url).filter(Boolean);
+  const departureMapUrl =
+    departureMapUpload.map((item) => item.url).find(Boolean) || "";
   const routeMapUpload = routeMapFiles.value.length
     ? await uploadFiles({
         files: routeMapFiles.value,
@@ -867,6 +1129,7 @@ const uploadPendingMedia = async () => {
   return {
     coverUrl,
     galleryUrls,
+    departureMapUrl,
     routeMapUrl,
   };
 };
@@ -914,7 +1177,8 @@ const submitTour = async () => {
   isSubmitting.value = true;
 
   try {
-    const { coverUrl, galleryUrls, routeMapUrl } = await uploadPendingMedia();
+    const { coverUrl, galleryUrls, departureMapUrl, routeMapUrl } =
+      await uploadPendingMedia();
     const payload = buildPayload();
 
     const mergedImages = [
@@ -935,6 +1199,10 @@ const submitTour = async () => {
       payload.routeMapImage = routeMapUrl;
     }
 
+    if (departureMapUrl) {
+      payload.departureMapImage = departureMapUrl;
+    }
+
     const response =
       props.mode === "edit"
         ? await api.client({
@@ -951,8 +1219,10 @@ const submitTour = async () => {
     emit("saved", response.data);
     coverFiles.value = [];
     galleryFiles.value = [];
+    departureMapFiles.value = [];
     routeMapFiles.value = [];
     revokeLocalPreview(localCoverPreview);
+    revokeLocalPreview(localDepartureMapPreview);
     revokeLocalPreview(localRouteMapPreview);
 
     if (props.mode === "create" && response.data?._id) {
@@ -986,6 +1256,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   revokeLocalPreview(localCoverPreview);
+  revokeLocalPreview(localDepartureMapPreview);
   revokeLocalPreview(localRouteMapPreview);
 });
 </script>
@@ -1007,28 +1278,28 @@ onBeforeUnmount(() => {
 
   &__shell {
     display: grid;
-    grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
-    gap: 20px;
+    grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.72fr);
+    gap: 24px;
     align-items: start;
   }
 
   &__main,
   &__side {
     display: grid;
-    gap: 18px;
+    gap: 20px;
   }
 
   &__card {
     display: grid;
-    gap: 18px;
-    padding: 22px;
-    background: rgba(255, 255, 255, 0.94);
+    gap: 20px;
+    padding: 26px;
+    background: rgba(255, 255, 255, 0.88);
     border: 1px solid rgba($red-500, 0.1);
-    border-radius: 8px;
-    box-shadow: 0 20px 48px rgba(32, 36, 38, 0.06);
+    border-radius: 24px;
+    box-shadow: 0 18px 44px rgba(32, 36, 38, 0.06);
 
     &--hero {
-      gap: 14px;
+      gap: 18px;
     }
 
     &--sticky {
@@ -1037,11 +1308,54 @@ onBeforeUnmount(() => {
     }
   }
 
+  &__hero-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  &__hero-title {
+    margin-top: 6px;
+    color: $surface-900;
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1.08;
+  }
+
+  &__hero-text {
+    margin-top: 6px;
+    color: $surface-500;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  &__hero-pills {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  &__hero-pill {
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 12px;
+    color: $surface-600;
+    background: rgba($surface-300, 0.24);
+    border: 1px solid rgba($red-500, 0.08);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
   &__hero-grid,
   &__grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
+    gap: 16px;
   }
 
   &__toggle {
@@ -1050,12 +1364,12 @@ onBeforeUnmount(() => {
     align-items: center;
     gap: 10px;
     padding: 0 14px;
-    background: rgba($red-500, 0.04);
+    background: linear-gradient(135deg, rgba($red-500, 0.08), rgba($orange-200, 0.04));
     border: 1px solid rgba($red-500, 0.12);
-    border-radius: 8px;
+    border-radius: 18px;
     color: $surface-900;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
 
     input {
       accent-color: $red-500;
@@ -1065,7 +1379,7 @@ onBeforeUnmount(() => {
   &__gallery {
     display: grid;
     grid-template-columns: minmax(280px, 0.82fr) minmax(0, 1fr);
-    gap: 18px;
+    gap: 20px;
     align-items: start;
   }
 
@@ -1073,7 +1387,7 @@ onBeforeUnmount(() => {
   &__summary-preview {
     min-height: 260px;
     overflow: hidden;
-    border-radius: 8px;
+    border-radius: 20px;
     background: $surface-150;
     border: 1px solid rgba($red-500, 0.08);
   }
@@ -1100,12 +1414,12 @@ onBeforeUnmount(() => {
   &__stack,
   &__tickets {
     display: grid;
-    gap: 14px;
+    gap: 16px;
   }
 
   &__upload-box {
     display: grid;
-    gap: 10px;
+    gap: 12px;
   }
 
   &__map {
@@ -1121,10 +1435,23 @@ onBeforeUnmount(() => {
     gap: 16px;
   }
 
+  &__section-meta {
+    display: grid;
+    gap: 4px;
+  }
+
+  &__eyebrow {
+    color: $red-500;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
   &__section-title {
     color: $surface-900;
-    font-size: 18px;
-    font-weight: 700;
+    font-size: 20px;
+    font-weight: 800;
   }
 
   &__section-text {
@@ -1140,7 +1467,7 @@ onBeforeUnmount(() => {
     color: $red-500;
     background: rgba($red-500, 0.06);
     border: 1px solid rgba($red-500, 0.12);
-    border-radius: 8px;
+    border-radius: 999px;
     font-size: 13px;
     font-weight: 600;
   }
@@ -1195,6 +1522,16 @@ onBeforeUnmount(() => {
     line-height: 1.2;
   }
 
+  &__summary-note {
+    padding: 12px 14px;
+    color: $surface-600;
+    background: rgba($surface-300, 0.16);
+    border: 1px solid rgba($red-500, 0.08);
+    border-radius: 16px;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
   &__summary-badge {
     min-height: 28px;
     display: inline-flex;
@@ -1210,15 +1547,15 @@ onBeforeUnmount(() => {
   &__summary-stats {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
+    gap: 12px;
   }
 
   &__summary-stat {
     display: grid;
     gap: 4px;
-    padding: 12px;
-    background: rgba($red-500, 0.04);
-    border-radius: 8px;
+    padding: 14px;
+    background: rgba($red-500, 0.05);
+    border-radius: 18px;
 
     span {
       color: $surface-500;
@@ -1241,7 +1578,7 @@ onBeforeUnmount(() => {
     padding: 14px 16px;
     color: $surface-900;
     background: rgba($red-500, 0.05);
-    border-radius: 8px;
+    border-radius: 18px;
 
     span {
       font-size: 14px;
@@ -1259,12 +1596,72 @@ onBeforeUnmount(() => {
     width: fit-content;
   }
 
+  &__checklist {
+    display: grid;
+    gap: 14px;
+    padding: 18px;
+    background: rgba($surface-300, 0.12);
+    border: 1px solid rgba($red-500, 0.08);
+    border-radius: 20px;
+  }
+
+  &__checklist-list {
+    display: grid;
+    gap: 10px;
+  }
+
+  &__checklist-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba($red-500, 0.06);
+    border-radius: 16px;
+
+    &--done {
+      .tour-editor__checklist-dot {
+        background: $red-500;
+        box-shadow: 0 0 0 5px rgba($red-500, 0.12);
+      }
+    }
+  }
+
+  &__checklist-dot {
+    width: 10px;
+    height: 10px;
+    flex: 0 0 10px;
+    margin-top: 6px;
+    border-radius: 50%;
+    background: rgba($surface-400, 0.75);
+    transition:
+      background-color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  &__checklist-meta {
+    display: grid;
+    gap: 4px;
+
+    strong {
+      color: $surface-900;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    span {
+      color: $surface-500;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+  }
+
   &__submit {
     width: 100%;
-    min-height: 48px;
+    min-height: 52px;
     color: $white;
     background: $red-500;
-    border-radius: 8px;
+    border-radius: 18px;
     font-size: 15px;
     font-weight: 700;
     transition: background-color 0.2s ease;
@@ -1295,6 +1692,14 @@ onBeforeUnmount(() => {
 
     &__card--sticky {
       position: static;
+    }
+
+    &__hero-head {
+      flex-direction: column;
+    }
+
+    &__hero-pills {
+      justify-content: flex-start;
     }
   }
 }

@@ -1,10 +1,5 @@
 <template>
   <section>
-    <TheAdminCommonPageHeader
-      title="Пользователи"
-      description="Управление аккаунтами и ролями пользователей."
-    />
-
     <UiTable :columns="columns" :rows="users" :loading="isLoading" />
   </section>
 </template>

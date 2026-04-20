@@ -1,5 +1,6 @@
 export async function useFetchClient(options = {}) {
 	const authStore = useAuthStore()
+	const loaderStore = useLoaderStore()
 
 	const normalizeError = (error) => {
 		return (
@@ -21,6 +22,8 @@ export async function useFetchClient(options = {}) {
 	};
 
 	try {
+		loaderStore.start()
+
 		const response = await $fetch(options.url, {
 			body: options?.data || options?.body,
 			method: options?.method || "get",
@@ -40,5 +43,7 @@ export async function useFetchClient(options = {}) {
 			authStore.logout({ type: 'local' })
 		}
 		throw normalizedError;
+	} finally {
+		loaderStore.stop()
 	}
 };

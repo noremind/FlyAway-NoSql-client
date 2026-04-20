@@ -6,6 +6,7 @@
       :slides-per-view="perSlides"
       :loop="loop"
       :modules="modules"
+      autoHeight="true"
       :navigation="{
         nextEl: nextBtnClass,
         prevEl: prevBtnClass,

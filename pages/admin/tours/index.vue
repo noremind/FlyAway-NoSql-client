@@ -1,10 +1,5 @@
 <template>
   <section>
-    <TheAdminCommonPageHeader
-      title="Туры"
-      description="Список туров с быстрым переходом к редактированию."
-    />
-
     <UiTable :columns="columns" :rows="tours" :loading="isLoading" />
   </section>
 </template>

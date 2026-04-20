@@ -9,7 +9,9 @@
         />
         <div class="transaction__box">
           <h2 class="transaction__title">Мои бонусы</h2>
-          <p class="transaction__price">10 400 Б</p>
+          <p class="transaction__price">
+            {{ Number(wallet.bonusBalance || 0).toLocaleString("ru-RU") }} Б
+          </p>
         </div>
         <div class="transaction__inner">
           <div class="transaction__inner-box">
@@ -74,14 +76,18 @@
       </div>
 
       <div class="transaction__blocks">
-        <section class="transaction__block" v-for="block in 10" :key="block">
+        <section
+          class="transaction__block"
+          v-for="(item, index) in transactions"
+          :key="`${item.name}-${index}`"
+        >
           <div class="transaction__block-box">
-            <h3 class="transaction__block-title">Однодевный тур на Кольсай</h3>
-            <p class="transaction__block-baige">тур</p>
+            <h3 class="transaction__block-title">{{ item.name }}</h3>
+            <p class="transaction__block-baige">{{ item.type }}</p>
           </div>
           <div class="transaction__block-box">
-            <p class="transaction__block-price">- 13 800 ₸</p>
-            <p class="transaction__block-date">12.11.2024</p>
+            <p class="transaction__block-price">{{ formatAmount(item.amount) }}</p>
+            <p class="transaction__block-date">{{ item.date }}</p>
           </div>
         </section>
       </div>
@@ -161,50 +167,23 @@ const openBonusModal = () => {
   isOpenBonusModal.value = true;
 };
 
-const transactions = ref([
-  {
-    name: "Однодневный тур на Кольсай",
-    type: "тур",
-    date: "12.11.2024",
-    amount: -13800,
-    refund: false,
-  },
-  {
-    name: "Однодневный тур на Кольсай",
-    type: "тур",
-    date: "12.11.2024",
-    amount: 24800,
-    refund: false,
-  },
-  {
-    name: "Однодневный тур на Кольсай",
-    type: "тур",
-    date: "12.11.2024",
-    amount: 13800,
-    refund: true,
-  },
-  {
-    name: "Однодневный тур на Кольсай",
-    type: "тур",
-    date: "12.11.2024",
-    amount: 24800,
-    refund: false,
-  },
-  {
-    name: "Однодневный тур на Кольсай",
-    type: "тур",
-    date: "12.11.2024",
-    amount: -13800,
-    refund: false,
-  },
-  {
-    name: "Однодневный тур на Кольсай",
-    type: "тур",
-    date: "12.11.2024",
-    amount: 24800,
-    refund: false,
-  },
-]);
+const transactions = computed(() => {
+  return (Array.isArray(wallet.value?.transactions) ? wallet.value.transactions : []).map(
+    (item) => ({
+      name: item?.name || "Транзакция",
+      type: item?.type || "операция",
+      date: item?.createdAt
+        ? new Intl.DateTimeFormat("ru-RU", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          }).format(new Date(item.createdAt))
+        : "-",
+      amount: Number(item?.amount) || 0,
+      refund: false,
+    }),
+  );
+});
 
 const formatAmount = (amount) => {
   const absAmount = Math.abs(amount).toLocaleString();

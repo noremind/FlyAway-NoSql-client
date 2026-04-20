@@ -1,7 +1,5 @@
 <template>
   <section>
-    <TheAdminCommonPageHeader title="Редактировать тур" />
-
     <TheAdminToursForm mode="edit" :tour-id="route.params.id" />
   </section>
 </template>

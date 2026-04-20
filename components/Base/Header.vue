@@ -15,12 +15,6 @@
           />
         </nuxt-link>
 
-        <UiSelect
-          class="header__city"
-          v-model="selectCity"
-          :options="cities"
-        ></UiSelect>
-
         <ul class="header__list">
           <li
             v-for="list in navList"
@@ -35,14 +29,14 @@
         </ul>
       </div>
       <div class="header__box">
-        <TheHeaderLocale></TheHeaderLocale>
+        <!-- <TheHeaderLocale></TheHeaderLocale> -->
 
-        <UiInput
+        <!-- <UiInput
           custom-class="header__search"
           placeholder="Введите название"
           after-icon="lupa"
           icon-color="red-500"
-        ></UiInput>
+        ></UiInput> -->
 
         <nuxt-link to="/profile/favourites" v-if="userStore.isLoggedIn">
           <UiIcons icon="heart" size="size-24" color="red-500"></UiIcons>
@@ -108,22 +102,10 @@ const isOpenDropdownMenu = ref(false);
 const isOpenMobileNavMenu = ref(false);
 const userStore = useAuthStore();
 const user = computed(() => userStore.getUser);
-const userInitial = computed(() => (user.value?.name || "U").charAt(0).toUpperCase());
-const cities = reactive([
-  {
-    id: 1,
-    name: "Алматы",
-  },
-  {
-    id: 2,
-    name: "Астана",
-  },
-  {
-    id: 3,
-    name: "Қызылорда",
-  },
-]);
-const selectCity = ref(cities[0]);
+const userInitial = computed(() =>
+  (user.value?.name || "U").charAt(0).toUpperCase(),
+);
+
 const navList = ref([
   {
     id: 1,
@@ -172,7 +154,7 @@ watch(
   () => {
     closeMobileNavMenu();
     closeDropdownMenu();
-  }
+  },
 );
 </script>
 

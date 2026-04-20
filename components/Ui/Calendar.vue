@@ -1,36 +1,50 @@
 <template>
   <div class="calendar">
-    <label v-if="label" class="calendar__label" :for="inputId">{{ label }}</label>
-    <Calendar
-      class="calendar__field"
-      :inputId="inputId"
-      v-model="model"
-      :showIcon="haveIcon"
-      iconDisplay="input"
-      :selectionMode="selectionMode || undefined"
-      dateFormat="dd.mm.yy"
-      :placeholder="placeholder"
-      panelClass="calendar__panel"
-    >
-      <template #inputicon="{ clickCallback }">
-        <button
-          v-if="haveIcon"
-          type="button"
-          class="calendar__icon"
-          @click="clickCallback"
-          aria-label="Открыть календарь"
-        >
-          <i class="pi pi-calendar"></i>
-        </button>
-      </template>
-    </Calendar>
+    <label v-if="label" class="calendar__label" :for="inputId">{{
+      label
+    }}</label>
+    <div class="calendar__control" :class="{ 'calendar__control--with-clear': showClear }">
+      <Calendar
+        class="calendar__field"
+        :inputId="inputId"
+        v-model="model"
+        :showIcon="haveIcon"
+        iconDisplay="input"
+        :selectionMode="selectionMode || undefined"
+        dateFormat="dd.mm.yy"
+        :placeholder="placeholder"
+        panelClass="calendar__panel"
+      >
+        <template #inputicon="{ clickCallback }">
+          <button
+            v-if="haveIcon"
+            type="button"
+            class="calendar__icon"
+            @click="clickCallback"
+            aria-label="Открыть календарь"
+          >
+            <i class="pi pi-calendar"></i>
+          </button>
+        </template>
+      </Calendar>
+
+      <button
+        v-if="showClear"
+        type="button"
+        class="calendar__clear"
+        aria-label="Сбросить дату"
+        @click="clearValue"
+      >
+        <UiIcons icon="circle-close" size="size-16" color="surface-400" />
+      </button>
+    </div>
   </div>
 </template>
 
 <script setup>
 import Calendar from "primevue/calendar";
 
-const emit = defineEmits(["update:modelValue"]);
+const emit = defineEmits(["update:modelValue", "clear"]);
 
 const props = defineProps({
   modelValue: {
@@ -54,6 +68,10 @@ const props = defineProps({
     default: "",
   },
   placeholder: String,
+  clearable: {
+    type: Boolean,
+    default: true,
+  },
 });
 
 const model = computed({
@@ -62,23 +80,53 @@ const model = computed({
 });
 
 const instance = getCurrentInstance();
-const inputId = computed(() => props.inputId || `ui-calendar-${instance?.uid || 0}`);
+const inputId = computed(
+  () => props.inputId || `ui-calendar-${instance?.uid || 0}`,
+);
+
+const showClear = computed(() => {
+  if (!props.clearable) {
+    return false;
+  }
+
+  if (Array.isArray(props.modelValue)) {
+    return props.modelValue.length > 0;
+  }
+
+  return props.modelValue !== null && props.modelValue !== undefined && props.modelValue !== "";
+});
+
+const clearValue = () => {
+  emit("update:modelValue", Array.isArray(props.modelValue) ? [] : null);
+  emit("clear");
+};
 </script>
 
 <style scoped lang="scss">
 .calendar {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 
   &__label {
     color: $surface-900;
-    font-weight: 600;
+    font-weight: 500;
     font-size: 14px;
   }
 
   &__field {
     width: 100%;
     min-width: 0;
+  }
+
+  &__control {
+    position: relative;
+
+    &--with-clear {
+      :deep(.p-inputtext) {
+        padding-right: 76px !important;
+      }
+    }
   }
 
   &__icon {
@@ -137,6 +185,29 @@ const inputId = computed(() => props.inputId || `ui-calendar-${instance?.uid || 
 
   :deep(.p-datepicker-input-icon) {
     display: none;
+  }
+
+  &__clear {
+    position: absolute;
+    top: 50%;
+    right: 44px;
+    transform: translateY(-50%);
+    z-index: 3;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: rgba($surface-300, 0.18);
+    transition:
+      background-color 0.2s ease,
+      transform 0.2s ease;
+
+    &:hover {
+      transform: translateY(-50%) scale(1.04);
+      background: rgba($red-500, 0.08);
+    }
   }
 }
 </style>

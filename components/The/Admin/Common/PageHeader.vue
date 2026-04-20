@@ -32,19 +32,20 @@ defineProps({
   align-items: flex-start;
   justify-content: space-between;
   gap: 20px;
-  margin-bottom: 8px;
+  padding: 2px 2px 6px;
 
   &__meta {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
   }
 
   &__title {
     color: $surface-900;
-    font-size: 34px;
-    font-weight: 700;
+    font-size: 40px;
+    font-weight: 800;
     line-height: 1.05;
+    letter-spacing: -0.03em;
   }
 
   &__description {
@@ -58,11 +59,12 @@ defineProps({
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    min-height: 44px;
-    padding: 12px 18px;
+    min-height: 48px;
+    padding: 12px 20px;
     color: $white;
     background: $red-500;
-    border-radius: 8px;
+    border-radius: 999px;
+    box-shadow: 0 14px 24px rgba($red-500, 0.18);
     transition:
       background-color 0.2s ease,
       transform 0.2s ease;
@@ -88,10 +90,9 @@ defineProps({
 @media (max-width: 700px) {
   .admin-page-header {
     flex-direction: column;
-    margin-bottom: 4px;
 
     &__title {
-      font-size: 28px;
+      font-size: 30px;
     }
 
     &__action {

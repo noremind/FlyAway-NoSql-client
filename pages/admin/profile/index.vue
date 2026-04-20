@@ -1,15 +1,10 @@
 <template>
   <section class="admin-profile">
-    <TheAdminCommonPageHeader
-      :title="isPartnerSession ? 'Профиль партнера' : 'Мой профиль'"
-      :description="
-        isPartnerSession
-          ? 'Данные компании, контакты и логотип для витрины и кабинета партнера.'
-          : 'Личные данные администратора и аватар профиля.'
-      "
-    />
-
-    <form v-if="!isPartnerSession" class="admin-profile__card" @submit.prevent="saveUserProfile">
+    <form
+      v-if="!isPartnerSession"
+      class="admin-profile__card"
+      @submit.prevent="saveUserProfile"
+    >
       <div class="admin-profile__identity">
         <img
           v-if="userForm.avatar"
@@ -31,7 +26,11 @@
               @change="handleUserAvatarChange"
             />
           </label>
-          <button class="admin-profile__action admin-profile__action--danger" type="button" @click="removeUserAvatar">
+          <button
+            class="admin-profile__action admin-profile__action--danger"
+            type="button"
+            @click="removeUserAvatar"
+          >
             Удалить
           </button>
         </div>
@@ -44,13 +43,21 @@
       </div>
 
       <div class="admin-profile__actions">
-        <button class="admin-profile__submit" type="submit" :disabled="isLoading">
+        <button
+          class="admin-profile__submit"
+          type="submit"
+          :disabled="isLoading"
+        >
           {{ isLoading ? "Сохраняем..." : "Сохранить профиль" }}
         </button>
       </div>
     </form>
 
-    <form v-else class="admin-profile__card" @submit.prevent="savePartnerProfile">
+    <form
+      v-else
+      class="admin-profile__card"
+      @submit.prevent="savePartnerProfile"
+    >
       <div class="admin-profile__identity">
         <img
           v-if="partnerForm.logo"
@@ -58,7 +65,10 @@
           :src="partnerForm.logo"
           alt="Логотип"
         />
-        <span v-else class="admin-profile__avatar admin-profile__avatar--logo admin-profile__avatar--empty">
+        <span
+          v-else
+          class="admin-profile__avatar admin-profile__avatar--logo admin-profile__avatar--empty"
+        >
           {{ partnerInitial }}
         </span>
 
@@ -72,7 +82,11 @@
               @change="handlePartnerLogoChange"
             />
           </label>
-          <button class="admin-profile__action admin-profile__action--danger" type="button" @click="removePartnerLogo">
+          <button
+            class="admin-profile__action admin-profile__action--danger"
+            type="button"
+            @click="removePartnerLogo"
+          >
             Удалить
           </button>
         </div>
@@ -81,7 +95,11 @@
       <div class="admin-profile__grid">
         <UiInput label="Название компании" v-model.trim="partnerForm.title" />
         <UiInput label="Почта партнера" v-model.trim="partnerForm.email" />
-        <UiInput label="Телефон" maska="8(###)-###-##-##" v-model.trim="partnerForm.phone" />
+        <UiInput
+          label="Телефон"
+          maska="8(###)-###-##-##"
+          v-model.trim="partnerForm.phone"
+        />
         <UiInput label="БИН" v-model.trim="partnerForm.bin" />
         <UiInput label="Имя владельца" v-model.trim="partnerForm.ownerName" />
         <UiInput
@@ -100,7 +118,11 @@
       />
 
       <div class="admin-profile__actions">
-        <button class="admin-profile__submit" type="submit" :disabled="isLoading">
+        <button
+          class="admin-profile__submit"
+          type="submit"
+          :disabled="isLoading"
+        >
           {{ isLoading ? "Сохраняем..." : "Сохранить профиль партнера" }}
         </button>
       </div>
@@ -126,8 +148,16 @@ const message = ref("");
 const errorMessage = ref("");
 const user = computed(() => authStore.getUser);
 const isPartnerSession = computed(() => user.value?.role === "partner");
-const userInitial = computed(() => String(userForm.name || user.value?.name || "U").charAt(0).toUpperCase());
-const partnerInitial = computed(() => String(partnerForm.title || "P").charAt(0).toUpperCase());
+const userInitial = computed(() =>
+  String(userForm.name || user.value?.name || "U")
+    .charAt(0)
+    .toUpperCase(),
+);
+const partnerInitial = computed(() =>
+  String(partnerForm.title || "P")
+    .charAt(0)
+    .toUpperCase(),
+);
 
 const userAvatarFile = ref(null);
 const partnerLogoFile = ref(null);
@@ -287,7 +317,8 @@ const savePartnerProfile = async () => {
     partnerLogoFile.value = null;
     message.value = "Профиль партнера обновлен";
   } catch (error) {
-    errorMessage.value = error?.message || "Не удалось сохранить профиль партнера";
+    errorMessage.value =
+      error?.message || "Не удалось сохранить профиль партнера";
   } finally {
     isLoading.value = false;
   }

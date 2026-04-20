@@ -49,8 +49,13 @@
             :type="field.type || 'text'"
             :rows="field.rows || 4"
             :selection-mode="field.selectionMode"
+            :disabled="field.disabled"
             :model-value="item?.[field.key] ?? ''"
-            @update:model-value="updateObjectField(index, field.key, $event)"
+            @update:model-value="
+              field.disabled
+                ? undefined
+                : updateObjectField(index, field.key, $event)
+            "
           />
           <div
             v-for="field in fields.filter((itemField) => itemField.component === 'upload')"

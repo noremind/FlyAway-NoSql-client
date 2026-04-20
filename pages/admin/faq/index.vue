@@ -1,10 +1,5 @@
 <template>
   <section>
-    <TheAdminCommonPageHeader
-      title="FAQ"
-      description="Короткие ответы на частые вопросы."
-    />
-
     <UiAccordion :items="items" />
   </section>
 </template>
