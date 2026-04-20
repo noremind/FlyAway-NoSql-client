@@ -8,6 +8,7 @@
     >
       <button class="accordion__trigger" type="button" @click="toggle(index)">
         <span class="accordion__title">{{ item.title }}</span>
+
         <UiIcons
           icon="chevron"
           size="size-14"
