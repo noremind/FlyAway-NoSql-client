@@ -1397,6 +1397,9 @@ const decrementTicket = (index) => {
 const getBookingPayload = () => {
   return {
     availabilityDateId: selectedDateAvailability.value?._id,
+    date: normalizeString(selectedDateAvailability.value?.date),
+    timeFrom: normalizeString(selectedDateAvailability.value?.timeFrom),
+    timeTo: normalizeString(selectedDateAvailability.value?.timeTo),
     ticketSelections: ticketTypes.value.map((ticket, index) => ({
       title: ticket.title,
       price: ticket.price,
@@ -1480,7 +1483,7 @@ const submitBooking = async (origin = "desktop") => {
     return;
   }
 
-  if (!selectedDateAvailability.value?._id) {
+  if (!normalizeString(selectedDateAvailability.value?.date)) {
     promoError.value = "Выберите доступную дату";
     return;
   }
