@@ -304,8 +304,12 @@ const mapContainer = ref(null);
 const mapContainerMobile = ref(null);
 const isOpenFilterMobile = ref(false);
 const isOpenPartialLocationCards = ref(false);
-const tours = ref(null);
-const pagination = reactive({});
+const tours = ref([]);
+const pagination = reactive({
+  last_page: 1,
+  total_items: 0,
+  per_page: 9,
+});
 const currentPage = ref(1);
 const route = useRoute();
 const router = useRouter();
@@ -468,6 +472,7 @@ const getTours = async () => {
     method: "get",
     query: {
       page: currentPage.value,
+      per_page: pagination.per_page || 9,
       search: filters.search || undefined,
       dateFrom: formatQueryDate(filters.dateFrom) || undefined,
       dateTo: formatQueryDate(filters.dateTo) || undefined,
@@ -479,18 +484,21 @@ const getTours = async () => {
     },
   });
 
-  tours.value = res.data;
-  // pagination.last_page = res.data.last_page;
-  // pagination.total_items = res.data.total;
-  // pagination.per_page = res.data.per_page;
+  tours.value = Array.isArray(res?.data) ? res.data : [];
+
+  const meta = res?.meta || {};
+  pagination.last_page = Number(meta.last_page) || 1;
+  pagination.total_items = Number(meta.total_items ?? meta.total) || tours.value.length;
+  pagination.per_page = Number(meta.per_page) || pagination.per_page || 9;
+  currentPage.value = Number(meta.current_page) || currentPage.value;
 };
 
 syncFiltersFromRoute();
 await getTours();
 
-const paginationPage = (page) => {
+const paginationPage = async (page) => {
   currentPage.value = page;
-  getTours();
+  await getTours();
 };
 
 const destroyMap = (mapRef) => {
