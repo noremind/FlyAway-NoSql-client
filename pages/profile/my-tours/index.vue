@@ -29,9 +29,6 @@
         </div>
       </div>
     </div>
-
-    <br />
-    <UiPagination class="my-tours__pagination"></UiPagination>
   </div>
 </template>
 
@@ -177,10 +174,6 @@ onMounted(loadBookings);
     flex-direction: column;
     gap: 16px;
     margin: 24px 0;
-  }
-
-  &__pagination {
-    margin: 0 auto;
   }
 
   &__state,
