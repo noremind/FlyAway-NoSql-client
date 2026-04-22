@@ -3,22 +3,22 @@
     <div ref="mapContainer" class="map-i__wrapper"></div>
 
     <div class="map-i__meta">
-      <p class="map-i__title">
+      <!-- <p class="map-i__title">
         {{
           selectable
             ? "Нажмите на карту, чтобы выбрать место"
             : "Точка на карте"
         }}
-      </p>
+      </p> -->
 
       <p v-if="loadError" class="map-i__error">
         {{ loadError }}
       </p>
 
-      <p v-else-if="currentPoint" class="map-i__coords">
+      <!-- <p v-else-if="currentPoint" class="map-i__coords">
         <span><b>x:</b> {{ currentPoint.x }}</span>
         <span><b>y:</b> {{ currentPoint.y }}</span>
-      </p>
+      </p> -->
 
       <p v-if="!loadError && currentAddress" class="map-i__address">
         <b>Адрес:</b> {{ currentAddress }}
@@ -322,7 +322,7 @@ onBeforeUnmount(() => {
     width: 100%;
     min-height: 360px;
     height: 300px;
-    border-radius: 12px;
+    border-radius: 16px;
     overflow: hidden;
     box-shadow: $box-shadow-md;
     background: $white;
@@ -331,25 +331,31 @@ onBeforeUnmount(() => {
   &__meta {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
     margin-top: 12px;
-    padding: 12px 14px;
-    border-radius: 12px;
-    background: rgba($red-500, 0.08);
-    border: 1px solid rgba($red-500, 0.2);
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: $white;
+    border: 1px solid rgba($surface-500, 0.08);
+    box-shadow: 0 4px 16px rgba($surface-500, 0.06);
     min-height: 72px;
   }
 
   &__title {
     font-size: 13px;
-    font-weight: 700;
-    color: $surface-500;
+    font-weight: 600;
+    color: rgba($surface-500, 0.72);
+    letter-spacing: 0.2px;
   }
 
   &__error {
     font-size: 14px;
     font-weight: 600;
     color: $red-500;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgba($red-500, 0.06);
+    border: 1px solid rgba($red-500, 0.12);
   }
 
   &__coords {
@@ -357,33 +363,61 @@ onBeforeUnmount(() => {
     gap: 14px;
     flex-wrap: wrap;
     font-size: 14px;
-    color: $surface-500;
+    color: rgba($surface-500, 0.82);
   }
 
   &__address,
   &__empty {
     font-size: 14px;
+    line-height: 1.5;
+    color: rgba($surface-500, 0.82);
+  }
+
+  &__address b {
     color: $surface-500;
+    font-weight: 600;
+  }
+
+  &__empty {
+    color: rgba($surface-500, 0.58);
   }
 
   &__actions {
     display: flex;
     justify-content: flex-end;
+    margin-top: 2px;
   }
 
   &__clear {
     border: 0;
-    background: transparent;
+    background: rgba($red-500, 0.06);
     color: $red-500;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
-    padding: 0;
+    padding: 8px 12px;
+    border-radius: 10px;
+    transition:
+      background 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  &__clear:hover {
+    background: rgba($red-500, 0.1);
+  }
+
+  &__clear:active {
+    transform: scale(0.98);
   }
 
   @media screen and (max-width: 767px) {
     &__wrapper {
       min-height: 320px;
       height: 320px;
+    }
+
+    &__meta {
+      padding: 12px 14px;
+      border-radius: 14px;
     }
   }
 }

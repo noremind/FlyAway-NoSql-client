@@ -5,6 +5,7 @@ const props = defineProps({
   description: { type: String, required: true },
   isOpen: { type: Boolean, default: false },
   limit: { type: Number, default: 200 },
+  isShowText: { type: Boolean, default: true },
 });
 
 const emit = defineEmits(["toggle"]);
@@ -118,7 +119,7 @@ function onToggle() {
     </div>
 
     <button
-      v-if="wasTruncated"
+      v-if="wasTruncated && isShowText"
       class="trunc__more"
       type="button"
       @click.stop="onToggle"

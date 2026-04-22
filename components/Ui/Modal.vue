@@ -105,6 +105,8 @@ const emit = defineEmits(["close"]);
   }
   &__content {
     padding: 16px;
+    max-height: 90vh;
+    overflow-y: scroll;
     &--padding {
       margin-top: 80px;
     }

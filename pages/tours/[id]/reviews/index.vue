@@ -1,63 +1,286 @@
 <template>
-  <section class="reviews">
-    <div class="reviews__wrapper">
-      <UiGoBack label="Однодневный тур на Кольсай"></UiGoBack>
+  <section class="tour-reviews-page">
+    <div class="tour-reviews-page__wrapper">
+      <UiGoBack label="Назад к туру" :go-back="`/tours/${route.params.id}`" />
 
-      <h1 class="reviews__title title">Все отзывы путешественников</h1>
-
-      <div class="reviews__rating">
-        <p class="reviews__count">20 отзывов</p>
-        <UiIcons icon="star" color="yellow-500" size="size-14"></UiIcons>
-        <p class="reviews__average">4,1</p>
+      <div class="tour-reviews-page__header">
+        <div>
+          <h1 class="tour-reviews-page__title title">Отзывы о туре</h1>
+          <p class="tour-reviews-page__text">
+            Поделитесь впечатлениями после поездки и помогите другим выбрать
+            тур.
+          </p>
+        </div>
       </div>
 
-      <div class="reviews__blocks">
+      <div v-if="message" class="tour-reviews-page__message">{{ message }}</div>
+      <div v-if="errorMessage" class="tour-reviews-page__error">
+        {{ errorMessage }}
+      </div>
+
+      <form
+        v-if="authStore.isLoggedIn && canReview"
+        class="tour-reviews-page__form"
+        @submit.prevent="submitReview"
+      >
+        <div class="tour-reviews-page__rating">
+          <p class="tour-reviews-page__label">Оценка</p>
+
+          <div class="tour-reviews-page__stars">
+            <button
+              v-for="star in 5"
+              :key="star"
+              type="button"
+              class="tour-reviews-page__star"
+              @click="form.rating = star"
+            >
+              <UiIcons
+                icon="star"
+                size="size-20"
+                :color="star <= form.rating ? 'yellow-500' : 'surface-300'"
+              />
+            </button>
+          </div>
+        </div>
+
+        <UiTextarea
+          label="Ваш отзыв"
+          placeholder="Напишите, как прошла поездка"
+          v-model="form.comment"
+        />
+
+        <UiButton
+          label="Оставить отзыв"
+          type="submit"
+          class="tour-reviews-page__submit"
+          :is-loading="isSubmitting"
+        />
+      </form>
+
+      <div
+        v-else-if="authStore.isLoggedIn && hasReview"
+        class="tour-reviews-page__state"
+      >
+        Вы уже оставили отзыв на этот тур.
+      </div>
+
+      <div
+        v-else-if="authStore.isLoggedIn && !canReview"
+        class="tour-reviews-page__state"
+      >
+        Отзыв можно оставить только после завершённой поездки.
+      </div>
+
+      <div v-else class="tour-reviews-page__state">
+        Чтобы оставить отзыв, войдите в аккаунт.
+      </div>
+
+      <div class="tour-reviews-page__list">
         <TheCommonReview
-          v-for="review in 6"
-          :key="review"
+          v-for="review in reviews"
+          :key="review._id"
+          :review="review"
           type="single"
-        ></TheCommonReview>
-      </div>
+          :show-tour-meta="false"
+        />
 
-      <UiPagination class="reviews__pagination"></UiPagination>
+        <div
+          v-if="!isLoading && !reviews.length"
+          class="tour-reviews-page__state"
+        >
+          Пока отзывов нет.
+        </div>
+      </div>
     </div>
   </section>
 </template>
 
-<script setup></script>
+<script setup>
+const route = useRoute();
+const api = useApi();
+const authStore = useAuthStore();
 
-<style lang="scss" scoped>
-.reviews {
+const reviews = ref([]);
+const canReview = ref(false);
+const hasReview = ref(false);
+const isLoading = ref(false);
+const isSubmitting = ref(false);
+const message = ref("");
+const errorMessage = ref("");
+
+const form = reactive({
+  rating: 5,
+  comment: "",
+});
+
+useSeoMeta({
+  title: "FlyAway - Отзывы о туре",
+  ogTitle: "FlyAway - Отзывы о туре",
+  description: "Отзывы путешественников о туре FlyAway",
+  ogDescription: "Отзывы путешественников о туре FlyAway",
+});
+
+const loadReviews = async () => {
+  isLoading.value = true;
+
+  try {
+    const response = await api.client({
+      url: `/tour-reviews/tour/${route.params.id}`,
+      method: "get",
+      query: { limit: 50 },
+    });
+
+    reviews.value = Array.isArray(response?.data) ? response.data : [];
+  } catch (error) {
+    errorMessage.value = error?.message || "Не удалось загрузить отзывы.";
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const loadCanReview = async () => {
+  if (!authStore.isLoggedIn) {
+    canReview.value = false;
+    hasReview.value = false;
+    return;
+  }
+
+  try {
+    const response = await api.client({
+      url: `/tour-reviews/can-review/${route.params.id}`,
+      method: "get",
+    });
+
+    canReview.value = Boolean(response?.data?.canReview);
+    hasReview.value = Boolean(response?.data?.hasReview);
+  } catch {
+    canReview.value = false;
+    hasReview.value = false;
+  }
+};
+
+const submitReview = async () => {
+  message.value = "";
+  errorMessage.value = "";
+
+  if (String(form.comment || "").trim().length < 10) {
+    errorMessage.value = "Отзыв должен содержать минимум 10 символов.";
+    return;
+  }
+
+  isSubmitting.value = true;
+
+  try {
+    const response = await api.client({
+      url: "/tour-reviews",
+      method: "post",
+      data: {
+        tourId: route.params.id,
+        rating: form.rating,
+        comment: form.comment,
+      },
+    });
+
+    reviews.value = [response?.data, ...reviews.value.filter(Boolean)];
+    canReview.value = false;
+    hasReview.value = true;
+    form.rating = 5;
+    form.comment = "";
+    message.value = "Спасибо, ваш отзыв опубликован.";
+  } catch (error) {
+    errorMessage.value = error?.message || "Не удалось отправить отзыв.";
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+
+onMounted(async () => {
+  await Promise.all([loadReviews(), loadCanReview()]);
+});
+</script>
+
+<style scoped lang="scss">
+.tour-reviews-page {
   &__wrapper {
-    margin: 36px 0;
-  }
-  &__title {
-    margin-top: 40px;
-  }
-  &__rating {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-    margin-top: 12px;
-  }
-  &__count {
-    font-size: 14px;
-    color: $surface-400;
-    font-weight: 400;
-  }
-  &__average {
-    font-weight: 400;
-    color: $surface-900;
-    font-size: 14px;
-  }
-  &__blocks {
-    margin: 12px 0;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 20px;
+    margin: 24px 0 40px;
   }
-  &__pagination {
-    margin: 0 auto;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  &__text {
+    color: $surface-500;
+    line-height: 1.5;
+    margin-top: 8px;
+  }
+
+  &__form,
+  &__list,
+  &__state {
+    background: $white;
+    border-radius: 16px;
+    padding: 16px;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &__state {
+    color: $surface-500;
+  }
+
+  &__rating {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__label {
+    color: $surface-900;
+    font-weight: 600;
+  }
+
+  &__stars {
+    display: flex;
+    gap: 6px;
+  }
+
+  &__star {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: rgba($surface-300, 0.12);
+  }
+
+  &__submit {
+    width: fit-content;
+  }
+
+  &__message,
+  &__error {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  &__message {
+    color: $green-400;
+  }
+
+  &__error {
+    color: $orange-200;
   }
 }
 </style>

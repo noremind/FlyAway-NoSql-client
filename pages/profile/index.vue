@@ -50,7 +50,6 @@
           label="Номер телефона*"
           maska="8(###)-###-##-##"
           v-model.trim="phone"
-          :disabled="true"
         ></UiInput>
 
         <UiButton

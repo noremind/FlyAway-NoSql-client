@@ -56,6 +56,7 @@
           class="tour__description"
           :description="descriptionText"
           :limit="viewType === 'tablet' ? 88 : 120"
+          :isShowText="false"
         />
         <div class="tour__box">
           <p class="tour__text">Осталось</p>
@@ -352,8 +353,6 @@ onMounted(() => {
     max-width: 292px;
     width: 100%;
     background-color: $white;
-    box-shadow: 0px 0px 20px 0px #0000001a;
-
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -444,7 +443,7 @@ onMounted(() => {
     max-width: 292px;
     width: 100%;
     background-color: $white;
-    box-shadow: 0px 0px 20px 0px #0000001a;
+    // box-shadow: 0px 0px 20px 0px #0000001a;
 
     display: flex;
     flex-direction: column;
@@ -462,11 +461,11 @@ onMounted(() => {
   &__description {
     font-size: 14px;
     color: $surface-900;
-    height: 170px; // фиксированная зона
-    min-height: 170px;
-    max-height: 170px;
-    min-width: 0;
-    overflow: hidden; // чтобы родитель не рос
+    // height: 170px; // фиксированная зона
+    // min-height: 170px;
+    // max-height: 170px;
+    // min-width: 0;
+    // overflow: hidden; // чтобы родитель не рос
   }
 
   &__inner {
@@ -514,7 +513,7 @@ onMounted(() => {
   &__description {
     font-size: 14px;
     color: $surface-900;
-    min-height: 96px;
+    // min-height: 96px;
   }
   &__inner {
     display: flex;

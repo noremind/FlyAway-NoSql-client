@@ -23,19 +23,6 @@
             <UiIcons icon="circle-close" size="size-20" color="surface-900" />
           </button>
         </div>
-
-        <div class="admin-aside__intro-card">
-          <p class="admin-aside__intro-title">
-            {{
-              user?.role === "partner"
-                ? "Кабинет партнера"
-                : "Панель управления"
-            }}
-          </p>
-          <p class="admin-aside__intro-text">
-            Быстрый доступ к созданию, управлению каталогом и настройкам сайта.
-          </p>
-        </div>
       </div>
 
       <nav class="admin-aside__nav">
@@ -85,7 +72,13 @@
 const isNavOpen = useState("admin-nav-open", () => false);
 const userStore = useAuthStore();
 const user = computed(() => userStore.getUser);
-const openSections = ref(["overview", "content", "catalog", "site"]);
+const openSections = ref([
+  "overview",
+  "content",
+  "catalog",
+  "operations",
+  "site",
+]);
 
 const closeNav = () => {
   isNavOpen.value = false;
@@ -111,6 +104,22 @@ const navSections = computed(() => {
           { label: "Создать отель", to: "/admin/hotels/create", icon: "plus" },
           { label: "Мои отели", to: "/admin/hotels", icon: "home-hotel" },
           { label: "Промокоды", to: "/admin/promocodes", icon: "copy" },
+        ],
+      },
+      {
+        id: "operations",
+        title: "Операции",
+        items: [
+          {
+            label: "Брони туров",
+            to: "/admin/tour-bookings",
+            icon: "wallet",
+          },
+          {
+            label: "Заявки на отели",
+            to: "/admin/hotel-requests",
+            icon: "phone",
+          },
         ],
       },
     ];
@@ -143,6 +152,22 @@ const navSections = computed(() => {
         { label: "Отели", to: "/admin/hotels", icon: "home-hotel" },
         { label: "Промокоды", to: "/admin/promocodes", icon: "copy" },
         { label: "Бонусы", to: "/admin/bonuses", icon: "wallet" },
+      ],
+    },
+    {
+      id: "operations",
+      title: "Операции",
+      items: [
+        {
+          label: "Брони туров",
+          to: "/admin/tour-bookings",
+          icon: "wallet",
+        },
+        {
+          label: "Заявки на отели",
+          to: "/admin/hotel-requests",
+          icon: "phone",
+        },
       ],
     },
     {
@@ -270,7 +295,7 @@ const toggleSection = (sectionId) => {
 
   &__intro-title {
     color: $surface-900;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 800;
     line-height: 1.15;
   }

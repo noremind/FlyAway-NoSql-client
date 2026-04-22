@@ -140,15 +140,19 @@
           >
         </p>
 
-        <UiButton
+        <NuxtLink
+          to="/partner/apply"
           class="about__opportunity-btn about__opportunity-btn--laptop"
-          label="Стать партнером"
-        ></UiButton>
+        >
+          Стать партнером
+        </NuxtLink>
       </section>
-      <UiButton
+      <NuxtLink
+        to="/partner/apply"
         class="about__opportunity-btn about__opportunity-btn--mobile"
-        label="Стать партнером"
-      ></UiButton>
+      >
+        Стать партнером
+      </NuxtLink>
     </div>
   </section>
 </template>

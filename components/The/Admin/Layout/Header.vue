@@ -143,6 +143,13 @@ const pageDefinitions = [
       "Управляйте списком туров, проверяйте наполнение карточек и быстро переходите к созданию или редактированию нужного предложения.",
   },
   {
+    match: /^\/admin\/tour-bookings$/,
+    eyebrow: "Брони туров",
+    title: "Брони туров",
+    description:
+      "Проверяйте бронирования туров: клиент, дата поездки, способ оплаты, сумма и текущий статус заявки.",
+  },
+  {
     match: /^\/admin\/hotels\/create$/,
     eyebrow: "Каталог отелей",
     title: "Создание отеля",
@@ -157,6 +164,13 @@ const pageDefinitions = [
       "Просматривайте и редактируйте объекты размещения, следите за их наполнением и управляйте каталогом отелей в одном месте.",
   },
   {
+    match: /^\/admin\/hotel-requests$/,
+    eyebrow: "Заявки отелей",
+    title: "Заявки отелей",
+    description:
+      "Обрабатывайте заявки гостей на проживание: меняйте статус, фиксируйте комментарии менеджера и держите связь с клиентом.",
+  },
+  {
     match: /^\/admin\/users$/,
     eyebrow: "Пользователи",
     title: "Пользователи",
@@ -169,6 +183,20 @@ const pageDefinitions = [
     title: "Партнеры",
     description:
       "Управляйте компаниями-партнерами, их профилями и доступом к кабинетам, из которых создаются туры и отели.",
+  },
+  {
+    match: /^\/admin\/tour-bookings$/,
+    eyebrow: "Операции",
+    title: "Бронирования туров",
+    description:
+      "Следите за актуальными бронями, статусами поездок и операционной нагрузкой по турам. Здесь удобно переводить поездки в завершенные и контролировать отмены.",
+  },
+  {
+    match: /^\/admin\/hotel-requests$/,
+    eyebrow: "Операции",
+    title: "Заявки на отели",
+    description:
+      "Просматривайте входящие заявки пользователей по отелям, меняйте статусы обработки и фиксируйте заметки менеджера по каждому обращению.",
   },
   {
     match: /^\/admin\/banners$/,
@@ -453,9 +481,11 @@ onBeforeUnmount(() => {
 
 @media (max-width: 700px) {
   .admin-header {
+    min-height: auto;
+    gap: 10px;
     align-items: stretch;
     flex-direction: column;
-    padding: 14px 12px;
+    padding: 10px 12px 8px;
 
     &__lead,
     &__actions {
@@ -464,23 +494,53 @@ onBeforeUnmount(() => {
 
     &__lead {
       align-items: flex-start;
+      gap: 10px;
     }
 
     &__actions {
       flex-wrap: wrap;
+      gap: 10px;
     }
 
     &__menu {
       display: inline-flex;
+      width: 38px;
+      height: 38px;
+      flex: 0 0 38px;
+    }
+
+    &__page {
+      gap: 2px;
     }
 
     &__title {
-      font-size: 24px;
+      font-size: 20px;
+      line-height: 1.1;
+    }
+
+    &__description {
+      display: none;
     }
 
     &__site-link,
     &__user {
       width: 100%;
+    }
+
+    &__user {
+      min-width: 0;
+      padding: 8px 10px;
+      border-radius: 16px;
+    }
+
+    &__avatar {
+      width: 38px;
+      height: 38px;
+      flex: 0 0 38px;
+    }
+
+    &__name {
+      max-width: 100%;
     }
 
     &__dropdown {

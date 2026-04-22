@@ -2,11 +2,11 @@
   <UiOverlay
     :is-show="true"
     header-icon="share"
-    btn-label="Выбрать"
+    btn-label="Оставить заявку"
     :have-footer="true"
     :have-favorite-icon="true"
     @close="goTo('/hotels')"
-    @action="openPartialModalPayment"
+    @action="scrollToRequestForm"
   >
     <section class="details">
       <div class="details__wrapper" v-if="hotel">
@@ -166,7 +166,7 @@
                     v-for="room in hotel.room_types"
                     :key="room.id"
                     :room="room"
-                    @select="openPartialModalPayment"
+                    @select="selectRoom"
                   ></TheHotelsRoom>
                 </div>
               </div>
@@ -374,65 +374,109 @@
             </div>
           </section>
 
-          <div class="details__totals">
-            <div class="details__totals-header">
+          <aside ref="requestCard" class="details__request-card">
+            <div class="details__request-header">
               <div class="details__totals-box">
                 <img
                   class="details__avatar"
                   :src="hotel?.partner?.logo"
                   alt="Avatar"
                 />
-                <p class="details__name">{{ hotel.partner?.name }}</p>
+                <p class="details__name">
+                  {{ hotel.partner?.name || hotel.partner?.title || "FlyAway" }}
+                </p>
               </div>
-              <p class="details__baige">-20%</p>
+              <span class="details__request-badge">Заявка</span>
             </div>
 
-            <p class="details__bold">Выберите дату</p>
-
-            <Calendar class="details__calendar" v-model="date" inline />
-
-            <div class="details__select-date">
-              <p class="details__date">24.12.2024</p>
-              <UiIcons icon="arrow" size="size-14"></UiIcons>
-              <p class="details__date">26.12.2024</p>
+            <div class="details__request-intro">
+              <h2 class="details__request-title">Оставить заявку</h2>
+              <p class="details__request-text">
+                Заполните контакты и даты проживания. Менеджер проверит
+                доступность номеров и свяжется с вами.
+              </p>
             </div>
 
-            <div class="details__message">
+            <div v-if="selectedRoom" class="details__message">
               <UiIcons
                 icon="circle-check"
                 color="red-500"
                 size="size-20"
               ></UiIcons>
-              <p class="details__message-text">Вы выбрали премиум номер</p>
+              <p class="details__message-text">
+                Вы выбрали номер: {{ selectedRoom.name }}
+              </p>
             </div>
 
-            <ul class="details__totals-list">
-              <li class="details__totals-item">
-                <p class="details__totals-answer">Всего:</p>
-                <p class="details__totals-question">45 000 ₸</p>
-              </li>
-              <li class="details__totals-item">
-                <p class="details__totals-answer">Скидка:</p>
-                <p
-                  class="details__totals-question details__totals-question--discount"
-                >
-                  -20%
-                </p>
-              </li>
-              <li class="details__totals-item details__totals-item--result">
-                <p class="details__totals-answer">Итого:</p>
-                <p class="details__totals-question details__totals-question">
-                  36 000₸
-                </p>
-              </li>
-            </ul>
+            <form class="details__request-form" @submit.prevent="submitHotelRequest">
+              <UiInput
+                label="Имя"
+                placeholder="Как к вам обращаться"
+                v-model.trim="requestForm.name"
+                :is-error="Boolean(fieldErrors.name)"
+              />
+              <UiInput
+                label="Телефон"
+                placeholder="+7 700 000 00 00"
+                maska="+7 ### ### ## ##"
+                v-model="requestForm.phone"
+                :is-error="Boolean(fieldErrors.phone)"
+              />
+              <UiInput
+                label="Email"
+                type="email"
+                placeholder="name@example.com"
+                v-model.trim="requestForm.email"
+                :is-error="Boolean(fieldErrors.email)"
+              />
 
-            <UiButton
-              label="Забронировать"
-              class="details__totals-btn"
-              @click="openPaymentModal"
-            ></UiButton>
-          </div>
+              <div class="details__request-grid">
+                <UiCalendar
+                  label="Дата заезда"
+                  placeholder="Выберите дату"
+                  v-model="requestForm.checkIn"
+                  :clearable="true"
+                />
+                <UiCalendar
+                  label="Дата выезда"
+                  placeholder="Выберите дату"
+                  v-model="requestForm.checkOut"
+                  :clearable="true"
+                />
+              </div>
+
+              <UiInput
+                label="Гостей"
+                type="number"
+                placeholder="Например, 2"
+                v-model="requestForm.guests"
+                :is-error="Boolean(fieldErrors.guests)"
+              />
+
+              <UiTextarea
+                label="Комментарий"
+                placeholder="Например: нужен ранний заезд, детская кроватка или выбранный номер"
+                v-model.trim="requestForm.comment"
+                :rows="4"
+              />
+
+              <p
+                v-if="statusMessage"
+                class="details__request-status"
+                :class="`details__request-status--${requestStatus}`"
+              >
+                {{ statusMessage }}
+              </p>
+
+              <UiButton
+                label="Отправить заявку"
+                class="details__request-btn button-primary"
+                type="submit"
+                :is-loading="isSubmittingRequest"
+                :disabled="isSubmittingRequest"
+              />
+            </form>
+          </aside>
         </div>
       </div>
       <section class="details__reviews">
@@ -480,264 +524,20 @@
   </UiOverlay>
 
   <UiModal
-    :is-show="isOpenPayment"
-    max-width="600px"
-    @close="closePaymentModal"
-  >
-    <ModalsBookHotelPayment
-      @next-step="openBookingForm"
-    ></ModalsBookHotelPayment>
-  </UiModal>
-
-  <UiModal
-    :is-show="isOpenStatusPayment"
-    max-width="600px"
-    @close="closeStatusPaymentModal"
-  >
-    <ModalsStatus
-      title="Наш менеджер с вами свяжется"
-      status="success"
-      btn-label="Готово"
-      @action="closeStatusPaymentModal"
-    />
-  </UiModal>
-
-  <UiModal
     :is-show="isOpenPreviewPicture"
     max-width="600px"
     @close="closePreviewPicture"
   >
     <ModalsPicture></ModalsPicture>
   </UiModal>
-
-  <UiModal
-    :is-show="isOpenBookingForm"
-    max-width="600px"
-    @close="closeBookingForm"
-  >
-    <ModalsBookHotelInfo @next-step="statusPayed"></ModalsBookHotelInfo>
-  </UiModal>
-
-  <!-- Mobile -->
-
-  <!-- Step 1 -->
-  <UiPartialModal
-    :is-show="isOpenPartialModalPayment"
-    height="85%"
-    @close="closePartialModalPayment"
-  >
-    <template #body>
-      <div class="details__partial-payment-box">
-        <p class="details__bold details__bold--center">Эконом</p>
-
-        <div class="details__imgs">
-          <UiIcons
-            icon="chevron"
-            class="prev-img down"
-            size="size-30"
-            color="surface-900"
-          ></UiIcons>
-          <UiSwiper
-            :loop="false"
-            :pagination="{ clickable: true }"
-            next-btn-class=".next-img"
-            prev-btn-class=".prev-img"
-          >
-            <swiper-slide v-for="slide in 5" :key="slide">
-              <img
-                @click="openPreviewPicture"
-                class="details__swiper-img"
-                src="@/assets/image/content/main-image.png"
-                alt="Image"
-              />
-            </swiper-slide>
-          </UiSwiper>
-          <UiIcons
-            icon="chevron"
-            class="next-img"
-            size="size-30"
-            color="surface-900"
-          ></UiIcons>
-        </div>
-
-        <ul class="details__partial-payment-list">
-          <li class="details__partial-payment-item">
-            Элегантный номер с видами на море, город или горы.
-          </li>
-          <li class="details__partial-payment-item">
-            Элегантный номер с видами на море, город или горы.
-          </li>
-          <li class="details__partial-payment-item">
-            Элегантный номер с видами на море, город или горы.
-          </li>
-          <li class="details__partial-payment-item">
-            Элегантный номер с видами на море, город или горы.
-          </li>
-        </ul>
-
-        <div>
-          <p class="details__bold">Выберите дату</p>
-          <Calendar class="details__calendar" v-model="date" inline />
-        </div>
-
-        <div class="details__select-date">
-          <p class="details__date">24.12.2024</p>
-          <UiIcons icon="arrow" size="size-14"></UiIcons>
-          <p class="details__date">26.12.2024</p>
-        </div>
-
-        <ul class="details__totals-list">
-          <li class="details__totals-item">
-            <p class="details__totals-answer">Всего:</p>
-            <p class="details__totals-question">45 000 ₸</p>
-          </li>
-          <li class="details__totals-item">
-            <p class="details__totals-answer">Скидка:</p>
-            <p
-              class="details__totals-question details__totals-question--discount"
-            >
-              -20%
-            </p>
-          </li>
-          <li class="details__totals-item details__totals-item--result">
-            <p class="details__totals-answer">Итого:</p>
-            <p class="details__totals-question details__totals-question">
-              36 000₸
-            </p>
-          </li>
-        </ul>
-
-        <UiButton
-          class="details__partial-payment-btn"
-          label="Выбрать"
-          @click="openOverlayPayment"
-        ></UiButton>
-      </div>
-    </template>
-  </UiPartialModal>
-
-  <!-- Step 2 -->
-  <UiOverlay
-    :is-show="isOpenOverlayPayment"
-    title="Подтвердите бронь"
-    @close="closeOverlayPayment"
-    btn-label="Подтвердить"
-    :show-header-icons="false"
-    @action="openMobileStatusPayment"
-  >
-    <div class="overlay-payment">
-      <div class="overlay-payment__wrapper">
-        <div class="overlay-payment__preview">
-          <img
-            class="overlay-payment__img"
-            src="@/assets/image/content/tour-card.png"
-            alt="Preview"
-          />
-          <h2 class="overlay-payment__title title">Business po kazakhsky</h2>
-        </div>
-        <div class="details__message">
-          <UiIcons icon="circle-check" color="red-500" size="size-20"></UiIcons>
-          <p class="details__message-text">Вы выбрали премиум номер</p>
-        </div>
-        <table class="overlay-payment__table">
-          <tbody>
-            <tr class="overlay-payment__tr">
-              <td class="overlay-payment__td">Дата от</td>
-              <td class="overlay-payment__td">25 декабря 2024</td>
-            </tr>
-            <tr class="overlay-payment__tr">
-              <td class="overlay-payment__td">Дата до</td>
-              <td class="overlay-payment__td">25 декабря 2024</td>
-            </tr>
-            <tr class="overlay-payment__tr overlay-payment__tr--blue">
-              <td>Ваши сертификаты</td>
-            </tr>
-            <tr class="overlay-payment__tr">
-              <td class="overlay-payment__td">Взрослый 23+</td>
-              <td class="overlay-payment__td">1 билет х 15 000 ₸</td>
-            </tr>
-            <tr class="overlay-payment__tr">
-              <td class="overlay-payment__td">Детский от 7 до 13 лет</td>
-              <td class="overlay-payment__td">2 билета х 8 000 ₸</td>
-            </tr>
-
-            <tr class="overlay-payment__tr overlay-payment__tr--padding">
-              <td class="overlay-payment__td overlay-payment__td">Премиум</td>
-              <td class="overlay-payment__td">3 дня х 20 000 ₸</td>
-            </tr>
-            <tr class="overlay-payment__tr">
-              <td class="overlay-payment__td overlay-payment__td--bold">
-                Скидка
-              </td>
-              <td class="overlay-payment__td">-20%</td>
-            </tr>
-            <tr class="overlay-payment__tr overlay-payment__tr--padding">
-              <td class="overlay-payment__td overlay-payment__td--bold">
-                Итого
-              </td>
-              <td class="overlay-payment__td">24 800 ₸</td>
-            </tr>
-            <tr class="overlay-payment__tr overlay-payment__tr--blue">
-              <td>Способ оплаты</td>
-            </tr>
-            <tr class="overlay-payment__tr">
-              <td class="overlay-payment__td overlay-payment__td--box">
-                <UiCheckbox
-                  type="checkmark"
-                  label="Банковская карта"
-                ></UiCheckbox>
-              </td>
-              <td class="overlay-payment__td"></td>
-            </tr>
-            <tr class="overlay-payment__tr">
-              <td class="overlay-payment__td overlay-payment__td--box">
-                <UiCheckbox
-                  type="checkmark"
-                  label="Рассрочка на 3 месяца"
-                ></UiCheckbox>
-                <img
-                  class="overlay-payment__td-img"
-                  src="@/assets/icons/freedom-bank.svg"
-                  alt="Freedom Bank"
-                />
-              </td>
-              <td class="overlay-payment__td"></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </UiOverlay>
-
-  <!-- Step 3 -->
-  <UiModal
-    :is-show="isOpenMobileStatusPayment"
-    max-width="600px"
-    @close="closeMobileStatusPayment"
-    :full-screen="true"
-  >
-    <ModalsStatus
-      title="Наш менеджер с вами свяжется"
-      status="success"
-      btn-label="Перейти в Мои отели"
-      go-to="/profile/my-hotels"
-      @action="closeMobileStatusPayment"
-    />
-  </UiModal>
 </template>
 
 <script setup>
-const isOpenPayment = ref(false);
-const isOpenStatusPayment = ref(false);
 const isOpenPreviewPicture = ref(false);
-const isOpenBookingForm = ref(false);
-const isOpenPartialModalPayment = ref(false);
-const isOpenOverlayPayment = ref(false);
-const isOpenMobileStatusPayment = ref(null);
-
-const date = new Date();
 const yandexMapInfo = ref(null);
 const { createMap } = useYandexMaps();
+const api = useApi();
+const authStore = useAuthStore();
 
 const isMapReady = ref(false);
 const infoMap = shallowRef(null);
@@ -745,6 +545,175 @@ const mapCenter = [76.889709, 43.238949];
 
 const hotel = ref(null);
 const route = useRoute();
+const requestCard = ref(null);
+const selectedRoom = ref(null);
+const isSubmittingRequest = ref(false);
+const requestStatus = ref("");
+const statusMessage = ref("");
+const fieldErrors = reactive({
+  name: "",
+  phone: "",
+  email: "",
+  guests: "",
+});
+
+const requestForm = reactive({
+  name: "",
+  phone: "",
+  email: "",
+  checkIn: null,
+  checkOut: null,
+  guests: "2",
+  comment: "",
+});
+
+const formatApiDate = (value) => {
+  if (!value) {
+    return "";
+  }
+
+  const date = value instanceof Date ? value : new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+const resetFieldErrors = () => {
+  fieldErrors.name = "";
+  fieldErrors.phone = "";
+  fieldErrors.email = "";
+  fieldErrors.guests = "";
+};
+
+const hydrateRequestFormFromUser = () => {
+  const user = authStore.getUser;
+
+  if (!user) {
+    return;
+  }
+
+  requestForm.name ||= user.name || user.fullName || "";
+  requestForm.phone ||= user.phone || "";
+  requestForm.email ||= user.email || "";
+};
+
+const validateRequestForm = () => {
+  resetFieldErrors();
+  const checkIn = formatApiDate(requestForm.checkIn);
+  const checkOut = formatApiDate(requestForm.checkOut);
+  const guests = Number(requestForm.guests) || 0;
+
+  if (!requestForm.name.trim()) {
+    fieldErrors.name = "Укажите имя";
+  }
+
+  if (!requestForm.phone.trim()) {
+    fieldErrors.phone = "Укажите телефон";
+  }
+
+  if (!requestForm.email.trim()) {
+    fieldErrors.email = "Укажите email";
+  }
+
+  if (guests < 1) {
+    fieldErrors.guests = "Минимум 1 гость";
+  }
+
+  if (!checkIn || !checkOut) {
+    statusMessage.value = "Выберите дату заезда и дату выезда.";
+    requestStatus.value = "error";
+    return false;
+  }
+
+  if (checkIn > checkOut) {
+    statusMessage.value = "Дата выезда не может быть раньше даты заезда.";
+    requestStatus.value = "error";
+    return false;
+  }
+
+  const hasFieldErrors = Object.values(fieldErrors).some(Boolean);
+
+  if (hasFieldErrors) {
+    statusMessage.value = "Проверьте обязательные поля заявки.";
+    requestStatus.value = "error";
+    return false;
+  }
+
+  return true;
+};
+
+const buildComment = () => {
+  const parts = [];
+
+  if (selectedRoom.value?.name) {
+    parts.push(`Выбранный номер: ${selectedRoom.value.name}`);
+  }
+
+  if (requestForm.comment.trim()) {
+    parts.push(requestForm.comment.trim());
+  }
+
+  return parts.join("\n");
+};
+
+const submitHotelRequest = async () => {
+  statusMessage.value = "";
+  requestStatus.value = "";
+
+  if (!validateRequestForm()) {
+    return;
+  }
+
+  isSubmittingRequest.value = true;
+
+  try {
+    await api.client({
+      url: "/hotel-requests",
+      method: "post",
+      data: {
+        hotelId: hotel.value?._id || route.params.id,
+        name: requestForm.name.trim(),
+        phone: requestForm.phone.trim(),
+        email: requestForm.email.trim(),
+        checkIn: formatApiDate(requestForm.checkIn),
+        checkOut: formatApiDate(requestForm.checkOut),
+        guests: Number(requestForm.guests) || 1,
+        comment: buildComment(),
+      },
+    });
+
+    requestStatus.value = "success";
+    statusMessage.value =
+      "Заявка отправлена. Менеджер проверит доступность и свяжется с вами.";
+    requestForm.checkIn = null;
+    requestForm.checkOut = null;
+    requestForm.comment = "";
+    selectedRoom.value = null;
+  } catch (error) {
+    requestStatus.value = "error";
+    statusMessage.value =
+      error?.message || "Не удалось отправить заявку. Попробуйте еще раз.";
+  } finally {
+    isSubmittingRequest.value = false;
+  }
+};
+
+const scrollToRequestForm = async () => {
+  await nextTick();
+  requestCard.value?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+};
+
+const selectRoom = async (room) => {
+  selectedRoom.value = room || null;
+  await scrollToRequestForm();
+};
 
 useFetchSsr({
   url: `/hotels/${route.params.id}`,
@@ -752,6 +721,8 @@ useFetchSsr({
 }).then((res) => {
   hotel.value = res.data;
 });
+
+hydrateRequestFormFromUser();
 
 const destroyInfoMap = () => {
   if (infoMap.value && typeof infoMap.value.destroy === "function") {
@@ -797,67 +768,12 @@ onBeforeUnmount(() => {
   destroyInfoMap();
 });
 
-// Step 1
-const closePartialModalPayment = () => {
-  isOpenPartialModalPayment.value = false;
-};
-
-const openPartialModalPayment = () => {
-  isOpenPartialModalPayment.value = true;
-};
-
-// Step 2
-const closeOverlayPayment = () => {
-  isOpenOverlayPayment.value = false;
-};
-
-const openOverlayPayment = () => {
-  isOpenPartialModalPayment.value = false;
-  isOpenOverlayPayment.value = true;
-};
-
-// Step 3
-const openMobileStatusPayment = () => {
-  isOpenPartialModalPayment.value = false;
-  isOpenMobileStatusPayment.value = true;
-};
-
-const closeMobileStatusPayment = () => {
-  isOpenMobileStatusPayment.value = false;
-};
-
-const statusPayed = () => {
-  isOpenBookingForm.value = false;
-  isOpenStatusPayment.value = true;
-};
-
-const closeBookingForm = () => {
-  isOpenBookingForm.value = false;
-};
-
-const openBookingForm = () => {
-  isOpenPayment.value = false;
-  isOpenBookingForm.value = true;
-};
-
 const closePreviewPicture = () => {
   isOpenPreviewPicture.value = false;
 };
 
 const openPreviewPicture = () => {
   isOpenPreviewPicture.value = true;
-};
-
-const closeStatusPaymentModal = () => {
-  isOpenStatusPayment.value = false;
-};
-
-const openPaymentModal = () => {
-  isOpenPayment.value = true;
-};
-
-const closePaymentModal = () => {
-  isOpenPayment.value = false;
 };
 </script>
 
@@ -896,6 +812,94 @@ const closePaymentModal = () => {
     max-width: 360px;
     width: 100%;
   }
+  &__request {
+    &-card {
+      position: sticky;
+      top: 18px;
+      align-self: flex-start;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-width: 380px;
+      width: 100%;
+      padding: 18px;
+      border-radius: 24px;
+      background: $white;
+      color: $surface-900;
+      box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.08);
+    }
+
+    &-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    &-badge {
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba($red-500, 0.08);
+      color: $red-500;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    &-intro {
+      display: grid;
+      gap: 6px;
+    }
+
+    &-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: $surface-900;
+    }
+
+    &-text {
+      color: $surface-500;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    &-form {
+      display: grid;
+      gap: 12px;
+    }
+
+    &-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    &-status {
+      padding: 10px 12px;
+      border-radius: 14px;
+      font-size: 14px;
+      line-height: 1.45;
+
+      &--success {
+        color: $green-400;
+        background: rgba($green-400, 0.08);
+      }
+
+      &--error {
+        color: $red-500;
+        background: rgba($red-500, 0.08);
+      }
+    }
+
+    &-btn {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 46px;
+      padding: 12px;
+      color: $white;
+      background-color: $red-500;
+    }
+  }
   &__header {
     display: flex;
     justify-content: space-between;
@@ -912,70 +916,6 @@ const closePaymentModal = () => {
     display: flex;
     gap: 12px;
     align-items: center;
-  }
-  &__partial {
-    &-info {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    &-count {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-    &-payment {
-      &-box {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-      }
-      &-btn {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background-color: $red-500;
-        color: $white;
-        padding: 10px;
-        margin-top: 12px;
-        font-weight: 700;
-      }
-      &-list {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-      }
-      &-item {
-        list-style: disc;
-        margin-left: 20px;
-        font-weight: 100;
-        font-size: 14px;
-      }
-    }
-    &-title {
-      font-size: 16px;
-    }
-    &-list {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    &-item {
-      list-style: disc;
-      margin-left: 15px;
-      font-size: 12px;
-    }
-    &-btn {
-      border: 1px solid $red-500;
-      background-color: transparent;
-      color: $red-500;
-      font-weight: 400;
-      width: 100%;
-      padding: 10px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
   }
   &__imgs {
     display: flex;
@@ -1294,79 +1234,36 @@ const closePaymentModal = () => {
   position: absolute !important;
 }
 
-.details__partial-payment-box
-  .details__imgs
-  :deep(.custom-swiper::part(pagination)) {
-  position: absolute !important;
-}
-
-.overlay-payment {
-  &__wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  &__preview {
-    width: 100%;
-  }
-  &__img {
-    width: 100%;
-    height: 137px;
-    object-fit: cover;
-    border-radius: 16px;
-    margin: 0 auto;
-  }
-  &__table {
-    color: $surface-900;
-    font-size: 14px;
-  }
-  &__tr &__td:last-child {
-    text-align: right;
-    font-weight: 400;
-    white-space: nowrap;
-  }
-  &__td {
-    font-weight: 100;
-    padding-top: 4px;
-    font-size: 14px;
-
-    &--bold {
-      font-weight: 400;
-    }
-    &-img {
-      width: 80px;
-      margin-left: 28px;
-    }
-    &--box {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-  }
-  &__tr {
-    &--padding td {
-      padding-top: 24px;
-    }
-    &--blue {
-      color: $red-500;
-      font-weight: 400;
-      & td {
-        padding-top: 16px;
-      }
-    }
-  }
-}
-
 @media (max-width: 375px) {
   .details {
     &__wrapper {
       margin-top: 0;
+    }
+    &__box {
+      flex-direction: column;
+      gap: 16px;
     }
     &__content {
       padding: 0;
       background-color: transparent;
       flex-direction: column;
       gap: 16px;
+    }
+    &__request {
+      &-card {
+        position: static;
+        max-width: 100%;
+        padding: 16px;
+        border-radius: 18px;
+      }
+
+      &-title {
+        font-size: 20px;
+      }
+
+      &-grid {
+        grid-template-columns: 1fr;
+      }
     }
     &__totals {
       &-header {

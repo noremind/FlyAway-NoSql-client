@@ -13,15 +13,6 @@
                 Сначала задайте базу: название, партнера, длительность и статус.
               </p>
             </div>
-
-            <div class="tour-editor__hero-pills">
-              <span class="tour-editor__hero-pill">
-                {{ form.title ? "Название заполнено" : "Название не заполнено" }}
-              </span>
-              <span class="tour-editor__hero-pill">
-                {{ selectedPartnerId ? "Партнер выбран" : "Нужно выбрать партнера" }}
-              </span>
-            </div>
           </div>
 
           <div class="tour-editor__hero-grid">
@@ -393,10 +384,6 @@
               </span>
             </div>
 
-            <div class="tour-editor__summary-note">
-              Карточка обновляется автоматически по мере заполнения формы.
-            </div>
-
             <div class="tour-editor__summary-preview">
               <img
                 v-if="coverImage"
@@ -573,7 +560,7 @@ const availabilityDateFields = [
   {
     key: "bookedSeats",
     label: "Забронировано",
-    placeholder: "6",
+    placeholder: "0",
     type: "number",
     disabled: true,
   },
@@ -962,7 +949,9 @@ const applyFormState = (tour) => {
       timeFrom: item?.timeFrom || "",
       timeTo: item?.timeTo || "",
       seats:
-        item?.seats === null || item?.seats === undefined ? "" : String(item.seats),
+        item?.seats === null || item?.seats === undefined
+          ? ""
+          : String(item.seats),
       bookedSeats:
         item?.bookedSeats === null || item?.bookedSeats === undefined
           ? ""
@@ -1364,7 +1353,11 @@ onBeforeUnmount(() => {
     align-items: center;
     gap: 10px;
     padding: 0 14px;
-    background: linear-gradient(135deg, rgba($red-500, 0.08), rgba($orange-200, 0.04));
+    background: linear-gradient(
+      135deg,
+      rgba($red-500, 0.08),
+      rgba($orange-200, 0.04)
+    );
     border: 1px solid rgba($red-500, 0.12);
     border-radius: 18px;
     color: $surface-900;

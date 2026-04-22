@@ -99,7 +99,7 @@
     ></UiButton>
   </section>
 
-  <section class="main__reviews">
+  <section class="main__reviews" v-if="reviews?.length">
     <h2 class="main__title title">Отзывы путешественников</h2>
 
     <div class="main__reviews-cards">
@@ -111,13 +111,17 @@
           0: { slidesPerView: 1.5 },
         }"
       >
-        <swiper-slide v-for="review in 4" :key="review">
-          <TheCommonReview></TheCommonReview>
+        <swiper-slide v-for="review in reviews" :key="review._id">
+          <TheCommonReview :review="review" />
         </swiper-slide>
       </UiSwiper>
     </div>
     <div class="main__reviews-cards main__reviews-cards--mobile">
-      <TheCommonReview v-for="review in 2" :key="review"></TheCommonReview>
+      <TheCommonReview
+        v-for="review in reviews.slice(0, 2)"
+        :key="review._id"
+        :review="review"
+      />
     </div>
   </section>
 </template>
@@ -132,6 +136,16 @@ useFetchSsr({
   url: "/ads",
 }).then((res) => {
   banners.value = res.data;
+});
+
+const reviews = ref([]);
+
+useFetchSsr({
+  url: "/tour-reviews/latest",
+  method: "get",
+  query: { limit: 6 },
+}).then((res) => {
+  reviews.value = Array.isArray(res?.data) ? res.data : [];
 });
 
 useSeo({

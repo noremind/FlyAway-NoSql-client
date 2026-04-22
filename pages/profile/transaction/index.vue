@@ -13,7 +13,7 @@
             {{ Number(wallet.bonusBalance || 0).toLocaleString("ru-RU") }} Б
           </p>
         </div>
-        <div class="transaction__inner">
+        <!-- <div class="transaction__inner">
           <div class="transaction__inner-box">
             <UiIcons icon="copy" size="size-24" color="white"></UiIcons>
             <p class="transaction__inner-text">
@@ -27,14 +27,14 @@
           >
             Как получить бонусы?
           </p>
-        </div>
+        </div> -->
       </div>
 
-      <p class="transaction__question" @click="openBonusModal">
+      <!-- <p class="transaction__question" @click="openBonusModal">
         Как получить бонусы?
-      </p>
+      </p> -->
 
-      <div class="transaction__table">
+      <!-- <div class="transaction__table">
         <table class="transaction__table">
           <thead>
             <tr>
@@ -73,7 +73,7 @@
             </tr>
           </tbody>
         </table>
-      </div>
+      </div> -->
 
       <div class="transaction__blocks">
         <section
@@ -86,7 +86,9 @@
             <p class="transaction__block-baige">{{ item.type }}</p>
           </div>
           <div class="transaction__block-box">
-            <p class="transaction__block-price">{{ formatAmount(item.amount) }}</p>
+            <p class="transaction__block-price">
+              {{ formatAmount(item.amount) }}
+            </p>
             <p class="transaction__block-date">{{ item.date }}</p>
           </div>
         </section>
@@ -168,21 +170,21 @@ const openBonusModal = () => {
 };
 
 const transactions = computed(() => {
-  return (Array.isArray(wallet.value?.transactions) ? wallet.value.transactions : []).map(
-    (item) => ({
-      name: item?.name || "Транзакция",
-      type: item?.type || "операция",
-      date: item?.createdAt
-        ? new Intl.DateTimeFormat("ru-RU", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          }).format(new Date(item.createdAt))
-        : "-",
-      amount: Number(item?.amount) || 0,
-      refund: false,
-    }),
-  );
+  return (
+    Array.isArray(wallet.value?.transactions) ? wallet.value.transactions : []
+  ).map((item) => ({
+    name: item?.name || "Транзакция",
+    type: item?.type || "операция",
+    date: item?.createdAt
+      ? new Intl.DateTimeFormat("ru-RU", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }).format(new Date(item.createdAt))
+      : "-",
+    amount: Number(item?.amount) || 0,
+    refund: false,
+  }));
 });
 
 const formatAmount = (amount) => {
@@ -347,7 +349,7 @@ const formatAmount = (amount) => {
     display: flex;
     justify-content: space-between;
     border-bottom: 1px solid $surface-400;
-    padding: 4px 8px;
+    padding: 18px 12px;
 
     &:last-child {
       border-bottom-right-radius: 16px;

@@ -507,10 +507,21 @@
             },
           }"
         >
-          <swiper-slide v-for="review in 5" :key="review">
-            <TheCommonReview />
+          <swiper-slide v-for="review in tourReviews" :key="review._id">
+            <TheCommonReview :review="review" />
           </swiper-slide>
         </UiSwiper>
+
+        <div v-if="!tourReviews.length" class="details__reviews-empty">
+          Пока отзывов нет.
+        </div>
+
+        <UiButton
+          v-if="canReviewTour"
+          class="details__reviews-write"
+          label="Оставить отзыв"
+          @click="goTo(`/tours/${route.params.id}/reviews`)"
+        ></UiButton>
 
         <UiButton
           class="details__reviews-btn"
@@ -843,6 +854,41 @@ const tabs = reactive([
   { id: 4, name: "Контакты" },
 ]);
 const selectedTab = ref(tabs[0]);
+const tourReviews = ref([]);
+
+const canReviewTour = ref(false);
+
+const loadTourReviews = async () => {
+  try {
+    const response = await api.client({
+      url: `/tour-reviews/tour/${route.params.id}`,
+      method: "get",
+      query: { limit: 6 },
+    });
+
+    tourReviews.value = Array.isArray(response?.data) ? response.data : [];
+  } catch {
+    tourReviews.value = [];
+  }
+};
+
+const loadCanReviewTour = async () => {
+  if (!authStore.isLoggedIn) {
+    canReviewTour.value = false;
+    return;
+  }
+
+  try {
+    const response = await api.client({
+      url: `/tour-reviews/can-review/${route.params.id}`,
+      method: "get",
+    });
+
+    canReviewTour.value = Boolean(response?.data?.canReview);
+  } catch {
+    canReviewTour.value = false;
+  }
+};
 
 const response = await useFetchSsr({
   url: `/tours/${route.params.id}`,
@@ -996,9 +1042,12 @@ const ratingLabel = computed(() => {
     Number(tour.value?.rating) || Number(tour.value?.partner?.rating) || 0;
   return rating.toFixed(1).replace(".", ",");
 });
-const reviewsCount = computed(
-  () => `${Number(tour.value?.reviewsCount || 0)} отзывов`,
-);
+const reviewsCount = computed(() => {
+  const count =
+    Number(tour.value?.reviewsCount || 0) || tourReviews.value.length || 0;
+
+  return `${count} отзывов`;
+});
 const highlights = computed(() => normalizeStringList(tour.value?.highlights));
 const routePlaces = computed(() => {
   return normalizeObjectList(tour.value?.routePlaces)
@@ -1568,21 +1617,12 @@ watch(
   },
 );
 
-onMounted(async () => {
-  if (authStore.isLoggedIn) {
-    await Promise.allSettled([
-      favouritesStore.fetchFavourites(),
-      fetchWallet(),
-    ]);
-  }
-
-  await nextTick();
-  await mountInfoMap();
-
-  if (selectedTab.value?.id === 2) {
-    await mountPathMap();
-  }
-});
+await Promise.allSettled([
+  favouritesStore.fetchFavourites(),
+  fetchWallet(),
+  loadTourReviews(),
+  loadCanReviewTour(),
+]);
 
 onBeforeUnmount(() => {
   destroyMap(infoMap);
@@ -1652,6 +1692,12 @@ const closePaymentModal = () => {
     display: flex;
     justify-content: space-between;
     gap: 16px;
+  }
+  &__reviews-empty {
+    padding: 16px;
+    border-radius: 12px;
+    background: rgba($red-500, 0.04);
+    color: $surface-500;
   }
   &__content {
     background-color: $white;
@@ -2128,6 +2174,95 @@ const closePaymentModal = () => {
   }
 }
 
+.overlay-payment {
+  &__methods {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  &__method {
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba($surface-300, 0.5);
+    background: $white;
+    text-align: left;
+    transition:
+      border-color 0.2s ease,
+      background-color 0.2s ease;
+
+    &--active {
+      border-color: rgba($red-500, 0.5);
+      background: rgba($red-500, 0.05);
+    }
+  }
+
+  &__method-radio {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    margin-top: 2px;
+    border-radius: 999px;
+    border: 2px solid rgba($surface-300, 0.9);
+    position: relative;
+  }
+
+  &__method--active &__method-radio {
+    border-color: $red-500;
+  }
+
+  &__method--active &__method-radio::after {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    border-radius: 999px;
+    background: $red-500;
+  }
+
+  &__method-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__method-label {
+    color: $surface-900;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  &__method-hint {
+    color: $surface-500;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  &__bonus-note,
+  &__card-note {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  &__bonus-note {
+    color: $red-500;
+    background: rgba($red-500, 0.06);
+    font-weight: 600;
+  }
+
+  &__card-note {
+    color: $surface-500;
+    background: rgba($surface-300, 0.08);
+  }
+}
+
 .hide {
   display: none;
 }
@@ -2137,6 +2272,17 @@ const closePaymentModal = () => {
 
 .details .details__imgs :deep(.custom-swiper::part(pagination)) {
   position: absolute !important;
+}
+
+.details__reviews-empty {
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba($red-500, 0.04);
+  color: $surface-500;
+}
+
+.details__reviews-write {
+  width: fit-content;
 }
 
 .overlay-payment {

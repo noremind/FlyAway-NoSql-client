@@ -30,7 +30,7 @@
             <UiButton
               label="Выбрать"
               class="room__btn button-secondary"
-              @click="emit('select')"
+              @click="emit('select', room)"
             ></UiButton>
             <!-- <UiButton
               before-icon="circle-check"

@@ -7,6 +7,7 @@ const ensureApiBase = (value?: string | null, fallback = "http://localhost:3001"
 }
 
 const devApiBase = ensureApiBase(
+	process.env.NUXT_DEV_API_TARGET || process.env.NUXT_API_PROXY_TARGET,
 	"http://localhost:3001"
 )
 

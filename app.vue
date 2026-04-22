@@ -1,6 +1,6 @@
 <template>
   <NuxtLayout>
-      <NuxtPage />
+    <NuxtPage />
   </NuxtLayout>
 
   <UiModal
@@ -12,6 +12,7 @@
     <ModalsAuthStep></ModalsAuthStep>
   </UiModal>
 
+  <UiNotifyStack />
   <UiLoader />
 </template>
 
