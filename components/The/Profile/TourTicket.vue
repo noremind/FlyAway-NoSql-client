@@ -7,52 +7,41 @@
     }"
   >
     <div class="ticket__wrapper">
-      <div class="ticket__info">
-        <div class="ticket__top">
+      <div class="ticket__content">
+        <div class="ticket__head">
           <p class="ticket__number">Билет №{{ ticketNumber }}</p>
-          <span
-            class="ticket__status"
-            :class="`ticket__status--${bookingStatus}`"
-          >
+          <p v-if="bookingStatus !== 'active'" class="ticket__status">
             {{ statusLabel }}
-          </span>
+          </p>
         </div>
 
-        <NuxtLink :to="detailsLink">
-          <h2 class="ticket__title title">{{ bookingTitle }}</h2>
+        <NuxtLink :to="detailsLink" class="ticket__title-link">
+          <h2 class="ticket__title">{{ bookingTitle }}</h2>
         </NuxtLink>
 
-        <div class="ticket__grid">
-          <div class="ticket__info-box">
+        <div class="ticket__meta">
+          <div class="ticket__meta-item">
             <p class="ticket__label">Дата</p>
             <p class="ticket__value">{{ bookingDate }}</p>
           </div>
 
-          <div class="ticket__info-box">
-            <p class="ticket__label">Гостей</p>
-            <p class="ticket__value">{{ guestsLabel }}</p>
-          </div>
-
-          <div class="ticket__info-box">
-            <p class="ticket__label">Оплата</p>
-            <p class="ticket__value">{{ paymentMethodLabel }}</p>
-          </div>
-
-          <div class="ticket__info-box ticket__info-box--mobile-total">
-            <p class="ticket__label">Сумма</p>
-            <p class="ticket__price ticket__price--mobile">
-              {{ bookingTotal }}
-            </p>
+          <div class="ticket__meta-item ticket__meta-item--total">
+            <p class="ticket__label">Итого</p>
+            <p class="ticket__price">{{ bookingTotal }}</p>
           </div>
         </div>
 
-        <div v-if="ticketSummary.length" class="ticket__tickets">
-          <p class="ticket__label">Билеты</p>
-          <p class="ticket__tickets-text">{{ ticketSummary }}</p>
+        <div v-if="ticketSummary.length" class="ticket__summary">
+          <p class="ticket__summary-text">{{ ticketSummary }}</p>
         </div>
 
-        <div v-if="bookingStatus === 'active'" class="ticket__actions">
+        <div class="ticket__actions">
+          <NuxtLink class="ticket__open-link" :to="detailsLink">
+            Открыть билет
+          </NuxtLink>
+
           <button
+            v-if="bookingStatus === 'active'"
             class="ticket__cancel"
             type="button"
             :disabled="isCancelling"
@@ -60,19 +49,18 @@
           >
             {{ isCancelling ? "Отменяем..." : "Отменить бронь" }}
           </button>
-        </div>
 
-        <div v-else-if="bookingStatus === 'completed'" class="ticket__actions">
-          <NuxtLink class="ticket__review-link" :to="reviewLink">
+          <NuxtLink
+            v-else-if="bookingStatus === 'completed'"
+            class="ticket__review-link"
+            :to="reviewLink"
+          >
             Оставить отзыв
           </NuxtLink>
         </div>
       </div>
 
-      <div class="ticket__total">
-        <p class="ticket__total-text">Итого</p>
-        <p class="ticket__price">{{ bookingTotal }}</p>
-      </div>
+      <div class="ticket__accent"></div>
     </div>
   </section>
 </template>
@@ -145,28 +133,19 @@ const bookingDate = computed(() => {
 const bookingTotal = computed(() => formatMoney(props.booking?.total));
 
 const ticketNumber = computed(() => {
-  return (
-    String(props.booking?._id || "")
-      .slice(-6)
-      .toUpperCase() || "000000"
-  );
+  const raw = String(props.booking?._id || "").slice(-6);
+  const numeric = Number.parseInt(raw, 16);
+
+  if (!Number.isFinite(numeric)) {
+    return "12345";
+  }
+
+  return String(numeric % 100000).padStart(5, "0");
 });
 
 const detailsLink = computed(() => {
-  const id = props.booking?.tour?._id;
-  return id ? `/tours/${id}` : "/profile/my-tours";
-});
-
-const guestsLabel = computed(
-  () => `${Number(props.booking?.guests || 0) || 1}`,
-);
-
-const paymentMethodLabel = computed(() => {
-  const value = normalizeString(props.booking?.paymentMethod);
-
-  if (value === "bonus") return "Бонусами";
-  if (value === "installment") return "Рассрочка";
-  return "Банковская карта";
+  const id = props.booking?._id;
+  return id ? `/profile/my-tours/${id}` : "/profile/my-tours";
 });
 
 const ticketSummary = computed(() => {
@@ -184,218 +163,209 @@ const ticketSummary = computed(() => {
 <style lang="scss" scoped>
 .ticket {
   width: 100%;
-  border-radius: 16px;
-  box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.1);
-  padding: 16px;
-  border-right: 40px solid $red-500;
-  background: $white;
+  border-radius: 24px;
+  background: #f3f3f3;
+  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
 
   &--completed {
-    border-right-color: $blue-500;
+    .ticket__accent {
+      background: $blue-500;
+    }
   }
 
   &--cancelled {
-    border-right-color: $surface-400;
-  }
-
-  &__wrapper {
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-    width: 100%;
-  }
-
-  &__info {
-    flex: 1;
-    min-width: 0;
-  }
-
-  &__top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 8px;
-  }
-
-  &__number {
-    color: $surface-900;
-    font-weight: 400;
-  }
-
-  &__status {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 28px;
-    padding: 0 10px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 700;
-
-    &--active {
-      color: $white;
-      background: $red-500;
-    }
-
-    &--completed {
-      color: $white;
-      background: $blue-500;
-    }
-
-    &--cancelled {
-      color: $white;
+    .ticket__accent {
       background: $surface-400;
     }
   }
 
-  &__title {
-    font-size: 24px;
-    margin-bottom: 12px;
+  &__wrapper {
+    display: flex;
+    min-height: 156px;
   }
 
-  &__grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px 18px;
-  }
-
-  &__info-box {
+  &__content {
+    flex: 1;
+    padding: 28px 34px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-
-    &--mobile-total {
-      display: none;
-    }
+    gap: 14px;
+    min-width: 0;
   }
 
-  &__label {
-    color: $surface-500;
-    font-size: 13px;
-    font-weight: 400;
+  &__accent {
+    width: 52px;
+    flex: 0 0 52px;
+    background: $blue-500;
+    border-top-right-radius: 24px;
+    border-bottom-right-radius: 24px;
   }
 
-  &__value {
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  &__number {
     color: $surface-900;
     font-size: 14px;
     font-weight: 600;
   }
 
-  &__tickets {
-    margin-top: 14px;
+  &__status {
+    color: $surface-500;
+    font-size: 13px;
+    font-weight: 600;
   }
 
-  &__tickets-text {
-    margin-top: 4px;
+  &__title-link {
+    display: block;
+    width: fit-content;
+  }
+
+  &__title {
     color: $surface-900;
-    line-height: 1.5;
+    font-size: 28px;
+    line-height: 1.15;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  &__meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    &--total {
+      align-items: flex-start;
+      min-width: 180px;
+    }
+  }
+
+  &__label {
+    color: $surface-500;
+    font-size: 14px;
+  }
+
+  &__value {
+    color: $surface-900;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  &__price {
+    color: $blue-500;
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  &__summary {
+    margin-top: -2px;
+  }
+
+  &__summary-text {
+    color: $surface-500;
+    font-size: 14px;
+    line-height: 1.45;
   }
 
   &__actions {
-    margin-top: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 4px;
   }
 
+  &__open-link,
+  &__review-link,
   &__cancel {
     min-height: 40px;
     padding: 0 14px;
     border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  &__open-link {
+    color: $blue-500;
+    background: rgba($blue-500, 0.08);
+    border: 1px solid rgba($blue-500, 0.18);
+  }
+
+  &__review-link {
+    color: $blue-500;
+    background: rgba($blue-500, 0.08);
+    border: 1px solid rgba($blue-500, 0.18);
+  }
+
+  &__cancel {
     color: $orange-200;
     background: rgba($orange-200, 0.08);
     border: 1px solid rgba($orange-200, 0.2);
-    font-size: 14px;
-    font-weight: 700;
 
     &:disabled {
       opacity: 0.6;
       cursor: not-allowed;
     }
   }
-
-  &__total {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    min-width: 140px;
-    align-items: flex-end;
-  }
-
-  &__total-text {
-    font-size: 14px;
-    color: $surface-900;
-    font-weight: 400;
-  }
-  &__review-link {
-    min-height: 40px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 14px;
-    border-radius: 10px;
-    color: $blue-500;
-    background: rgba($blue-500, 0.08);
-    border: 1px solid rgba($blue-500, 0.2);
-    font-size: 14px;
-    font-weight: 700;
-  }
-
-  &__price {
-    color: $red-500;
-    font-size: 24px;
-    font-weight: 700;
-
-    &--mobile {
-      display: none;
-      font-size: 14px;
-    }
-  }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .ticket {
-    border-right-width: 20px;
-
     &__wrapper {
-      flex-direction: column;
+      min-height: auto;
     }
 
-    &__review-link {
-      width: 100%;
+    &__content {
+      padding: 22px 20px;
+      gap: 12px;
+    }
+
+    &__accent {
+      width: 22px;
+      flex-basis: 22px;
     }
 
     &__title {
-      font-size: 18px;
+      font-size: 22px;
     }
 
-    &__grid {
-      grid-template-columns: 1fr;
+    &__meta {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
     }
 
-    &__info-box {
-      &--mobile-total {
-        display: flex;
+    &__meta-item {
+      &--total {
+        min-width: auto;
       }
-    }
-
-    &__total {
-      display: none;
     }
 
     &__price {
-      &--mobile {
-        display: block;
-      }
+      font-size: 26px;
     }
 
-    &__top {
-      align-items: flex-start;
+    &__actions {
       flex-direction: column;
     }
 
-    &__status {
-      width: fit-content;
-    }
-
+    &__open-link,
+    &__review-link,
     &__cancel {
       width: 100%;
     }
