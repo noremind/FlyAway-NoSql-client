@@ -2,7 +2,7 @@
   <UiOverlay
     :is-show="true"
     header-icon="share"
-    btn-label="Выбрать билет"
+    btn-label="Перейти к бронированию"
     :have-footer="true"
     :have-favorite-icon="true"
     @close="goTo('/tours')"
@@ -563,7 +563,7 @@
   >
     <ModalsStatus
       v-if="isOpenStatusPayment === 'success'"
-      title="Ваш заказ оплачен"
+      title="Бронирование оформлено"
       status="success"
       btn-label="Перейти в Мои туры"
       go-to="/profile/my-tours"
@@ -717,7 +717,7 @@
   <!-- Step 2 -->
   <UiOverlay
     :is-show="isOpenOverlayPayment"
-    title="Платежи"
+    title="Подтверждение бронирования"
     @close="closeOverlayPayment"
     :btn-label="paymentActionLabel"
     :show-header-icons="false"
@@ -790,8 +790,7 @@
                 <UiCheckbox
                   :options="[
                     { label: 'Банковская карта', value: 'card' },
-                    { label: 'Рассрочка на 3 месяца', value: 'installment' },
-                    { label: 'Оплатить бонусом', value: 'bonus' },
+                    { label: 'Оплатить бонусами', value: 'bonus' },
                   ]"
                   :model-value="paymentMethod"
                   @update:model-value="paymentMethod = $event?.value || $event"
@@ -817,7 +816,7 @@
     :full-screen="true"
   >
     <ModalsStatus
-      title="Ваш заказ оплачен"
+      title="Бронирование оформлено"
       status="success"
       btn-label="Перейти в Мои туры"
       go-to="/profile/my-tours"
@@ -1340,7 +1339,9 @@ const totalToPay = computed(() => {
 });
 
 const paymentActionLabel = computed(() =>
-  paymentMethod.value === "bonus" ? "Оплатить бонусами" : "Оплатить",
+  paymentMethod.value === "bonus"
+    ? "Списать бонусы и забронировать"
+    : "Оформить бронь",
 );
 
 const isFavourite = computed(() =>
