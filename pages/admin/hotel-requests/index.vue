@@ -1,5 +1,32 @@
 <template>
   <section class="admin-hotel-requests">
+    <div class="admin-hotel-requests__head">
+      <div>
+        <h2 class="admin-hotel-requests__title-page">Заявки на отели</h2>
+        <p class="admin-hotel-requests__page-text">
+          Контроль входящих заявок, статусов обработки и заметок менеджера по
+          каждому бронированию.
+        </p>
+      </div>
+
+      <div class="admin-hotel-requests__head-actions">
+        <button class="admin-hotel-requests__reload" type="button" @click="loadRequests">
+          Обновить
+        </button>
+      </div>
+    </div>
+
+    <div class="admin-hotel-requests__stats">
+      <article
+        v-for="item in statItems"
+        :key="item.label"
+        class="admin-hotel-requests__stat"
+      >
+        <p class="admin-hotel-requests__stat-value">{{ item.value }}</p>
+        <p class="admin-hotel-requests__stat-label">{{ item.label }}</p>
+      </article>
+    </div>
+
     <div class="admin-hotel-requests__toolbar">
       <div class="admin-hotel-requests__filters">
         <UiSelect
@@ -77,6 +104,20 @@
             <span class="admin-hotel-requests__label">Создано</span>
             <span class="admin-hotel-requests__value">
               {{ formatDateTime(request.createdAt) }}
+            </span>
+          </div>
+
+          <div class="admin-hotel-requests__field">
+            <span class="admin-hotel-requests__label">Партнер</span>
+            <span class="admin-hotel-requests__value">
+              {{ request?.partner?.title || request?.hotel?.partner?.title || '—' }}
+            </span>
+          </div>
+
+          <div class="admin-hotel-requests__field">
+            <span class="admin-hotel-requests__label">Локация</span>
+            <span class="admin-hotel-requests__value">
+              {{ request?.hotel?.location || '—' }}
             </span>
           </div>
 
@@ -180,6 +221,20 @@ const formatDateTime = (value) => {
   }).format(parsed);
 };
 
+const statItems = computed(() => {
+  const total = requests.value.length;
+  const fresh = requests.value.filter((item) => item?.status === "new").length;
+  const inProgress = requests.value.filter((item) => item?.status === "in_progress").length;
+  const closed = requests.value.filter((item) => item?.status === "closed").length;
+
+  return [
+    { label: "Всего заявок", value: total },
+    { label: "Новые", value: fresh },
+    { label: "В работе", value: inProgress },
+    { label: "Закрытые", value: closed },
+  ];
+});
+
 const loadRequests = async () => {
   isLoading.value = true;
   message.value = "";
@@ -249,6 +304,62 @@ onMounted(loadRequests);
   flex-direction: column;
   gap: 16px;
 
+  &__head {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: flex-end;
+  }
+
+  &__title-page {
+    color: $surface-900;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.05;
+  }
+
+  &__page-text {
+    margin-top: 6px;
+    max-width: 760px;
+    color: $surface-500;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  &__head-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  &__stat {
+    padding: 18px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba($red-500, 0.08);
+    box-shadow: 0 10px 26px rgba(32, 36, 38, 0.04);
+  }
+
+  &__stat-value {
+    color: $red-500;
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  &__stat-label {
+    margin-top: 10px;
+    color: $surface-500;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
   &__toolbar {
     display: flex;
     justify-content: space-between;
@@ -262,9 +373,9 @@ onMounted(loadRequests);
   }
 
   &__reload {
-    min-height: 42px;
-    padding: 0 14px;
-    border-radius: 10px;
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 12px;
     color: $red-500;
     background: rgba($red-500, 0.06);
     border: 1px solid rgba($red-500, 0.14);
@@ -285,6 +396,7 @@ onMounted(loadRequests);
     border-radius: 20px;
     background: rgba(255, 255, 255, 0.9);
     border: 1px solid rgba($red-500, 0.08);
+    box-shadow: 0 10px 26px rgba(32, 36, 38, 0.04);
   }
 
   &__card-head {
@@ -339,7 +451,7 @@ onMounted(loadRequests);
 
   &__grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px 18px;
   }
 
@@ -394,8 +506,21 @@ onMounted(loadRequests);
   }
 }
 
+@media (max-width: 1100px) {
+  .admin-hotel-requests {
+    &__stats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    &__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}
+
 @media (max-width: 700px) {
   .admin-hotel-requests {
+    &__head,
     &__toolbar {
       flex-direction: column;
       align-items: stretch;
@@ -405,13 +530,14 @@ onMounted(loadRequests);
       max-width: 100%;
     }
 
-    &__card-head {
-      flex-direction: column;
-    }
-
+    &__stats,
     &__grid,
     &__actions {
       grid-template-columns: 1fr;
+    }
+
+    &__card-head {
+      flex-direction: column;
     }
   }
 }
