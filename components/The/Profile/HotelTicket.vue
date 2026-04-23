@@ -4,12 +4,7 @@
       <div class="ticket__content">
         <p class="ticket__number">Бронь №{{ bookingNumber }}</p>
 
-        <div class="ticket__title-row">
-          <h2 class="ticket__title">{{ hotelName }}</h2>
-          <div v-if="hotelStars.length" class="ticket__stars">
-            <span v-for="star in hotelStars" :key="star" class="ticket__star">★</span>
-          </div>
-        </div>
+        <h2 class="ticket__title">{{ hotelName }}</h2>
 
         <div class="ticket__meta">
           <div class="ticket__meta-item">
@@ -18,7 +13,7 @@
           </div>
 
           <div class="ticket__meta-item ticket__meta-item--total">
-            <p class="ticket__label">Итого</p>
+            <p class="ticket__label">Стоимость</p>
             <p class="ticket__price">{{ totalLabel }}</p>
           </div>
         </div>
@@ -70,20 +65,17 @@ const hotelName = computed(() => {
   return normalizeString(props.booking?.hotel?.name) || "Отель FlyAway";
 });
 
-const hotelStars = computed(() => {
-  const rating = Math.max(0, Math.floor(Number(props.booking?.hotel?.rating) || 0));
-  return Array.from({ length: rating }, (_, index) => index + 1);
-});
-
 const bookingPeriod = computed(() => {
-  const checkIn = formatDateLabel(props.booking?.checkIn);
-  const checkOut = formatDateLabel(props.booking?.checkOut);
+  const checkInRaw = normalizeString(props.booking?.checkIn);
+  const checkOutRaw = normalizeString(props.booking?.checkOut);
+  const checkIn = formatDateLabel(checkInRaw);
+  const checkOut = formatDateLabel(checkOutRaw);
 
-  if (!normalizeString(props.booking?.checkIn) && !normalizeString(props.booking?.checkOut)) {
+  if (!checkInRaw && !checkOutRaw) {
     return "Дата уточняется";
   }
 
-  if (!normalizeString(props.booking?.checkOut)) {
+  if (!checkOutRaw) {
     return checkIn;
   }
 
@@ -91,7 +83,13 @@ const bookingPeriod = computed(() => {
 });
 
 const totalLabel = computed(() => {
-  return `${Number(props.booking?.total || 24800).toLocaleString("ru-RU")} ₸`;
+  const total = Number(props.booking?.total);
+
+  if (Number.isFinite(total) && total > 0) {
+    return `${total.toLocaleString("ru-RU")} ₸`;
+  }
+
+  return "Уточняется";
 });
 
 const bookingNumber = computed(() => {
@@ -167,30 +165,12 @@ const ticketClassName = computed(() => {
     font-weight: 500;
   }
 
-  &__title-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-  }
-
   &__title {
     color: $surface-900;
     font-size: 20px;
     line-height: 1.2;
     font-weight: 700;
     margin: 0;
-  }
-
-  &__stars {
-    display: inline-flex;
-    gap: 3px;
-  }
-
-  &__star {
-    color: #f4c531;
-    font-size: 18px;
-    line-height: 1;
   }
 
   &__meta {
