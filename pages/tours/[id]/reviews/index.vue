@@ -1,16 +1,29 @@
 <template>
   <section class="tour-reviews-page">
     <div class="tour-reviews-page__wrapper">
-      <UiGoBack label="Назад к туру" :go-back="`/tours/${route.params.id}`" />
+      <UiGoBack
+        :label="tourTitle"
+        :go-back="`/tours/${route.params.id}`"
+      />
 
       <div class="tour-reviews-page__header">
         <div>
-          <h1 class="tour-reviews-page__title title">Отзывы о туре</h1>
-          <p class="tour-reviews-page__text">
-            Поделитесь впечатлениями после поездки и помогите другим выбрать
-            тур.
-          </p>
+          <h1 class="tour-reviews-page__title title">
+            Все отзывы путешественников
+          </h1>
+          <div class="tour-reviews-page__stats">
+            <p class="tour-reviews-page__stats-text">{{ reviewsCountLabel }}</p>
+            <UiIcons icon="star" color="yellow-500" size="size-14"></UiIcons>
+            <p class="tour-reviews-page__stats-text">{{ ratingLabel }}</p>
+          </div>
         </div>
+
+        <UiButton
+          v-if="authStore.isLoggedIn && canReview && !hasReview"
+          class="tour-reviews-page__toggle-review"
+          :label="isReviewFormVisible ? 'Скрыть форму' : 'Оставить отзыв'"
+          @click="isReviewFormVisible = !isReviewFormVisible"
+        />
       </div>
 
       <div v-if="successMessage" class="tour-reviews-page__message">
@@ -19,9 +32,12 @@
       <div v-if="submitErrorMessage" class="tour-reviews-page__error">
         {{ submitErrorMessage }}
       </div>
+      <div v-if="accessErrorMessage" class="tour-reviews-page__error">
+        {{ accessErrorMessage }}
+      </div>
 
       <form
-        v-if="authStore.isLoggedIn && canReview && !isCheckingAccess"
+        v-if="authStore.isLoggedIn && canReview && !hasReview && isReviewFormVisible"
         class="tour-reviews-page__form"
         @submit.prevent="submitReview"
       >
@@ -87,10 +103,6 @@
         Чтобы оставить отзыв, войдите в аккаунт.
       </div>
 
-      <div v-if="accessErrorMessage" class="tour-reviews-page__error">
-        {{ accessErrorMessage }}
-      </div>
-
       <div class="tour-reviews-page__list">
         <div v-if="isLoading" class="tour-reviews-page__state">
           Загружаем отзывы...
@@ -102,7 +114,7 @@
 
         <template v-else>
           <TheCommonReview
-            v-for="review in normalizedReviews"
+            v-for="review in paginatedReviews"
             :key="getReviewKey(review)"
             :review="review"
             type="single"
@@ -117,6 +129,16 @@
           Пока отзывов нет.
         </div>
       </div>
+
+      <UiPagination
+        v-if="lastPage > 1"
+        class="tour-reviews-page__pagination"
+        :total-items="normalizedReviews.length"
+        :current-page="currentPage"
+        :last-page="lastPage"
+        :per-page="perPage"
+        @change-page="changePage"
+      ></UiPagination>
     </div>
   </section>
 </template>
@@ -127,15 +149,19 @@ const api = useApi();
 const authStore = useAuthStore();
 
 const reviews = ref([]);
+const tour = ref(null);
 const canReview = ref(false);
 const hasReview = ref(false);
 const isLoading = ref(false);
 const isCheckingAccess = ref(false);
 const isSubmitting = ref(false);
+const isReviewFormVisible = ref(false);
 const successMessage = ref("");
 const reviewsErrorMessage = ref("");
 const submitErrorMessage = ref("");
 const accessErrorMessage = ref("");
+const currentPage = ref(1);
+const perPage = 5;
 
 const form = reactive({
   rating: 5,
@@ -146,12 +172,58 @@ const normalizedReviews = computed(() => {
   return Array.isArray(reviews.value) ? reviews.value.filter(Boolean) : [];
 });
 
+const lastPage = computed(() => {
+  return Math.max(1, Math.ceil(normalizedReviews.value.length / perPage));
+});
+
+const paginatedReviews = computed(() => {
+  const startIndex = (currentPage.value - 1) * perPage;
+  return normalizedReviews.value.slice(startIndex, startIndex + perPage);
+});
+
+const tourTitle = computed(() => {
+  return tour.value?.title || "Назад к туру";
+});
+
+const reviewsCountLabel = computed(() => {
+  const count = Number(tour.value?.reviewsCount) || normalizedReviews.value.length || 0;
+  return `${count} отзывов`;
+});
+
+const ratingLabel = computed(() => {
+  const rating = Number(tour.value?.rating) || 0;
+  return rating ? rating.toFixed(1).replace('.', ',') : '0,0';
+});
+
 useSeoMeta({
   title: "FlyAway - Отзывы о туре",
   ogTitle: "FlyAway - Отзывы о туре",
   description: "Отзывы путешественников о туре FlyAway",
   ogDescription: "Отзывы путешественников о туре FlyAway",
 });
+
+const syncPageBounds = () => {
+  if (currentPage.value > lastPage.value) {
+    currentPage.value = lastPage.value;
+  }
+
+  if (currentPage.value < 1) {
+    currentPage.value = 1;
+  }
+};
+
+const loadTour = async () => {
+  try {
+    const response = await api.client({
+      url: `/tours/${route.params.id}`,
+      method: "get",
+    });
+
+    tour.value = response?.data || null;
+  } catch {
+    tour.value = null;
+  }
+};
 
 const loadReviews = async () => {
   isLoading.value = true;
@@ -165,6 +237,7 @@ const loadReviews = async () => {
     });
 
     reviews.value = Array.isArray(response?.data) ? response.data : [];
+    currentPage.value = 1;
   } catch (error) {
     reviews.value = [];
     reviewsErrorMessage.value =
@@ -180,6 +253,7 @@ const loadCanReview = async () => {
   if (!authStore.isLoggedIn) {
     canReview.value = false;
     hasReview.value = false;
+    isReviewFormVisible.value = false;
     return;
   }
 
@@ -193,6 +267,7 @@ const loadCanReview = async () => {
 
     canReview.value = Boolean(response?.data?.canReview);
     hasReview.value = Boolean(response?.data?.hasReview);
+    isReviewFormVisible.value = false;
   } catch {
     canReview.value = false;
     hasReview.value = false;
@@ -232,15 +307,24 @@ const submitReview = async () => {
 
     if (response?.data) {
       reviews.value = [response.data, ...normalizedReviews.value];
+      if (tour.value) {
+        tour.value = {
+          ...tour.value,
+          reviewsCount: Number(tour.value.reviewsCount || 0) + 1,
+          rating: response.data?.tour?.rating || tour.value.rating,
+        };
+      }
     } else {
-      await loadReviews();
+      await Promise.all([loadReviews(), loadTour()]);
     }
 
     canReview.value = false;
     hasReview.value = true;
+    isReviewFormVisible.value = false;
     form.rating = 5;
     form.comment = "";
     successMessage.value = "Спасибо, ваш отзыв опубликован.";
+    currentPage.value = 1;
   } catch (error) {
     submitErrorMessage.value =
       error?.message || "Не удалось отправить отзыв.";
@@ -253,8 +337,12 @@ const getReviewKey = (review) => {
   return review?._id || `${review?.createdAt || ""}-${review?.comment || ""}`;
 };
 
+const changePage = (page) => {
+  currentPage.value = Math.min(Math.max(1, Number(page) || 1), lastPage.value);
+};
+
 onMounted(async () => {
-  await Promise.all([loadReviews(), loadCanReview()]);
+  await Promise.all([loadTour(), loadReviews(), loadCanReview()]);
 });
 
 watch(
@@ -263,6 +351,8 @@ watch(
     await loadCanReview();
   },
 );
+
+watch(normalizedReviews, syncPageBounds);
 </script>
 
 <style scoped lang="scss">
@@ -281,10 +371,16 @@ watch(
     align-items: flex-start;
   }
 
-  &__text {
-    color: $surface-500;
-    line-height: 1.5;
+  &__stats {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     margin-top: 8px;
+  }
+
+  &__stats-text {
+    color: $surface-500;
+    font-size: 14px;
   }
 
   &__form,
@@ -337,7 +433,8 @@ watch(
     background: rgba($surface-300, 0.12);
   }
 
-  &__submit {
+  &__submit,
+  &__toggle-review {
     width: fit-content;
   }
 
@@ -353,6 +450,10 @@ watch(
 
   &__error {
     color: $orange-200;
+  }
+
+  &__pagination {
+    margin: 0 auto;
   }
 }
 
@@ -383,7 +484,8 @@ watch(
       height: 40px;
     }
 
-    &__submit {
+    &__submit,
+    &__toggle-review {
       width: 100%;
       justify-content: center;
     }
