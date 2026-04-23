@@ -1,20 +1,17 @@
 <template>
-  <section
+  <NuxtLink
+    :to="detailsLink"
     class="ticket"
-    :class="{ 'ticket--nonactive': bookingStatus !== 'active' }"
+    :class="{
+      'ticket--completed': bookingStatus === 'completed',
+      'ticket--cancelled': bookingStatus === 'cancelled',
+    }"
   >
     <div class="ticket__wrapper">
       <div class="ticket__content">
-        <div class="ticket__head">
-          <p class="ticket__number">Билет №{{ ticketNumber }}</p>
-          <p v-if="bookingStatus !== 'active'" class="ticket__status">
-            {{ statusLabel }}
-          </p>
-        </div>
+        <p class="ticket__number">Билет №{{ ticketNumber }}</p>
 
-        <NuxtLink :to="detailsLink" class="ticket__title-link">
-          <h2 class="ticket__title">{{ bookingTitle }}</h2>
-        </NuxtLink>
+        <h2 class="ticket__title">{{ bookingTitle }}</h2>
 
         <div class="ticket__meta">
           <div class="ticket__meta-item">
@@ -22,56 +19,16 @@
             <p class="ticket__value">{{ bookingDate }}</p>
           </div>
 
-          <div class="ticket__info-box">
-            <p class="ticket__label">Гостей</p>
-            <p class="ticket__value">{{ guestsLabel }}</p>
+          <div class="ticket__meta-item ticket__meta-item--total">
+            <p class="ticket__label">Итого</p>
+            <p class="ticket__price">{{ bookingTotal }}</p>
           </div>
-
-          <div class="ticket__info-box">
-            <p class="ticket__label">Оплата</p>
-            <p class="ticket__value">{{ paymentMethodLabel }}</p>
-          </div>
-
-          <div class="ticket__info-box ticket__info-box--mobile-total">
-            <p class="ticket__label">Сумма</p>
-            <p class="ticket__price ticket__price--mobile">
-              {{ bookingTotal }}
-            </p>
-          </div>
-        </div>
-
-        <div v-if="ticketSummary.length" class="ticket__summary">
-          <p class="ticket__summary-text">{{ ticketSummary }}</p>
-        </div>
-
-        <div class="ticket__actions">
-          <NuxtLink class="ticket__open-link" :to="detailsLink">
-            Открыть билет
-          </NuxtLink>
-
-          <button
-            v-if="bookingStatus === 'active'"
-            class="ticket__cancel"
-            type="button"
-            :disabled="isCancelling"
-            @click="handleCancelClick"
-          >
-            {{ isCancelling ? "Отменяем..." : "Отменить бронь" }}
-          </button>
-
-          <NuxtLink
-            v-else-if="bookingStatus === 'completed'"
-            class="ticket__review-link"
-            :to="reviewLink"
-          >
-            Оставить отзыв
-          </NuxtLink>
         </div>
       </div>
 
       <div class="ticket__accent"></div>
     </div>
-  </section>
+  </NuxtLink>
 </template>
 
 <script setup>
@@ -85,8 +42,6 @@ const props = defineProps({
     default: false,
   },
 });
-
-const emit = defineEmits(["cancel"]);
 
 const normalizeString = (value) => String(value || "").trim();
 
@@ -155,114 +110,61 @@ const detailsLink = computed(() => {
     ? `/profile/my-tours/${props.booking._id}`
     : "/profile/my-tours";
 });
-
-const reviewLink = computed(() => {
-  const id = props.booking?.tour?._id;
-  return id ? `/tours/${id}` : "/profile/my-tours";
-});
-
-const guestsLabel = computed(
-  () => `${Number(props.booking?.guests || 0) || 1}`,
-);
-
-const paymentMethodLabel = computed(() => {
-  const value = normalizeString(props.booking?.paymentMethod);
-
-  if (value === "bonus") return "Бонусами";
-  if (value === "installment") return "Рассрочка";
-  return "Банковская карта";
-});
-
-const ticketSummary = computed(() => {
-  const selections = Array.isArray(props.booking?.ticketSelections)
-    ? props.booking.ticketSelections
-    : [];
-
-  return selections
-    .filter((item) => Number(item?.quantity) > 0)
-    .map((item) => `${item.title || "Билет"} × ${Number(item.quantity) || 0}`)
-    .join(", ");
-});
-
-const handleCancelClick = () => {
-  if (!props.booking?._id || props.isCancelling) {
-    return;
-  }
-
-  emit("cancel", props.booking._id);
-};
 </script>
 
 <style lang="scss" scoped>
 .ticket {
   width: 100%;
+  display: block;
   border-radius: 24px;
-  background: #f3f3f3;
-  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.06);
+  background: $white;
+  box-shadow: 0px 6px 24px rgba(0, 0, 0, 0.08);
   overflow: hidden;
 
   &--completed {
-    .ticket__accent {
-      background: $blue-500;
-    }
-  }
-
-  &--cancelled {
     .ticket__accent {
       background: $surface-400;
     }
   }
 
+  &--cancelled {
+    .ticket__accent {
+      background: $surface-300;
+    }
+  }
+
   &__wrapper {
     display: flex;
-    min-height: 156px;
+    min-height: 122px;
   }
 
   &__content {
     flex: 1;
-    padding: 28px 34px;
+    padding: 22px 26px;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 10px;
     min-width: 0;
   }
 
   &__accent {
-    width: 52px;
-    flex: 0 0 52px;
-    background: $blue-500;
+    width: 34px;
+    flex: 0 0 34px;
+    background: $red-500;
     border-top-right-radius: 24px;
     border-bottom-right-radius: 24px;
-  }
-
-  &__head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
   }
 
   &__number {
     color: $surface-900;
     font-size: 14px;
-    font-weight: 600;
-  }
-
-  &__status {
-    color: $surface-500;
-    font-size: 13px;
-    font-weight: 600;
-  }
-
-  &__title-link {
-    display: block;
-    width: fit-content;
+    font-weight: 500;
   }
 
   &__title {
     color: $surface-900;
-    font-size: 28px;
-    line-height: 1.15;
+    font-size: 20px;
+    line-height: 1.2;
     font-weight: 700;
     margin: 0;
   }
@@ -277,11 +179,11 @@ const handleCancelClick = () => {
   &__meta-item {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
 
     &--total {
+      min-width: 160px;
       align-items: flex-start;
-      min-width: 180px;
     }
   }
 
@@ -296,67 +198,11 @@ const handleCancelClick = () => {
     font-weight: 600;
   }
 
-  &__hint {
-    color: $surface-500;
-    font-size: 12px;
-    line-height: 1.35;
-  }
-
   &__price {
-    color: $blue-500;
-    font-size: 32px;
+    color: $red-500;
+    font-size: 18px;
     font-weight: 800;
     line-height: 1;
-  }
-
-  &__summary {
-    margin-top: -2px;
-  }
-
-  &__summary-text {
-    color: $surface-500;
-    font-size: 14px;
-    line-height: 1.45;
-  }
-
-  &__actions {
-    margin-top: 16px;
-  }
-
-  &__open-link,
-  &__review-link,
-  &__cancel {
-    min-height: 40px;
-    padding: 0 14px;
-    border-radius: 10px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    font-weight: 700;
-  }
-
-  &__open-link {
-    color: $blue-500;
-    background: rgba($blue-500, 0.08);
-    border: 1px solid rgba($blue-500, 0.18);
-  }
-
-  &__review-link {
-    color: $blue-500;
-    background: rgba($blue-500, 0.08);
-    border: 1px solid rgba($blue-500, 0.18);
-  }
-
-  &__cancel {
-    color: $orange-200;
-    background: rgba($orange-200, 0.08);
-    border: 1px solid rgba($orange-200, 0.2);
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
   }
 }
 
@@ -367,43 +213,24 @@ const handleCancelClick = () => {
     }
 
     &__content {
-      padding: 22px 20px;
-      gap: 12px;
+      padding: 18px 18px;
     }
 
     &__accent {
-      width: 22px;
-      flex-basis: 22px;
+      width: 18px;
+      flex-basis: 18px;
     }
 
     &__title {
-      font-size: 22px;
+      font-size: 18px;
     }
 
     &__meta {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 12px;
+      gap: 16px;
     }
 
-    &__meta-item {
-      &--total {
-        min-width: auto;
-      }
-    }
-
-    &__price {
-      font-size: 26px;
-    }
-
-    &__actions {
-      flex-direction: column;
-    }
-
-    &__open-link,
-    &__review-link,
-    &__cancel {
-      width: 100%;
+    &__meta-item--total {
+      min-width: auto;
     }
   }
 }
