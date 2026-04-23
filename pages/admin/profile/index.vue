@@ -1,5 +1,26 @@
 <template>
-  <section class="admin-profile">
+  <section class="admin-profile-page">
+    <div class="admin-profile-page__head">
+      <div>
+        <h2 class="admin-profile-page__title">Профиль</h2>
+        <p class="admin-profile-page__text">
+          Настройки аккаунта администратора или партнера, аватар, контакты и
+          корпоративные данные.
+        </p>
+      </div>
+    </div>
+
+    <div class="admin-profile-page__stats">
+      <article class="admin-profile-page__stat">
+        <p class="admin-profile-page__stat-value">{{ isPartnerSession ? 'Partner' : 'Admin' }}</p>
+        <p class="admin-profile-page__stat-label">Тип сессии</p>
+      </article>
+      <article class="admin-profile-page__stat">
+        <p class="admin-profile-page__stat-value">{{ isPartnerSession ? partnerForm.title || '—' : userForm.name || '—' }}</p>
+        <p class="admin-profile-page__stat-label">Активный профиль</p>
+      </article>
+    </div>
+
     <form
       v-if="!isPartnerSession"
       class="admin-profile__card"
@@ -338,6 +359,55 @@ onMounted(async () => {
 </script>
 
 <style lang="scss" scoped>
+.admin-profile-page {
+  display: grid;
+  gap: 18px;
+
+  &__title {
+    color: $surface-900;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.05;
+  }
+
+  &__text {
+    margin-top: 6px;
+    max-width: 760px;
+    color: $surface-500;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  &__stat {
+    padding: 18px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba($red-500, 0.08);
+    box-shadow: 0 10px 26px rgba(32, 36, 38, 0.04);
+  }
+
+  &__stat-value {
+    color: $red-500;
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.1;
+    word-break: break-word;
+  }
+
+  &__stat-label {
+    margin-top: 10px;
+    color: $surface-500;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+}
+
 .admin-profile {
   display: grid;
   gap: 16px;
@@ -345,6 +415,11 @@ onMounted(async () => {
   &__card {
     display: grid;
     gap: 18px;
+    padding: 22px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid rgba($red-500, 0.1);
+    box-shadow: 0 18px 42px rgba(32, 36, 38, 0.06);
   }
 
   &__identity {
@@ -387,7 +462,7 @@ onMounted(async () => {
     display: inline-flex;
     align-items: center;
     padding: 0 14px;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 13px;
     font-weight: 700;
 
@@ -424,7 +499,7 @@ onMounted(async () => {
     padding: 0 18px;
     color: $white;
     background: $red-500;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 14px;
     font-weight: 700;
   }
@@ -443,6 +518,12 @@ onMounted(async () => {
 }
 
 @media (max-width: 700px) {
+  .admin-profile-page {
+    &__stats {
+      grid-template-columns: 1fr;
+    }
+  }
+
   .admin-profile {
     &__identity,
     &__grid,
