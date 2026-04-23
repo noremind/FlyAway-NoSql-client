@@ -12,11 +12,11 @@
         :color="checkStatus"
       ></UiIcons>
 
-      <h4 class="status__title">{{ title }}</h4>
+      <h4 class="status__title">{{ displayTitle }}</h4>
 
       <nuxt-link @click="clickAction" class="status__link">
         <UiButton
-          :label="btnLabel"
+          :label="displayButtonLabel"
           class="status__btn button-primary"
         ></UiButton>
       </nuxt-link>
@@ -50,6 +50,25 @@ const checkStatus = computed(() => {
       return "";
   }
 });
+
+const displayTitle = computed(() => {
+  if (props.status === "success" && props.title === "Бронирование оформлено") {
+    return "Ваш заказ оплачен";
+  }
+
+  return props.title;
+});
+
+const displayButtonLabel = computed(() => {
+  if (
+    props.status === "success" &&
+    props.btnLabel === "Перейти в Мои туры"
+  ) {
+    return "Перейти в мои туры";
+  }
+
+  return props.btnLabel;
+});
 </script>
 
 <style lang="scss" scoped>
@@ -58,15 +77,16 @@ const checkStatus = computed(() => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 32px;
-    margin: 40px auto 60px auto;
-    max-width: 400px;
+    gap: 28px;
+    margin: 32px auto 40px auto;
+    max-width: 460px;
   }
   &__title {
     color: $red-500;
-    font-size: 32px;
-    font-weight: 400;
+    font-size: 28px;
+    font-weight: 700;
     text-align: center;
+    line-height: 1.2;
   }
   &__btn {
     width: 100%;
@@ -75,7 +95,7 @@ const checkStatus = computed(() => {
     width: 100%;
   }
   &__logo {
-    width: 64px;
+    width: 120px;
   }
 }
 </style>
