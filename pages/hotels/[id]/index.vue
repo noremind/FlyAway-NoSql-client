@@ -17,7 +17,18 @@
             <div class="details__header">
               <h1 class="details__title title">{{ hotel.name }}</h1>
               <div class="details__icons">
-                <UiIcons icon="heart" size="size-24" color="red-500"></UiIcons>
+                <button
+                  type="button"
+                  class="details__favorite-btn"
+                  aria-label="Добавить в избранное"
+                  @click="toggleFavouriteHotel"
+                >
+                  <UiIcons
+                    :icon="isFavouriteHotel ? 'heart-fill' : 'heart'"
+                    size="size-24"
+                    :color="isFavouriteHotel ? 'red-500' : 'surface-900'"
+                  ></UiIcons>
+                </button>
               </div>
             </div>
 
@@ -269,6 +280,7 @@ const route = useRoute();
 const requestCard = ref(null);
 const selectedRoom = ref(null);
 const isSubmittingRequest = ref(false);
+const isFavouriteHotel = ref(false);
 const requestStatus = ref("");
 const statusMessage = ref("");
 const fieldErrors = reactive({
@@ -346,6 +358,55 @@ const hydrateRequestFormFromUser = () => {
   requestForm.name ||= user.name || user.fullName || "";
   requestForm.phone ||= user.phone || "";
   requestForm.email ||= user.email || "";
+};
+
+const syncFavouriteHotelState = async () => {
+  if (!authStore.isLoggedIn || !hotel.value?._id) {
+    isFavouriteHotel.value = false;
+    return;
+  }
+
+  try {
+    const response = await api.client({
+      url: "/personal-cabinet/favourites/hotels",
+      method: "get",
+    });
+
+    const items = Array.isArray(response?.data)
+      ? response.data
+      : Array.isArray(response)
+        ? response
+        : [];
+
+    isFavouriteHotel.value = items.some(
+      (item) => String(item?._id || item?.id || "") === String(hotel.value?._id),
+    );
+  } catch {
+    isFavouriteHotel.value = false;
+  }
+};
+
+const toggleFavouriteHotel = async () => {
+  if (!authStore.isLoggedIn) {
+    authStore.openAuthModalLogin();
+    return;
+  }
+
+  if (!hotel.value?._id) {
+    return;
+  }
+
+  try {
+    const response = await api.client({
+      url: `/personal-cabinet/favourites/hotels/${hotel.value._id}/toggle`,
+      method: "post",
+    });
+
+    isFavouriteHotel.value = Boolean(response?.data?.isFavourite);
+  } catch {
+    statusMessage.value = "Не удалось обновить избранное.";
+    requestStatus.value = "error";
+  }
 };
 
 const validateRequestForm = () => {
@@ -462,11 +523,15 @@ const selectRoom = async (room) => {
 useFetchSsr({
   url: `/hotels/${route.params.id}`,
   method: "get",
-}).then((res) => {
+}).then(async (res) => {
   hotel.value = res.data;
+  await syncFavouriteHotelState();
 });
 
-hydrateRequestFormFromUser();
+onMounted(async () => {
+  hydrateRequestFormFromUser();
+  await syncFavouriteHotelState();
+});
 
 const closePreviewPicture = () => {
   isOpenPreviewPicture.value = false;
@@ -622,6 +687,14 @@ const openPreviewPicture = (image) => {
     display: flex;
     gap: 12px;
     align-items: center;
+  }
+  &__favorite-btn {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
   }
   &__imgs {
     display: flex;
