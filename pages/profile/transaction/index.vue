@@ -1,124 +1,94 @@
 <template>
   <section class="transaction">
     <div class="transaction__wrapper">
-      <div class="transaction__banner">
+      <section class="transaction__banner">
         <img
           class="transaction__banner-img"
           src="@/assets/image/content/carving.png"
           alt="Banner"
         />
-        <div class="transaction__box">
-          <h2 class="transaction__title">Мои бонусы</h2>
-          <p class="transaction__price">
-            {{ Number(wallet.bonusBalance || 0).toLocaleString("ru-RU") }} Б
-          </p>
-        </div>
-        <!-- <div class="transaction__inner">
-          <div class="transaction__inner-box">
-            <UiIcons icon="copy" size="size-24" color="white"></UiIcons>
-            <p class="transaction__inner-text">
-              Скопировать реферальную ссылку
+
+        <div class="transaction__banner-content">
+          <div class="transaction__banner-top">
+            <h2 class="transaction__title">Кошелек и бонусы</h2>
+            <p class="transaction__subtitle">
+              История начислений и списаний по вашему аккаунту FlyAway.
             </p>
           </div>
-          <p class="transaction__id">ID: 5028736416</p>
-          <p
-            class="transaction__question transaction__question--mobile"
-            @click="openOverlay"
-          >
-            Как получить бонусы?
-          </p>
-        </div> -->
+
+          <div class="transaction__totals">
+            <div class="transaction__total-card">
+              <p class="transaction__total-label">Бонусы</p>
+              <p class="transaction__total-value">
+                {{ Number(wallet.bonusBalance || 0).toLocaleString("ru-RU") }} Б
+              </p>
+            </div>
+
+            <div class="transaction__total-card transaction__total-card--light">
+              <p class="transaction__total-label">Транзакций</p>
+              <p class="transaction__total-value transaction__total-value--small">
+                {{ transactions.length }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div v-if="isLoading" class="transaction__state">
+        Загружаем операции...
       </div>
 
-      <!-- <p class="transaction__question" @click="openBonusModal">
-        Как получить бонусы?
-      </p> -->
+      <div
+        v-else-if="errorMessage"
+        class="transaction__state transaction__state--error"
+      >
+        {{ errorMessage }}
+      </div>
 
-      <!-- <div class="transaction__table">
-        <table class="transaction__table">
-          <thead>
-            <tr>
-              <th class="transaction__header">Название</th>
-              <th class="transaction__header">Тип</th>
-              <th class="transaction__header">Дата</th>
-              <th class="transaction__header">Сумма</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="(item, index) in transactions"
-              :key="index"
-              class="transaction__row"
-            >
-              <td class="transaction__cell">{{ item.name }}</td>
-              <td class="transaction__cell transaction__cell--type">
-                <span class="transaction__type-badge">{{ item.type }}</span>
-              </td>
-              <td class="transaction__cell">{{ item.date }}</td>
-              <td class="transaction__cell transaction__cell--amount">
-                <span
-                  class="transaction__amount"
-                  :class="{
-                    'transaction__amount--positive': item.amount > 0,
-                    'transaction__amount--negative': item.amount < 0,
-                    'transaction__amount--refund': item.refund,
-                  }"
-                >
-                  {{ formatAmount(item.amount) }}
-                </span>
-                <div v-if="item.refund" class="transaction__refund-text">
-                  Возврат средств
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div> -->
+      <div v-else class="transaction__body">
+        <div v-if="transactions.length" class="transaction__blocks">
+          <section
+            class="transaction__block"
+            v-for="(item, index) in transactions"
+            :key="`${item.name}-${item.createdAt || index}`"
+          >
+            <div class="transaction__block-left">
+              <h3 class="transaction__block-title">{{ item.name }}</h3>
+              <div class="transaction__block-meta">
+                <p class="transaction__block-badge">{{ item.type }}</p>
+                <p class="transaction__block-note" v-if="item.note">
+                  {{ item.note }}
+                </p>
+              </div>
+            </div>
 
-      <div class="transaction__blocks">
-        <section
-          class="transaction__block"
-          v-for="(item, index) in transactions"
-          :key="`${item.name}-${index}`"
-        >
-          <div class="transaction__block-box">
-            <h3 class="transaction__block-title">{{ item.name }}</h3>
-            <p class="transaction__block-baige">{{ item.type }}</p>
-          </div>
-          <div class="transaction__block-box">
-            <p class="transaction__block-price">
-              {{ formatAmount(item.amount) }}
-            </p>
-            <p class="transaction__block-date">{{ item.date }}</p>
-          </div>
-        </section>
+            <div class="transaction__block-right">
+              <p
+                class="transaction__block-amount"
+                :class="{
+                  'transaction__block-amount--positive': item.amount > 0,
+                  'transaction__block-amount--negative': item.amount < 0,
+                }"
+              >
+                {{ formatAmount(item.amount, item.currency) }}
+              </p>
+              <p class="transaction__block-date">{{ item.date }}</p>
+            </div>
+          </section>
+        </div>
+
+        <div v-else class="transaction__empty">
+          Пока в кошельке нет операций.
+        </div>
       </div>
     </div>
   </section>
-
-  <UiModal
-    max-width="830px"
-    :is-show="isOpenBonusModal"
-    @close="closeBonusModal"
-  >
-    <ModalsHowGetBonus></ModalsHowGetBonus>
-  </UiModal>
-
-  <UiOverlay
-    :is-show="isOpenOverlay"
-    :show-header-icons="false"
-    title="Как получить бонусы?"
-    @close="closeOverlay"
-    :have-footer="true"
-  >
-    <ModalsHowGetBonus></ModalsHowGetBonus>
-  </UiOverlay>
 </template>
 
 <script setup>
-const isOpenBonusModal = ref(false);
-const isOpenOverlay = ref(false);
 const api = useApi();
+const isLoading = ref(false);
+const errorMessage = ref("");
 const wallet = ref({
   balance: 0,
   bonusBalance: 0,
@@ -127,46 +97,39 @@ const wallet = ref({
 });
 
 useSeoMeta({
-  title: "FlyAway - Мой транзакции",
-  ogTitle: "FlyAway - Мой транзакции",
+  title: "FlyAway - Кошелек и бонусы",
+  ogTitle: "FlyAway - Кошелек и бонусы",
   description: "FlyAway - сайт для бронирования туров и отелей",
   ogDescription: "FlyAway - сайт для бронирования туров и отелей",
 });
 
-const getWallet = () => {
-  api
-    .client({
+const loadWallet = async () => {
+  isLoading.value = true;
+  errorMessage.value = "";
+
+  try {
+    const res = await api.client({
       url: "/personal-cabinet/wallet",
       method: "get",
-    })
-    .then((res) => {
-      wallet.value = res.data;
-    })
-    .catch(() => {
-      wallet.value = {
-        balance: 0,
-        bonusBalance: 0,
-        currency: "KZT",
-        transactions: [],
-      };
     });
-};
-getWallet();
 
-const openOverlay = () => {
-  isOpenOverlay.value = true;
-};
-
-const closeOverlay = () => {
-  isOpenOverlay.value = false;
-};
-
-const closeBonusModal = () => {
-  isOpenBonusModal.value = false;
-};
-
-const openBonusModal = () => {
-  isOpenBonusModal.value = true;
+    wallet.value = res.data || {
+      balance: 0,
+      bonusBalance: 0,
+      currency: "KZT",
+      transactions: [],
+    };
+  } catch (error) {
+    errorMessage.value = error?.message || "Не удалось загрузить операции.";
+    wallet.value = {
+      balance: 0,
+      bonusBalance: 0,
+      currency: "KZT",
+      transactions: [],
+    };
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const transactions = computed(() => {
@@ -174,7 +137,10 @@ const transactions = computed(() => {
     Array.isArray(wallet.value?.transactions) ? wallet.value.transactions : []
   ).map((item) => ({
     name: item?.name || "Транзакция",
-    type: item?.type || "операция",
+    type: item?.type || "Операция",
+    note: item?.note || "",
+    currency: item?.currency || "KZT",
+    createdAt: item?.createdAt || null,
     date: item?.createdAt
       ? new Intl.DateTimeFormat("ru-RU", {
           day: "2-digit",
@@ -183,208 +149,255 @@ const transactions = computed(() => {
         }).format(new Date(item.createdAt))
       : "-",
     amount: Number(item?.amount) || 0,
-    refund: false,
   }));
 });
 
-const formatAmount = (amount) => {
-  const absAmount = Math.abs(amount).toLocaleString();
-  const prefix = amount > 0 ? "+" : "-";
-  return `${prefix} ${absAmount} ₸`;
+const formatAmount = (amount, currency = "KZT") => {
+  const absAmount = Math.abs(Number(amount) || 0).toLocaleString("ru-RU");
+  const prefix = Number(amount) >= 0 ? "+" : "-";
+  const suffix = currency === "BONUS" ? "Б" : "₸";
+  return `${prefix} ${absAmount} ${suffix}`;
 };
+
+onMounted(loadWallet);
 </script>
 
 <style lang="scss" scoped>
 .transaction {
   &__wrapper {
     background-color: $white;
-    padding: 16px;
-    border-radius: 16px;
+    padding: 24px;
+    border-radius: 24px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 20px;
+    box-shadow: 0px 8px 28px rgba(0, 0, 0, 0.06);
+    min-height: 640px;
   }
+
   &__banner {
     width: 100%;
-    height: 160px;
+    min-height: 220px;
     background-color: $red-500;
-    border-radius: 16px;
-    padding: 16px;
-    display: flex;
-    justify-content: space-between;
+    border-radius: 24px;
+    padding: 24px;
     position: relative;
-    z-index: 1;
+    overflow: hidden;
+
     &-img {
       position: absolute;
-      max-width: 500px;
+      max-width: 520px;
       width: 100%;
-      z-index: 2;
-      opacity: 0.2;
-      left: 0;
-      top: -60px;
+      opacity: 0.14;
+      left: -20px;
+      top: -70px;
+      pointer-events: none;
     }
   }
-  &__title {
-    font-size: 400;
-    font-size: 24px;
-    color: $white;
-  }
-  &__box {
+
+  &__banner-content {
     position: relative;
-    z-index: 3;
+    z-index: 1;
     display: flex;
     flex-direction: column;
+    gap: 24px;
+    min-height: 172px;
     justify-content: space-between;
   }
-  &__price {
+
+  &__banner-top {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 520px;
+  }
+
+  &__title {
+    font-size: 28px;
+    line-height: 1.15;
     color: $white;
-    font-size: 40px;
     font-weight: 700;
   }
-  &__inner {
-    text-align: right;
-    &-box {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-    &-text {
-      color: $white;
-      font-size: 12px;
-      margin-bottom: 8px;
-    }
-  }
-  &__id {
+
+  &__subtitle {
+    color: rgba($white, 0.92);
     font-size: 14px;
+    line-height: 1.5;
+  }
+
+  &__totals {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  &__total-card {
+    min-width: 180px;
+    padding: 16px 18px;
+    border-radius: 18px;
+    background: rgba($white, 0.12);
+    backdrop-filter: blur(2px);
+
+    &--light {
+      background: rgba($white, 0.2);
+    }
+  }
+
+  &__total-label {
+    color: rgba($white, 0.85);
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+
+  &__total-value {
     color: $white;
-    font-weight: 600;
-  }
-  &__question {
-    font-weight: 400;
-    color: $red-500;
-  }
-  &__table {
-    width: 100%;
-    border-collapse: collapse;
-    font-family: Arial, sans-serif;
+    font-size: 34px;
+    line-height: 1;
+    font-weight: 800;
 
-    thead {
-      background-color: $blue-200;
-      border-top-left-radius: 16px;
-      border-top-right-radius: 16px;
-
-      .transaction__header {
-        text-align: left;
-        padding: 12px;
-        color: $red-500;
-        font-weight: 600;
-        border-bottom: 2px solid $red-500;
-      }
-    }
-
-    tbody {
-      .transaction__row {
-        border-bottom: 1px solid #eef4f8;
-
-        &:nth-child(even) {
-          background-color: $blue-200;
-        }
-
-        .transaction__cell {
-          padding: 16px 12px;
-          font-size: 14px;
-          height: 44px;
-          font-weight: 100;
-          color: $surface-900;
-
-          &--type {
-            .transaction__type-badge {
-              background-color: $blue-300;
-              color: $red-500;
-              padding: 6px 10px;
-              font-weight: 100;
-              border-radius: 16px;
-            }
-          }
-
-          &--amount {
-            font-weight: 700;
-
-            .transaction__amount {
-              font-weight: 700;
-              font-size: 16px;
-              &--positive {
-                color: $green-400;
-              }
-
-              &--negative {
-                color: $orange-200;
-              }
-
-              &--refund {
-                color: $surface-900;
-              }
-            }
-
-            .transaction__refund-text {
-              font-size: 12px;
-              color: $surface-900;
-              margin-top: 4px;
-              font-weight: 100;
-            }
-          }
-        }
-      }
+    &--small {
+      font-size: 28px;
     }
   }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  &__state,
+  &__empty {
+    padding: 36px 20px;
+    border-radius: 20px;
+    background: rgba($red-500, 0.04);
+    color: $surface-500;
+    text-align: center;
+  }
+
+  &__state {
+    &--error {
+      color: $orange-200;
+    }
+  }
+
   &__blocks {
     display: flex;
     flex-direction: column;
-    color: $surface-900;
-    background-color: $white;
-    border-radius: 16px;
-    box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.1);
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid rgba($surface-300, 0.35);
   }
+
   &__block {
     display: flex;
     justify-content: space-between;
-    border-bottom: 1px solid $surface-400;
-    padding: 18px 12px;
+    gap: 18px;
+    padding: 18px 18px;
+    border-bottom: 1px solid rgba($surface-300, 0.35);
+    background: $white;
+
+    &:nth-child(odd) {
+      background: rgba($red-500, 0.025);
+    }
 
     &:last-child {
-      border-bottom-right-radius: 16px;
-      border-bottom-left-radius: 16px;
-      border: none;
+      border-bottom: none;
     }
-    &:first-child {
-      border-top-right-radius: 16px;
-      border-top-left-radius: 16px;
-    }
-    &:nth-child(odd) {
-      background-color: $blue-200;
-    }
-    &-box:last-child {
-      text-align: right;
-    }
-    &-title {
-      font-size: 12px;
-      font-weight: 400;
-    }
-    &-baige {
-      font-size: 12px;
-      padding: 2px 6px;
-      border-radius: 36px;
-      background-color: $blue-300;
-      color: $red-500;
-      display: inline-block;
-    }
-    &-price {
-      font-size: 14px;
-      font-weight: 700;
+  }
+
+  &__block-left,
+  &__block-right {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__block-right {
+    align-items: flex-end;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  &__block-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: $surface-900;
+  }
+
+  &__block-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  &__block-badge {
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba($red-500, 0.08);
+    color: $red-500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__block-note,
+  &__block-date {
+    font-size: 13px;
+    color: $surface-500;
+    line-height: 1.45;
+  }
+
+  &__block-amount {
+    font-size: 16px;
+    font-weight: 800;
+    color: $surface-900;
+
+    &--positive {
       color: $green-400;
     }
-    &-date {
-      font-size: 10px;
+
+    &--negative {
+      color: $orange-200;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .transaction {
+    &__wrapper {
+      padding: 18px 16px 22px;
+      border-radius: 18px;
+      min-height: auto;
+    }
+
+    &__banner {
+      min-height: 200px;
+      border-radius: 18px;
+      padding: 18px;
+    }
+
+    &__title {
+      font-size: 24px;
+    }
+
+    &__total-value {
+      font-size: 28px;
+
+      &--small {
+        font-size: 24px;
+      }
+    }
+
+    &__block {
+      flex-direction: column;
+    }
+
+    &__block-right {
+      align-items: flex-start;
+      text-align: left;
     }
   }
 }
@@ -392,30 +405,23 @@ const formatAmount = (amount) => {
 @media (max-width: 375px) {
   .transaction {
     &__wrapper {
-      padding: 0;
       background-color: transparent;
+      box-shadow: none;
+      padding: 0;
+      gap: 14px;
     }
-    &__inner-box,
-    &__question,
-    &__table {
-      display: none;
-    }
+
     &__banner {
-      padding: 12px;
+      border-radius: 18px;
     }
-    &__question {
-      &--mobile {
-        position: absolute;
-        z-index: 2;
-        display: block;
-        color: $white;
-        font-size: 12px;
-        bottom: 20px;
-        white-space: nowrap;
-        right: 16px;
-        text-decoration: underline;
-        cursor: pointer;
-      }
+
+    &__totals {
+      flex-direction: column;
+    }
+
+    &__total-card {
+      width: 100%;
+      min-width: 0;
     }
   }
 }
