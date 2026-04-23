@@ -105,8 +105,8 @@
           </p>
 
           <p v-else class="payment__note">
-            После подтверждения бронь будет создана и сохранена в разделе «Мои
-            туры».
+            После подтверждения заказ будет оплачен и билет сохранится в разделе
+            «Мои туры».
           </p>
         </div>
       </div>
@@ -127,7 +127,7 @@ const emit = defineEmits(["payed", "update:paymentMethod"]);
 const props = defineProps({
   title: {
     type: String,
-    default: "Подтверждение бронирования",
+    default: "Платежи",
   },
   tourTitle: {
     type: String,
@@ -172,12 +172,12 @@ const paymentOptions = [
   {
     label: "Банковская карта",
     value: "card",
-    hint: "Оформим бронь со стандартным способом оплаты",
+    hint: "Оплатим заказ стандартным способом",
   },
   {
     label: "Оплата бонусами",
     value: "bonus",
-    hint: "Спишем доступный бонусный баланс при оформлении брони",
+    hint: "Спишем доступный бонусный баланс при оформлении заказа",
   },
 ];
 
@@ -193,8 +193,8 @@ const selectedPaymentMethod = computed(() =>
 
 const payLabel = computed(() =>
   selectedPaymentMethod.value === "bonus"
-    ? "Списать бонусы и забронировать"
-    : "Оформить бронь",
+    ? "Списать бонусы и оплатить"
+    : "Оплатить",
 );
 
 const formatMoney = (value) => Number(value || 0).toLocaleString("ru-RU");
