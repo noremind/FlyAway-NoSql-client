@@ -2,6 +2,7 @@ export async function useFetchSsr(options = {}) {
 	const authStore = useAuthStore()
 	const loaderStore = useLoaderStore()
 	const config = useRuntimeConfig();
+	const shouldShowLoader = import.meta.client && options?.loader !== false
 
 	const headers = {
 		Accept: "application/json",
@@ -10,7 +11,9 @@ export async function useFetchSsr(options = {}) {
 		...options?.headers,
 	};
 
-	loaderStore.setLoader(true)
+	if (shouldShowLoader) {
+		loaderStore.start()
+	}
 
 	try {
 		const response = await useFetch(options.url, {
@@ -24,19 +27,19 @@ export async function useFetchSsr(options = {}) {
 		const data = response.data?.value
 		const error = response?.error.value
 
-		loaderStore.setLoader(false)
-
-
 		if (error) { throw error }
 
 		return data;
 
 	} catch (error) {
-		loaderStore.setLoader(false)
 		console.log(error)
 		if (error?.statusCode === 401 || error?.data?.message === "Unauthenticated") {
 			authStore.logout({ type: 'local' })
 		}
 		throw error;
+	} finally {
+		if (shouldShowLoader) {
+			loaderStore.stop()
+		}
 	}
 };

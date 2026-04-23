@@ -1,24 +1,27 @@
 export const useLoaderStore = defineStore("loader", () => {
-	const pendingCount = ref(0)
-	const isLoader = computed(() => pendingCount.value > 0)
+	const isLoader = ref(false)
 
 	const setLoader = (value) => {
-		pendingCount.value = value ? pendingCount.value + 1 : Math.max(0, pendingCount.value - 1)
+		isLoader.value = Boolean(value)
 	};
 
 	const start = () => {
-		pendingCount.value += 1
+		isLoader.value = true
 	}
 
 	const stop = () => {
-		pendingCount.value = Math.max(0, pendingCount.value - 1)
+		isLoader.value = false
+	}
+
+	const reset = () => {
+		isLoader.value = false
 	}
 
 	return {
 		isLoader,
-		pendingCount,
 		setLoader,
 		start,
 		stop,
+		reset,
 	};
 });

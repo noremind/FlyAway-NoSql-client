@@ -8,17 +8,21 @@
 
       <div class="refund__checkboxs">
         <UiCheckbox
-          v-for="(item, index) in options"
-          :key="index"
-          :label="item.label"
+          v-model="selectedReason"
+          :options="options"
         ></UiCheckbox>
       </div>
 
-      <UiTextarea placeholder="Напишите причину возврата"></UiTextarea>
+      <UiTextarea
+        v-model="comment"
+        placeholder="Напишите причину возврата"
+      ></UiTextarea>
 
       <UiButton
         @click="clickButton"
         class="refund__btn button-primary"
+        :disabled="isDisabled"
+        :is-loading="isLoading"
         label="Оформить возврат"
       ></UiButton>
     </div>
@@ -27,17 +31,44 @@
 
 <script setup>
 const emit = defineEmits(["nextStep", "closeModal"]);
+
+const props = defineProps({
+  isLoading: {
+    type: Boolean,
+    default: false,
+  },
+  closeOnSubmit: {
+    type: Boolean,
+    default: true,
+  },
+});
+
 const options = [
-  { label: "по цене", value: "price" },
-  { label: "по популярности", value: "popularity" },
-  { label: "по популярности", value: "popularity" },
-  { label: "по отзывам", value: "popularity" },
-  { label: "Другое", value: "popularity" },
+  { label: "Изменились планы", value: "plans_changed" },
+  { label: "Не подходит дата или время", value: "date_or_time" },
+  { label: "Нашел другой тур", value: "another_tour" },
+  { label: "Ошибка при бронировании", value: "booking_error" },
+  { label: "Другое", value: "other" },
 ];
 
+const selectedReason = ref(options[0]);
+const comment = ref("");
+
+const isDisabled = computed(() => props.isLoading || !selectedReason.value);
+
 const clickButton = () => {
-  emit("closeModal");
-  emit("nextStep");
+  if (isDisabled.value) {
+    return;
+  }
+
+  emit("nextStep", {
+    reason: selectedReason.value,
+    comment: comment.value.trim(),
+  });
+
+  if (props.closeOnSubmit) {
+    emit("closeModal");
+  }
 };
 </script>
 

@@ -1,10 +1,7 @@
 <template>
   <section
     class="ticket"
-    :class="{
-      'ticket--completed': bookingStatus === 'completed',
-      'ticket--cancelled': bookingStatus === 'cancelled',
-    }"
+    :class="{ 'ticket--nonactive': bookingStatus !== 'active' }"
   >
     <div class="ticket__wrapper">
       <div class="ticket__content">
@@ -122,17 +119,6 @@ const bookingStatus = computed(() => {
     : "active";
 });
 
-const reviewLink = computed(() => {
-  const id = props.booking?.tour?._id;
-  return id ? `/tours/${id}/reviews` : "/profile/my-tours";
-});
-
-const statusLabel = computed(() => {
-  if (bookingStatus.value === "completed") return "Завершено";
-  if (bookingStatus.value === "cancelled") return "Отменено";
-  return "Активно";
-});
-
 const bookingTitle = computed(() => {
   return normalizeString(props.booking?.tour?.title) || "Тур FlyAway";
 });
@@ -165,6 +151,12 @@ const ticketNumber = computed(() => {
 });
 
 const detailsLink = computed(() => {
+  return props.booking?._id
+    ? `/profile/my-tours/${props.booking._id}`
+    : "/profile/my-tours";
+});
+
+const reviewLink = computed(() => {
   const id = props.booking?.tour?._id;
   return id ? `/tours/${id}` : "/profile/my-tours";
 });
