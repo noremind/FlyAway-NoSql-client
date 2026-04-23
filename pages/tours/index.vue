@@ -5,6 +5,7 @@
       v-show="selectedTabMobile.id === 3"
       ref="mapContainerMobile"
     ></div>
+
     <div class="tours__wrapper">
       <div class="tours__top">
         <UiInput
@@ -13,7 +14,9 @@
           after-icon="lupa"
           v-model="filters.search"
         ></UiInput>
-        <p class="tours__top-text" @click="openFilterMobile">Фильтр</p>
+        <button class="tours__top-text" type="button" @click="openFilterMobile">
+          Фильтр
+        </button>
       </div>
 
       <UiTabs
@@ -23,17 +26,21 @@
       ></UiTabs>
 
       <div
-        class="tours__header"
+        class="tours__hero"
         :class="{
-          'tours__header--visible': selectedTabMobile.id === 3,
+          'tours__hero--map-mobile': selectedTabMobile.id === 3,
         }"
       >
         <h1 class="tours__title title">Туры</h1>
-        <UiTabs class="tours__tabs" :tabs="tabs" v-model="selectedTab"></UiTabs>
+        <UiTabs
+          class="tours__tabs tours__tabs--desktop"
+          :tabs="tabs"
+          v-model="selectedTab"
+        ></UiTabs>
       </div>
 
       <div class="tours__content" v-show="selectedTabMobile.id !== 3">
-        <div class="tours__content-left">
+        <aside class="tours__sidebar">
           <section class="tours__filters">
             <div class="tours__filters-header">
               <UiIcons
@@ -53,7 +60,7 @@
                 v-model="filters.search"
               ></UiInput>
 
-              <div>
+              <div class="tours__filters-group">
                 <p class="tours__filters-text">Дата поездки</p>
                 <div class="tours__filters-dates">
                   <UiCalendar
@@ -96,37 +103,75 @@
                 </div>
               </div>
 
-              <!-- <div>
-                <p class="tours__filters-text">Продолжительность</p>
-                <UiInput
-                  placeholder="Например, 1 день"
-                  v-model="filters.duration"
-                ></UiInput>
-              </div> -->
+              <UiSelect
+                label="Продолжительность"
+                placeholder="Выберите длительность"
+                :options="durationOptions"
+                option-label="label"
+                option-value="value"
+                v-model="filters.duration"
+              ></UiSelect>
 
-              <!-- <div>
-                <p class="tours__filters-text">Локация</p>
-                <UiInput
-                  placeholder="Алматы или точка отправления"
-                  v-model="filters.location"
-                ></UiInput>
-              </div> -->
+              <UiSelect
+                label="Локация"
+                placeholder="Выберите локацию"
+                :options="locationOptions"
+                option-label="label"
+                option-value="value"
+                v-model="filters.location"
+              ></UiSelect>
 
-              <!-- <UiHashTag :tags="tags" label="Тип отдыха"></UiHashTag> -->
+              <div class="tours__filters-actions">
+                <button class="tours__filters-reset" type="button" @click="resetFilters">
+                  Сбросить фильтры
+                </button>
+              </div>
             </div>
           </section>
+
           <TheCommonAdBanner class="tours__ad"></TheCommonAdBanner>
-        </div>
+        </aside>
+
         <div class="tours__block">
           <section class="tours__sort">
-            <h2 class="tours__sort-title">Сортировка</h2>
-            <UiCheckbox
-              :options="sortOptions"
-              :model-value="selectedSortOption"
-              @update:model-value="selectSortOption"
-            ></UiCheckbox>
+            <div class="tours__sort-head">
+              <h2 class="tours__sort-title">Сортировка</h2>
+            </div>
+
+            <div class="tours__sort-groups">
+              <button
+                v-for="group in sortGroups"
+                :key="group.value"
+                type="button"
+                class="tours__sort-chip"
+                :class="{
+                  'tours__sort-chip--active': selectedSortGroup === group.value,
+                }"
+                @click="selectSortGroup(group.value)"
+              >
+                <span class="tours__sort-radio"></span>
+                <span>{{ group.label }}</span>
+              </button>
+            </div>
+
+            <UiSelect
+              class="tours__sort-order"
+              placeholder="Порядок"
+              :options="sortDirectionOptions"
+              option-label="label"
+              option-value="value"
+              v-model="selectedSortDirection"
+              :disabled="selectedSortGroup !== 'price'"
+            ></UiSelect>
           </section>
-          <template v-if="tours?.length">
+
+          <div v-if="isLoading" class="tours__state">Загружаем туры...</div>
+
+          <div v-else-if="errorMessage" class="tours__state tours__state--error">
+            {{ errorMessage }}
+          </div>
+
+          <template v-else-if="tours.length">
             <div
               v-show="selectedTab?.id === 1"
               class="tours__cards"
@@ -138,42 +183,25 @@
                 :tour="tour"
                 :view-type="selectedTabMobile.id === 1 ? 'tablet' : 'list'"
               ></TheCommonTourCard>
-
-              <!-- <TheCommonPopularBanner
-                class="tours__banner"
-              ></TheCommonPopularBanner> -->
             </div>
+
             <div v-show="selectedTab?.id === 2" class="tours__location">
               <div class="tours__map" ref="mapContainer"></div>
+
               <div class="tours__scroll-wrapper">
                 <div class="tours__scroll-cards">
                   <TheCommonTourCard
                     v-for="tour in tours"
                     :key="tour._id || tour.id"
                     :tour="tour"
+                    view-type="list"
                   ></TheCommonTourCard>
-                  <div class="tours__scroll-pagination">
-                    <UiPagination
-                      v-if="
-                        pagination?.last_page && pagination?.last_page !== 1
-                      "
-                      :total-items="pagination?.total_items"
-                      :current-page="currentPage"
-                      @change-page="paginationPage"
-                      :last-page="pagination?.last_page"
-                      :per-page="pagination?.per_page"
-                      class="tours__pagination tours__pagination--scroll"
-                    ></UiPagination>
-                  </div>
                 </div>
               </div>
             </div>
+
             <UiPagination
-              v-if="
-                pagination?.last_page &&
-                pagination?.last_page !== 1 &&
-                selectedTab?.id === 1
-              "
+              v-if="pagination?.last_page && pagination?.last_page !== 1"
               :total-items="pagination?.total_items"
               :current-page="currentPage"
               @change-page="paginationPage"
@@ -182,11 +210,12 @@
               class="tours__pagination"
             ></UiPagination>
           </template>
+
           <div v-else class="tours__empty">
             <h3 class="tours__empty-title">Туры не найдены</h3>
             <p class="tours__empty-text">
-              Сервер не вернул туры по выбранным фильтрам. Попробуйте изменить
-              даты, цену или поисковый запрос.
+              По выбранным фильтрам туры не нашлись. Попробуйте изменить
+              диапазон цены, даты или поисковый запрос.
             </p>
           </div>
         </div>
@@ -199,18 +228,7 @@
     @close="closeFilterMobile"
     title="Фильтр"
   >
-    <div class="tours__filters-box">
-      <div>
-        <p class="tours__filters-text">Сортировка</p>
-        <div class="tours__filters-checkboxs">
-          <UiCheckbox
-            :options="sortOptions"
-            :model-value="selectedSortOption"
-            @update:model-value="selectSortOption"
-          ></UiCheckbox>
-        </div>
-      </div>
-
+    <div class="tours__filters-box tours__filters-box--mobile">
       <UiInput
         label="Название"
         placeholder="Введите название"
@@ -219,7 +237,7 @@
         v-model="filters.search"
       ></UiInput>
 
-      <div>
+      <div class="tours__filters-group">
         <p class="tours__filters-text">Дата поездки</p>
         <div class="tours__filters-dates">
           <UiCalendar
@@ -262,23 +280,56 @@
         </div>
       </div>
 
-      <!-- <div>
-        <p class="tours__filters-text">Продолжительность</p>
-        <UiInput
-          placeholder="Например, 1 день"
-          v-model="filters.duration"
-        ></UiInput>
-      </div> -->
+      <UiSelect
+        label="Продолжительность"
+        placeholder="Выберите длительность"
+        :options="durationOptions"
+        option-label="label"
+        option-value="value"
+        v-model="filters.duration"
+      ></UiSelect>
 
-      <!-- <div>
-        <p class="tours__filters-text">Локация</p>
-        <UiInput
-          placeholder="Алматы или точка отправления"
-          v-model="filters.location"
-        ></UiInput>
-      </div> -->
+      <UiSelect
+        label="Локация"
+        placeholder="Выберите локацию"
+        :options="locationOptions"
+        option-label="label"
+        option-value="value"
+        v-model="filters.location"
+      ></UiSelect>
 
-      <!-- <UiHashTag :tags="tags" label="Тип отдыха"></UiHashTag> -->
+      <div class="tours__sort-mobile">
+        <p class="tours__filters-text">Сортировка</p>
+        <div class="tours__sort-groups tours__sort-groups--mobile">
+          <button
+            v-for="group in sortGroups"
+            :key="`${group.value}-mobile`"
+            type="button"
+            class="tours__sort-chip"
+            :class="{
+              'tours__sort-chip--active': selectedSortGroup === group.value,
+            }"
+            @click="selectSortGroup(group.value)"
+          >
+            <span class="tours__sort-radio"></span>
+            <span>{{ group.label }}</span>
+          </button>
+        </div>
+        <UiSelect
+          placeholder="Порядок"
+          :options="sortDirectionOptions"
+          option-label="label"
+          option-value="value"
+          v-model="selectedSortDirection"
+          :disabled="selectedSortGroup !== 'price'"
+        ></UiSelect>
+      </div>
+
+      <div class="tours__filters-actions">
+        <button class="tours__filters-reset" type="button" @click="resetFilters">
+          Сбросить фильтры
+        </button>
+      </div>
     </div>
   </UiOverlay>
 
@@ -288,11 +339,21 @@
     @close="closePartialLocationCards"
   >
     <template #body>
-      <div class="tours__cards">
+      <div v-if="isLoading" class="tours__state tours__state--mobile">
+        Загружаем туры...
+      </div>
+      <div
+        v-else-if="errorMessage"
+        class="tours__state tours__state--error tours__state--mobile"
+      >
+        {{ errorMessage }}
+      </div>
+      <div v-else class="tours__cards tours__cards--mobile-sheet">
         <TheCommonTourCard
-          v-for="card in 6"
-          :key="card"
-          :view-type="'list'"
+          v-for="tour in tours"
+          :key="tour._id || tour.id"
+          :tour="tour"
+          view-type="list"
         ></TheCommonTourCard>
       </div>
     </template>
@@ -304,6 +365,8 @@ const mapContainer = ref(null);
 const mapContainerMobile = ref(null);
 const isOpenFilterMobile = ref(false);
 const isOpenPartialLocationCards = ref(false);
+const isLoading = ref(false);
+const errorMessage = ref("");
 const tours = ref([]);
 const pagination = reactive({
   last_page: 1,
@@ -322,7 +385,7 @@ const filters = reactive({
   priceTo: "",
   duration: "",
   location: "",
-  sortBy: "newest",
+  sortBy: "price_desc",
 });
 let syncSearchFromRoute = false;
 
@@ -360,31 +423,17 @@ const selectedTabMobile = ref(tabsMobile[0]);
 const mapCenter = [76.889709, 43.238949];
 const desktopMap = shallowRef(null);
 const mobileMap = shallowRef(null);
-const sortOptions = [
-  { label: "Сначала новые", value: "newest" },
-  { label: "По цене: дешевле", value: "price_asc" },
-  { label: "По цене: дороже", value: "price_desc" },
-  { label: "По рейтингу", value: "rating_desc" },
+const sortGroups = [
+  { label: "по цене", value: "price" },
+  { label: "по популярности", value: "popularity" },
+  { label: "по отзывам", value: "reviews" },
 ];
-
-const tags = reactive([
-  {
-    id: 1,
-    name: "активный",
-  },
-  {
-    id: 2,
-    name: "экскурсионный",
-  },
-  {
-    id: 3,
-    name: "wellness",
-  },
-  {
-    id: 4,
-    name: "активный",
-  },
-]);
+const sortDirectionOptions = [
+  { label: "по возрастанию", value: "asc" },
+  { label: "по убыванию", value: "desc" },
+];
+const selectedSortGroup = ref("price");
+const selectedSortDirection = ref("desc");
 
 useSeoMeta({
   title: "FlyAway - Туры",
@@ -404,15 +453,70 @@ const normalizeNumberInput = (value) => {
   return parsed ? String(parsed) : "";
 };
 
-const selectedSortOption = computed(() => {
-  return (
-    sortOptions.find((option) => option.value === filters.sortBy) ||
-    sortOptions[0]
-  );
-});
+const uniqueOptionsFromTours = (mapper, fallbackLabel) => {
+  const values = [...new Set((Array.isArray(tours.value) ? tours.value : [])
+    .map(mapper)
+    .map((item) => String(item || "").trim())
+    .filter(Boolean))];
 
-const selectSortOption = (option) => {
-  filters.sortBy = option?.value || "newest";
+  return [
+    { label: fallbackLabel, value: "" },
+    ...values.map((value) => ({ label: value, value })),
+  ];
+};
+
+const durationOptions = computed(() =>
+  uniqueOptionsFromTours((tour) => tour?.duration, "Все варианты"),
+);
+
+const locationOptions = computed(() =>
+  uniqueOptionsFromTours(
+    (tour) => tour?.departureCity || tour?.departurePoint,
+    "Все локации",
+  ),
+);
+
+const applySortByUi = () => {
+  if (selectedSortGroup.value === "price") {
+    filters.sortBy = selectedSortDirection.value === "asc" ? "price_asc" : "price_desc";
+    return;
+  }
+
+  if (selectedSortGroup.value === "reviews") {
+    filters.sortBy = "rating_desc";
+    return;
+  }
+
+  filters.sortBy = "popularity";
+};
+
+const syncSortUiFromFilters = () => {
+  if (filters.sortBy === "price_asc") {
+    selectedSortGroup.value = "price";
+    selectedSortDirection.value = "asc";
+    return;
+  }
+
+  if (filters.sortBy === "rating_desc") {
+    selectedSortGroup.value = "reviews";
+    selectedSortDirection.value = "desc";
+    return;
+  }
+
+  if (filters.sortBy === "popularity") {
+    selectedSortGroup.value = "popularity";
+    selectedSortDirection.value = "desc";
+    return;
+  }
+
+  selectedSortGroup.value = "price";
+  selectedSortDirection.value = "desc";
+  filters.sortBy = "price_desc";
+};
+
+const selectSortGroup = (value) => {
+  selectedSortGroup.value = value;
+  applySortByUi();
 };
 
 const syncFiltersFromRoute = () => {
@@ -424,7 +528,8 @@ const syncFiltersFromRoute = () => {
   filters.priceTo = normalizeNumberInput(route.query.priceTo);
   filters.duration = String(route.query.duration || "");
   filters.location = String(route.query.location || "");
-  filters.sortBy = String(route.query.sortBy || "newest");
+  filters.sortBy = String(route.query.sortBy || "price_desc");
+  syncSortUiFromFilters();
 };
 
 const updateRouteFilters = async () => {
@@ -456,7 +561,7 @@ const updateRouteFilters = async () => {
     priceTo: filters.priceTo,
     duration: filters.duration,
     location: filters.location,
-    sortBy: filters.sortBy !== "newest" ? filters.sortBy : "",
+    sortBy: filters.sortBy !== "price_desc" ? filters.sortBy : "",
   });
 
   if (areQueriesEqual(nextQuery, route.query)) {
@@ -467,30 +572,55 @@ const updateRouteFilters = async () => {
 };
 
 const getTours = async () => {
-  const res = await api.client({
-    url: "/tours",
-    method: "get",
-    query: {
-      page: currentPage.value,
-      per_page: pagination.per_page || 9,
-      search: filters.search || undefined,
-      dateFrom: formatQueryDate(filters.dateFrom) || undefined,
-      dateTo: formatQueryDate(filters.dateTo) || undefined,
-      priceFrom: filters.priceFrom || undefined,
-      priceTo: filters.priceTo || undefined,
-      duration: filters.duration || undefined,
-      location: filters.location || undefined,
-      sortBy: filters.sortBy || undefined,
-    },
-  });
+  isLoading.value = true;
+  errorMessage.value = "";
 
-  tours.value = Array.isArray(res?.data) ? res.data : [];
+  try {
+    const res = await api.client({
+      url: "/tours",
+      method: "get",
+      query: {
+        page: currentPage.value,
+        per_page: pagination.per_page || 9,
+        search: filters.search || undefined,
+        dateFrom: formatQueryDate(filters.dateFrom) || undefined,
+        dateTo: formatQueryDate(filters.dateTo) || undefined,
+        priceFrom: filters.priceFrom || undefined,
+        priceTo: filters.priceTo || undefined,
+        duration: filters.duration || undefined,
+        location: filters.location || undefined,
+        sortBy: filters.sortBy || undefined,
+      },
+    });
 
-  const meta = res?.meta || {};
-  pagination.last_page = Number(meta.last_page) || 1;
-  pagination.total_items = Number(meta.total_items ?? meta.total) || tours.value.length;
-  pagination.per_page = Number(meta.per_page) || pagination.per_page || 9;
-  currentPage.value = Number(meta.current_page) || currentPage.value;
+    tours.value = Array.isArray(res?.data) ? res.data : [];
+
+    const meta = res?.meta || {};
+    pagination.last_page = Number(meta.last_page) || 1;
+    pagination.total_items = Number(meta.total_items ?? meta.total) || tours.value.length;
+    pagination.per_page = Number(meta.per_page) || pagination.per_page || 9;
+    currentPage.value = Number(meta.current_page) || currentPage.value;
+  } catch (error) {
+    tours.value = [];
+    errorMessage.value = error?.message || "Не удалось загрузить туры.";
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const resetFilters = async () => {
+  filters.search = "";
+  filters.dateFrom = null;
+  filters.dateTo = null;
+  filters.priceFrom = "";
+  filters.priceTo = "";
+  filters.duration = "";
+  filters.location = "";
+  selectedSortGroup.value = "price";
+  selectedSortDirection.value = "desc";
+  applySortByUi();
+  currentPage.value = 1;
+  await updateRouteFilters();
 };
 
 syncFiltersFromRoute();
@@ -584,7 +714,27 @@ watch(
     if (tabId === 3) {
       await nextTick();
       await mountMap(mapContainerMobile, mobileMap);
+      openPartialLocationCards();
+      return;
     }
+
+    closePartialLocationCards();
+  },
+);
+
+watch(
+  () => selectedSortDirection.value,
+  () => {
+    if (selectedSortGroup.value === "price") {
+      applySortByUi();
+    }
+  },
+);
+
+watch(
+  () => filters.sortBy,
+  () => {
+    syncSortUiFromFilters();
   },
 );
 
@@ -608,13 +758,6 @@ const closePartialLocationCards = () => {
 const openPartialLocationCards = () => {
   isOpenPartialLocationCards.value = true;
 };
-
-watch(
-  () => selectedTabMobile.value,
-  (newVal) => {
-    newVal.id === 3 ? openPartialLocationCards() : null;
-  },
-);
 
 watch(
   () => route.query,
@@ -649,167 +792,233 @@ useWatchDebounced(
 <style lang="scss" scoped>
 .tours {
   position: relative;
+
   &__wrapper {
-    margin: 60px 0 30px 0;
-  }
-  &__header {
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-    align-items: center;
-    &--visible {
-      display: block;
-      position: relative;
-      z-index: 2;
-      color: $surface-900;
-    }
-  }
-  &__tabs {
-    background-color: $white;
-    border-radius: 24px;
-    &--mobile {
-      display: none;
-    }
-  }
-  &__content {
-    width: 100%;
-    display: flex;
-    // justify-content: space-between;
-    gap: 24px;
-    margin: 36px 0;
-  }
-  &__filters {
-    width: 255px;
-    // width: 100%;
-    border-radius: 16px;
-    background-color: $white;
-    box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.04);
-    &-box {
-      display: flex;
-      flex-direction: column;
-      gap: 36px;
-      padding: 20px;
-    }
-    &-checkboxs {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    &-dates {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    &-calendar {
-      width: 100%;
-    }
-    &-range {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    &-inner {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-    &-header {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      background-color: $blue-200;
-      padding: 20px;
-      border-radius: 16px;
-      &--visible {
-        display: block;
-        position: relative;
-        z-index: 2;
-        color: $surface-900;
-      }
-    }
-    &-title {
-      color: $surface-900;
-      font-size: 16px;
-    }
-    &-text {
-      font-size: 14px;
-      font-weight: 400;
-      color: $surface-900;
-      margin-bottom: 12px;
-    }
-  }
-  &__block {
-    flex-grow: 1;
+    margin: 48px 0 34px;
     display: flex;
     flex-direction: column;
     gap: 24px;
   }
-  &__sort {
-    background-color: $white;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 24px;
-    padding-right: 24px;
-    box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.04);
-    &-title {
-      padding: 26px;
-      background-color: $blue-200;
-      border-radius: 16px;
-      color: $surface-900;
-      font-size: 16px;
-      margin-right: 16px;
-    }
-  }
-  &__empty {
-    background-color: $white;
-    border-radius: 16px;
-    padding: 36px 28px;
-    box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.04);
-  }
-  &__empty-title {
-    font-size: 24px;
-    font-weight: 700;
-    color: $surface-900;
-    margin-bottom: 10px;
-  }
-  &__empty-text {
-    max-width: 520px;
-    color: $surface-500;
-    line-height: 1.5;
-  }
-  &__cards {
-    background-color: $white;
-    border-radius: 16px;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    align-items: start;
-    padding: 16px;
-    gap: 16px;
-    box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.04);
-  }
-  &__banner {
-    grid-column: 1 / -1;
-  }
-  &__pagination {
-    margin: 0 auto;
-    &--scroll {
-      position: absolute;
-      bottom: 0;
-      z-index: 3;
-      margin-bottom: 12px;
-    }
-  }
-  &__location {
+
+  &__hero {
     display: flex;
     justify-content: space-between;
-    height: 610px;
+    gap: 16px;
+    align-items: center;
+
+    &--map-mobile {
+      position: relative;
+      z-index: 2;
+    }
   }
+
+  &__title {
+    color: $surface-900;
+  }
+
+  &__tabs {
+    &--desktop {
+      background-color: $white;
+      border-radius: 999px;
+      padding: 4px;
+      box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.04);
+    }
+
+    &--mobile {
+      display: none;
+    }
+  }
+
+  &__content {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+  }
+
+  &__sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  &__filters,
+  &__sort,
+  &__cards,
+  &__empty,
+  &__state {
+    background-color: $white;
+    border-radius: 20px;
+    box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.04);
+  }
+
+  &__filters {
+    overflow: hidden;
+  }
+
+  &__filters-header {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    background-color: $blue-200;
+    padding: 18px 20px;
+  }
+
+  &__filters-title,
+  &__sort-title {
+    color: $surface-900;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  &__filters-box {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding: 20px;
+
+    &--mobile {
+      padding: 8px 0 0;
+    }
+  }
+
+  &__filters-group,
+  &__filters-range {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  &__filters-dates {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  &__filters-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: $surface-900;
+  }
+
+  &__filters-inner {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  &__filters-actions {
+    display: flex;
+    justify-content: flex-start;
+  }
+
+  &__filters-reset {
+    min-height: 40px;
+    padding: 0 14px;
+    border-radius: 12px;
+    color: $red-500;
+    background: rgba($red-500, 0.06);
+    font-weight: 700;
+  }
+
+  &__block {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  &__sort {
+    display: grid;
+    grid-template-columns: auto 1fr 210px;
+    gap: 16px;
+    align-items: center;
+    padding: 18px 20px;
+  }
+
+  &__sort-head {
+    display: flex;
+    align-items: center;
+  }
+
+  &__sort-groups {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    &--mobile {
+      flex-direction: column;
+    }
+  }
+
+  &__sort-chip {
+    min-height: 40px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid rgba($surface-300, 0.55);
+    background: $white;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: $surface-500;
+    font-size: 14px;
+    font-weight: 600;
+
+    &--active {
+      border-color: rgba($red-500, 0.45);
+      color: $surface-900;
+      background: rgba($red-500, 0.04);
+    }
+  }
+
+  &__sort-radio {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid rgba($surface-300, 0.95);
+    position: relative;
+    flex: 0 0 16px;
+  }
+
+  &__sort-chip--active &__sort-radio {
+    border-color: $red-500;
+  }
+
+  &__sort-chip--active &__sort-radio::after {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    border-radius: 50%;
+    background: $red-500;
+  }
+
+  &__sort-order {
+    width: 100%;
+  }
+
+  &__cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: stretch;
+    padding: 16px;
+    gap: 16px;
+  }
+
+  &__location {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 0;
+    height: 610px;
+    border-radius: 20px;
+    overflow: hidden;
+    background: $white;
+    box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.04);
+  }
+
   &__map {
-    max-width: 610px;
     width: 100%;
     height: 610px;
+
     &--mobile {
       display: none;
       width: 100%;
@@ -818,121 +1027,193 @@ useWatchDebounced(
       position: fixed;
       z-index: 1;
       top: 0;
-      left: -0px;
+      left: 0;
     }
   }
+
+  &__scroll-wrapper {
+    height: 100%;
+    background: $white;
+    border-left: 1px solid rgba($surface-300, 0.3);
+  }
+
   &__scroll-cards {
-    max-width: 320px;
-    width: 100%;
-    padding: 12px;
-    overflow-y: scroll;
+    height: 100%;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 12px;
-    height: inherit;
-    background-color: $white;
-    border-top-right-radius: 16px;
-    border-bottom-right-radius: 16px;
+    padding: 14px;
   }
-  &__scroll-wrapper {
-    display: flex;
-    flex-direction: column;
-    position: relative;
+
+  &__pagination {
+    margin: 0 auto;
   }
-  &__scroll-pagination {
-    position: absolute;
-    bottom: 0;
-    background-color: $white;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    left: 0;
-    height: 60px;
-    border-bottom-right-radius: 16px;
-    display: none;
+
+  &__state,
+  &__empty {
+    padding: 36px 24px;
+    text-align: center;
   }
+
+  &__state {
+    color: $surface-500;
+
+    &--error {
+      color: $orange-200;
+    }
+
+    &--mobile {
+      background: transparent;
+      box-shadow: none;
+      padding: 28px 16px;
+    }
+  }
+
+  &__empty-title {
+    color: $surface-900;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  &__empty-text {
+    max-width: 560px;
+    margin: 0 auto;
+    color: $surface-500;
+    line-height: 1.5;
+  }
+
   &__top {
     display: none;
-    position: relative;
-    z-index: 2;
+  }
+
+  &__cards--mobile-sheet {
+    background: transparent;
+    box-shadow: none;
+    grid-template-columns: 1fr;
+    padding: 0;
+  }
+}
+
+@media (max-width: 1200px) {
+  .tours {
+    &__cards {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    &__sort {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .tours {
+    &__content {
+      grid-template-columns: 1fr;
+    }
+
+    &__sidebar {
+      display: none;
+    }
+
+    &__cards {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .tours {
+    &__wrapper {
+      margin: 16px 0 24px;
+      gap: 16px;
+    }
+
+    &__top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+      z-index: 2;
+    }
+
+    &__top-search {
+      width: 100%;
+      background-color: $white;
+      border-radius: 26px;
+    }
+
+    &__top-text {
+      color: $red-500;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    &__tabs {
+      &--desktop {
+        display: none;
+      }
+
+      &--mobile {
+        display: block;
+        position: relative;
+        z-index: 2;
+      }
+    }
+
+    &__hero {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    &__title {
+      font-size: 28px;
+    }
+
+    &__cards {
+      grid-template-columns: 1fr;
+      padding: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    &__cards--tablet {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    &__location {
+      grid-template-columns: 1fr;
+      height: auto;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    &__scroll-wrapper {
+      display: none;
+    }
+
+    &__map {
+      display: none;
+
+      &--mobile {
+        display: block;
+      }
+    }
   }
 }
 
 @media (max-width: 375px) {
   .tours {
-    &__wrapper {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin: 16px 0;
-    }
-    &__top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      &-text {
-        color: $red-500;
-        font-weight: 400;
-        cursor: pointer;
-      }
-      &-search {
-        width: 100%;
-        background-color: $white;
-        border-radius: 26px;
-      }
-    }
-    &__map {
-      display: none;
-      &--mobile {
-        display: block;
-        width: 100%;
-        max-width: 100%;
-        height: 100vh;
-        position: fixed;
-        z-index: 1;
-        top: 0;
-        left: -0px;
-      }
-    }
-    &__tabs {
-      display: none;
-      position: relative;
-      z-index: 2;
-      &--mobile {
-        display: block;
-      }
-    }
-    &__ad,
-    &__filters,
-    &__sort {
-      display: none;
-    }
-    &__content {
-      display: flex;
-      flex-direction: column;
-      margin: 0;
-      gap: 0;
-    }
     &__title {
       font-size: 24px;
-      &--visible {
-        display: block;
-      }
     }
-    &__cards {
-      display: flex;
-      flex-direction: column;
-      padding: 0;
-      background-color: transparent;
-      align-items: center;
-      box-shadow: none;
-      &--tablet {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 6px;
-      }
+
+    &__cards--tablet {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 }
