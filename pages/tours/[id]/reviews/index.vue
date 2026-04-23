@@ -13,13 +13,15 @@
         </div>
       </div>
 
-      <div v-if="message" class="tour-reviews-page__message">{{ message }}</div>
-      <div v-if="errorMessage" class="tour-reviews-page__error">
-        {{ errorMessage }}
+      <div v-if="successMessage" class="tour-reviews-page__message">
+        {{ successMessage }}
+      </div>
+      <div v-if="submitErrorMessage" class="tour-reviews-page__error">
+        {{ submitErrorMessage }}
       </div>
 
       <form
-        v-if="authStore.isLoggedIn && canReview"
+        v-if="authStore.isLoggedIn && canReview && !isCheckingAccess"
         class="tour-reviews-page__form"
         @submit.prevent="submitReview"
       >
@@ -32,6 +34,8 @@
               :key="star"
               type="button"
               class="tour-reviews-page__star"
+              :aria-label="`Поставить ${star}`"
+              :aria-pressed="star <= form.rating"
               @click="form.rating = star"
             >
               <UiIcons
@@ -53,9 +57,17 @@
           label="Оставить отзыв"
           type="submit"
           class="tour-reviews-page__submit"
+          :disabled="isSubmitting"
           :is-loading="isSubmitting"
         />
       </form>
+
+      <div
+        v-else-if="authStore.isLoggedIn && isCheckingAccess"
+        class="tour-reviews-page__state"
+      >
+        Проверяем возможность оставить отзыв...
+      </div>
 
       <div
         v-else-if="authStore.isLoggedIn && hasReview"
@@ -75,17 +87,31 @@
         Чтобы оставить отзыв, войдите в аккаунт.
       </div>
 
+      <div v-if="accessErrorMessage" class="tour-reviews-page__error">
+        {{ accessErrorMessage }}
+      </div>
+
       <div class="tour-reviews-page__list">
-        <TheCommonReview
-          v-for="review in reviews"
-          :key="review._id"
-          :review="review"
-          type="single"
-          :show-tour-meta="false"
-        />
+        <div v-if="isLoading" class="tour-reviews-page__state">
+          Загружаем отзывы...
+        </div>
+
+        <div v-else-if="reviewsErrorMessage" class="tour-reviews-page__error">
+          {{ reviewsErrorMessage }}
+        </div>
+
+        <template v-else>
+          <TheCommonReview
+            v-for="review in normalizedReviews"
+            :key="getReviewKey(review)"
+            :review="review"
+            type="single"
+            :show-tour-meta="false"
+          />
+        </template>
 
         <div
-          v-if="!isLoading && !reviews.length"
+          v-if="!isLoading && !reviewsErrorMessage && !normalizedReviews.length"
           class="tour-reviews-page__state"
         >
           Пока отзывов нет.
@@ -104,13 +130,20 @@ const reviews = ref([]);
 const canReview = ref(false);
 const hasReview = ref(false);
 const isLoading = ref(false);
+const isCheckingAccess = ref(false);
 const isSubmitting = ref(false);
-const message = ref("");
-const errorMessage = ref("");
+const successMessage = ref("");
+const reviewsErrorMessage = ref("");
+const submitErrorMessage = ref("");
+const accessErrorMessage = ref("");
 
 const form = reactive({
   rating: 5,
   comment: "",
+});
+
+const normalizedReviews = computed(() => {
+  return Array.isArray(reviews.value) ? reviews.value.filter(Boolean) : [];
 });
 
 useSeoMeta({
@@ -122,6 +155,7 @@ useSeoMeta({
 
 const loadReviews = async () => {
   isLoading.value = true;
+  reviewsErrorMessage.value = "";
 
   try {
     const response = await api.client({
@@ -132,18 +166,24 @@ const loadReviews = async () => {
 
     reviews.value = Array.isArray(response?.data) ? response.data : [];
   } catch (error) {
-    errorMessage.value = error?.message || "Не удалось загрузить отзывы.";
+    reviews.value = [];
+    reviewsErrorMessage.value =
+      error?.message || "Не удалось загрузить отзывы.";
   } finally {
     isLoading.value = false;
   }
 };
 
 const loadCanReview = async () => {
+  accessErrorMessage.value = "";
+
   if (!authStore.isLoggedIn) {
     canReview.value = false;
     hasReview.value = false;
     return;
   }
+
+  isCheckingAccess.value = true;
 
   try {
     const response = await api.client({
@@ -156,15 +196,24 @@ const loadCanReview = async () => {
   } catch {
     canReview.value = false;
     hasReview.value = false;
+    accessErrorMessage.value =
+      "Не удалось проверить возможность оставить отзыв.";
+  } finally {
+    isCheckingAccess.value = false;
   }
 };
 
 const submitReview = async () => {
-  message.value = "";
-  errorMessage.value = "";
+  successMessage.value = "";
+  submitErrorMessage.value = "";
+
+  if (Number(form.rating) < 1 || Number(form.rating) > 5) {
+    submitErrorMessage.value = "Выберите оценку от 1 до 5.";
+    return;
+  }
 
   if (String(form.comment || "").trim().length < 10) {
-    errorMessage.value = "Отзыв должен содержать минимум 10 символов.";
+    submitErrorMessage.value = "Отзыв должен содержать минимум 10 символов.";
     return;
   }
 
@@ -177,26 +226,43 @@ const submitReview = async () => {
       data: {
         tourId: route.params.id,
         rating: form.rating,
-        comment: form.comment,
+        comment: form.comment.trim(),
       },
     });
 
-    reviews.value = [response?.data, ...reviews.value.filter(Boolean)];
+    if (response?.data) {
+      reviews.value = [response.data, ...normalizedReviews.value];
+    } else {
+      await loadReviews();
+    }
+
     canReview.value = false;
     hasReview.value = true;
     form.rating = 5;
     form.comment = "";
-    message.value = "Спасибо, ваш отзыв опубликован.";
+    successMessage.value = "Спасибо, ваш отзыв опубликован.";
   } catch (error) {
-    errorMessage.value = error?.message || "Не удалось отправить отзыв.";
+    submitErrorMessage.value =
+      error?.message || "Не удалось отправить отзыв.";
   } finally {
     isSubmitting.value = false;
   }
 };
 
+const getReviewKey = (review) => {
+  return review?._id || `${review?.createdAt || ""}-${review?.comment || ""}`;
+};
+
 onMounted(async () => {
   await Promise.all([loadReviews(), loadCanReview()]);
 });
+
+watch(
+  () => authStore.isLoggedIn,
+  async () => {
+    await loadCanReview();
+  },
+);
 </script>
 
 <style scoped lang="scss">
@@ -227,6 +293,12 @@ onMounted(async () => {
     background: $white;
     border-radius: 16px;
     padding: 16px;
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
   }
 
   &__list {
@@ -281,6 +353,40 @@ onMounted(async () => {
 
   &__error {
     color: $orange-200;
+  }
+}
+
+@media (max-width: 640px) {
+  .tour-reviews-page {
+    &__wrapper {
+      margin: 16px 0 28px;
+      gap: 16px;
+    }
+
+    &__header {
+      flex-direction: column;
+    }
+
+    &__form,
+    &__list,
+    &__state {
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    &__stars {
+      justify-content: space-between;
+    }
+
+    &__star {
+      width: 40px;
+      height: 40px;
+    }
+
+    &__submit {
+      width: 100%;
+      justify-content: center;
+    }
   }
 }
 </style>

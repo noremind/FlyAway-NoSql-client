@@ -21,7 +21,7 @@
               </div>
             </div>
 
-            <div class="details__imgs">
+            <div v-if="hotelImages.length" class="details__imgs">
               <UiIcons
                 icon="chevron"
                 class="prev-img down"
@@ -34,12 +34,12 @@
                 next-btn-class=".next-img"
                 prev-btn-class=".prev-img"
               >
-                <swiper-slide v-for="slide in hotel.images" :key="slide">
+                <swiper-slide v-for="slide in hotelImages" :key="slide">
                   <img
-                    @click="openPreviewPicture"
+                    @click="openPreviewPicture(slide)"
                     class="details__swiper-img"
                     :src="slide"
-                    alt="Image"
+                    :alt="hotel.name"
                   />
                 </swiper-slide>
               </UiSwiper>
@@ -51,19 +51,11 @@
               ></UiIcons>
             </div>
 
-            <div class="details__reviews-inner details__reviews-inner--mobile">
-              <p class="details__reviews-count details__reviews-count">
-                20 отзывов
-              </p>
-              <UiIcons icon="star" color="yellow-500" size="size-14"></UiIcons>
-              <p class="details__reviews-average">{{ hotel.rating }}</p>
-            </div>
-
             <div class="details__totals-header details__totals-header--mobile">
-              <div class="details__totals-box">
+              <div v-if="partnerLogo" class="details__totals-box">
                 <img
                   class="details__avatar"
-                  :src="hotel?.partner?.logo"
+                  :src="partnerLogo"
                   alt="Avatar"
                 />
               </div>
@@ -73,12 +65,13 @@
             </div>
 
             <div
+              v-if="ratingStars.length"
               class="details__category-stars details__category-stars--mobile"
             >
               <UiIcons
                 icon="star"
                 color="yellow-500"
-                v-for="star in 5"
+                v-for="star in ratingStars"
                 :key="star"
                 size="size-20"
               ></UiIcons>
@@ -87,15 +80,23 @@
             <div class="details__info">
               <p class="details__about">Об отеле</p>
 
-              <p class="details__description" v-html="hotel.content"></p>
+              <p v-if="hotel.description" class="details__description">
+                {{ hotel.description }}
+              </p>
 
-              <div class="details__category">
+              <div
+                v-if="hotel.content"
+                class="details__description"
+                v-html="hotel.content"
+              ></div>
+
+              <div v-if="hasRating" class="details__category">
                 <p class="details__category-title">Категория</p>
                 <div class="details__category-stars">
                   <UiIcons
                     icon="star"
                     color="yellow-500"
-                    v-for="star in Math.floor(hotel.rating)"
+                    v-for="star in ratingStars"
                     :key="star"
                     size="size-20"
                   ></UiIcons>
@@ -105,270 +106,29 @@
                 </p>
               </div>
 
-              <div class="details__location">
+              <div v-if="hotel.location" class="details__location">
                 <p class="details__bold">Расположение</p>
-                <p class="details__address">
-                  г. Алматы, Пересечение улиц Байтурсынова и Абая
-                </p>
-
-                <div class="details__location-info">
-                  <div
-                    style="width: 100%; height: 400px"
-                    class="details__map"
-                    ref="yandexMapInfo"
-                  ></div>
-                  <div class="details__location-box">
-                    <div
-                      class="details__location-inner"
-                      v-for="item in 4"
-                      :key="item"
-                    >
-                      <UiIcons
-                        icon="location"
-                        size="size-24"
-                        color="red-500"
-                      ></UiIcons>
-                      <p class="details__location-text">
-                        <span class="details__location-path">20 км</span> от
-                        аэропорта
-                      </p>
-                    </div>
-                  </div>
+                <div class="details__location-inner">
+                  <UiIcons
+                    icon="location"
+                    size="size-24"
+                    color="red-500"
+                  ></UiIcons>
+                  <p class="details__address">{{ hotel.location }}</p>
                 </div>
               </div>
             </div>
 
-            <div class="details__tourist">
-              <div class="details__tourist-box">
-                <p class="details__tourist-text">Политика отеля</p>
-                <ul class="details__tourist-list">
-                  <li class="details__tourist-item">
-                    Время заезда и выезда — стандартное время заселения и
-                    выписки.
-                  </li>
-                  <li class="details__tourist-item">
-                    Условия отмены бронирования — возможность возврата средств.
-                  </li>
-                  <li class="details__tourist-item">
-                    Депозиты — нужны ли залоги за проживание или дополнительные
-                    услуги.
-                  </li>
-                  <li class="details__tourist-item">
-                    Размещение с детьми и животными — есть ли ограничения.
-                  </li>
-                </ul>
-              </div>
-
+            <div v-if="roomTypes.length" class="details__tourist">
               <div class="details__tourist-box">
                 <p class="details__tourist-text">Виды номеров</p>
                 <div class="details__rooms">
                   <TheHotelsRoom
-                    v-for="room in hotel.room_types"
-                    :key="room.id"
+                    v-for="room in roomTypes"
+                    :key="room._id || room.id || room.name"
                     :room="room"
                     @select="selectRoom"
                   ></TheHotelsRoom>
-                </div>
-              </div>
-
-              <div class="details__tourist-box">
-                <p class="details__tourist-text">Питание</p>
-                <ul class="details__tourist-list details__tourist-list--icon">
-                  <li class="details__tourist-item details__tourist-item--icon">
-                    <UiIcons
-                      icon="check"
-                      color="red-500"
-                      size="size-24"
-                    ></UiIcons>
-                    <p>Полный пансион</p>
-                  </li>
-                  <li class="details__tourist-item details__tourist-item--icon">
-                    <UiIcons
-                      icon="check"
-                      color="red-500"
-                      size="size-24"
-                    ></UiIcons>
-                    <p>Ресторан</p>
-                  </li>
-                  <li class="details__tourist-item details__tourist-item--icon">
-                    <UiIcons
-                      icon="check"
-                      color="red-500"
-                      size="size-24"
-                    ></UiIcons>
-                    <p>
-                      Возможность заказать специальное меню (вегетарианское,
-                      халяль и др.).
-                    </p>
-                  </li>
-                </ul>
-              </div>
-
-              <div class="details__tourist-box">
-                <p class="details__tourist-text">Условия</p>
-                <ul class="details__tourist-list details__tourist-list--icon">
-                  <li class="details__tourist-item details__tourist-item--icon">
-                    <UiIcons
-                      icon="star-unfill"
-                      color="red-500"
-                      size="size-24"
-                    ></UiIcons>
-                    <p>Проживание 1 ночь</p>
-                  </li>
-                  <li class="details__tourist-item details__tourist-item--icon">
-                    <UiIcons
-                      icon="home"
-                      color="red-500"
-                      size="size-24"
-                    ></UiIcons>
-                    <p>Одноместный номер в Лоло</p>
-                  </li>
-                  <li class="details__tourist-item details__tourist-item--icon">
-                    <UiIcons
-                      icon="x-icon"
-                      color="orange-200"
-                      size="size-24"
-                    ></UiIcons>
-                    <p>Личные расходы</p>
-                  </li>
-                </ul>
-              </div>
-
-              <div class="details__tourist-box">
-                <p class="details__tourist-text">Платные услуги</p>
-                <ul class="details__tourist-list details__tourist-list--icon">
-                  <li class="details__tourist-item details__tourist-item--icon">
-                    <UiIcons
-                      icon="check"
-                      color="red-500"
-                      size="size-24"
-                    ></UiIcons>
-                    <p>Полный пансион</p>
-                  </li>
-                  <li class="details__tourist-item details__tourist-item--icon">
-                    <UiIcons
-                      icon="check"
-                      color="red-500"
-                      size="size-24"
-                    ></UiIcons>
-                    <p>Ресторан</p>
-                  </li>
-                  <li class="details__tourist-item details__tourist-item--icon">
-                    <UiIcons
-                      icon="check"
-                      color="red-500"
-                      size="size-24"
-                    ></UiIcons>
-                    <p>
-                      Возможность заказать специальное меню (вегетарианское,
-                      халяль и др.).
-                    </p>
-                  </li>
-                </ul>
-              </div>
-
-              <div class="details__tourist-box">
-                <p class="details__tourist-text">Особенности для семей</p>
-                <ul class="details__tourist-list details__tourist-list--icon">
-                  <li class="details__tourist-item details__tourist-item--icon">
-                    <UiIcons
-                      icon="check"
-                      color="red-500"
-                      size="size-24"
-                    ></UiIcons>
-                    <p>Детские кроватки, услуги няни, детская площадка</p>
-                  </li>
-                </ul>
-              </div>
-
-              <div class="details__tourist-box">
-                <p class="details__tourist-text">Доступность</p>
-                <ul class="details__tourist-list details__tourist-list--icon">
-                  <li class="details__tourist-item details__tourist-item--icon">
-                    <UiIcons
-                      icon="check"
-                      color="red-500"
-                      size="size-24"
-                    ></UiIcons>
-                    <p>
-                      Удобства для людей с ограниченными возможностями (лифты,
-                      пандусы)
-                    </p>
-                  </li>
-                </ul>
-              </div>
-
-              <div class="details__tourist-box">
-                <p class="details__tourist-text">Развлечения и отдых</p>
-                <ul class="details__tourist-list details__tourist-list--icon">
-                  <li class="details__tourist-item details__tourist-item--icon">
-                    <UiIcons
-                      icon="check"
-                      color="red-500"
-                      size="size-24"
-                    ></UiIcons>
-                    <p>Полный пансион</p>
-                  </li>
-                  <li class="details__tourist-item details__tourist-item--icon">
-                    <UiIcons
-                      icon="check"
-                      color="red-500"
-                      size="size-24"
-                    ></UiIcons>
-                    <p>Ресторан</p>
-                  </li>
-                  <li class="details__tourist-item details__tourist-item--icon">
-                    <UiIcons
-                      icon="check"
-                      color="red-500"
-                      size="size-24"
-                    ></UiIcons>
-                    <p>
-                      Возможность заказать специальное меню (вегетарианское,
-                      халяль и др.).
-                    </p>
-                  </li>
-                </ul>
-              </div>
-            </div>
-
-            <div class="details__contacts">
-              <div class="details__contacts-box">
-                <p class="details__contacts-text">Контакты</p>
-
-                <div class="details__contacts-inner">
-                  <div class="details__contacts-info">
-                    <UiIcons
-                      icon="globe"
-                      color="red-500"
-                      size="size-24"
-                    ></UiIcons>
-                    <p class="details__contacts-desc">website</p>
-                  </div>
-                  <div class="details__contacts-info">
-                    <UiIcons
-                      icon="phone"
-                      color="red-500"
-                      size="size-24"
-                    ></UiIcons>
-                    <p class="details__contacts-desc">phone number</p>
-                  </div>
-                  <div class="details__contacts-info">
-                    <UiIcons
-                      icon="location"
-                      color="red-500"
-                      size="size-24"
-                    ></UiIcons>
-                    <p class="details__contacts-desc">address</p>
-                  </div>
-                  <div class="details__contacts-info">
-                    <UiIcons
-                      icon="instagram"
-                      color="red-500"
-                      size="size-24"
-                    ></UiIcons>
-                    <p class="details__contacts-desc">instagram</p>
-                  </div>
                 </div>
               </div>
             </div>
@@ -376,15 +136,14 @@
 
           <aside ref="requestCard" class="details__request-card">
             <div class="details__request-header">
-              <div class="details__totals-box">
+              <div v-if="partnerLogo || partnerName" class="details__totals-box">
                 <img
+                  v-if="partnerLogo"
                   class="details__avatar"
-                  :src="hotel?.partner?.logo"
+                  :src="partnerLogo"
                   alt="Avatar"
                 />
-                <p class="details__name">
-                  {{ hotel.partner?.name || hotel.partner?.title || "FlyAway" }}
-                </p>
+                <p v-if="partnerName" class="details__name">{{ partnerName }}</p>
               </div>
               <span class="details__request-badge">Заявка</span>
             </div>
@@ -408,7 +167,10 @@
               </p>
             </div>
 
-            <form class="details__request-form" @submit.prevent="submitHotelRequest">
+            <form
+              class="details__request-form"
+              @submit.prevent="submitHotelRequest"
+            >
               <UiInput
                 label="Имя"
                 placeholder="Как к вам обращаться"
@@ -448,14 +210,14 @@
               <UiInput
                 label="Гостей"
                 type="number"
-                placeholder="Например, 2"
+                placeholder="Количество гостей"
                 v-model="requestForm.guests"
                 :is-error="Boolean(fieldErrors.guests)"
               />
 
               <UiTextarea
                 label="Комментарий"
-                placeholder="Например: нужен ранний заезд, детская кроватка или выбранный номер"
+                placeholder="Напишите пожелания к проживанию"
                 v-model.trim="requestForm.comment"
                 :rows="4"
               />
@@ -479,47 +241,6 @@
           </aside>
         </div>
       </div>
-      <section class="details__reviews">
-        <div class="details__reviews-box">
-          <div>
-            <h3 class="details__reviews-title">Отзывы путешественников</h3>
-            <div class="details__reviews-inner">
-              <p class="details__reviews-count">20 отзывов</p>
-              <UiIcons icon="star" color="yellow-500" size="size-14"></UiIcons>
-              <p class="details__reviews-average">4,1</p>
-            </div>
-          </div>
-          <nuxt-link class="details__reviews-link" to="/tours/1/reviews"
-            >Все отзывы</nuxt-link
-          >
-        </div>
-
-        <UiSwiper
-          :loop="false"
-          :breakpoints="{
-            1000: {
-              slidesPerView: 2.5,
-            },
-            375: {
-              slidesPerView: 1,
-            },
-            0: {
-              slidesPerView: 1,
-            },
-          }"
-        >
-          <swiper-slide v-for="review in 5" :key="review">
-            <TheCommonReview />
-          </swiper-slide>
-        </UiSwiper>
-        <UiButton
-          class="details__reviews-btn"
-          label="Все отзывы"
-          after-icon="chevron"
-          icon-size="size-20"
-          icon-color="red-500"
-        ></UiButton>
-      </section>
     </section>
   </UiOverlay>
 
@@ -528,20 +249,20 @@
     max-width="600px"
     @close="closePreviewPicture"
   >
-    <ModalsPicture></ModalsPicture>
+    <img
+      v-if="previewImage"
+      class="details__preview-img"
+      :src="previewImage"
+      :alt="hotel?.name || 'Отель'"
+    />
   </UiModal>
 </template>
 
 <script setup>
 const isOpenPreviewPicture = ref(false);
-const yandexMapInfo = ref(null);
-const { createMap } = useYandexMaps();
+const previewImage = ref("");
 const api = useApi();
 const authStore = useAuthStore();
-
-const isMapReady = ref(false);
-const infoMap = shallowRef(null);
-const mapCenter = [76.889709, 43.238949];
 
 const hotel = ref(null);
 const route = useRoute();
@@ -563,9 +284,32 @@ const requestForm = reactive({
   email: "",
   checkIn: null,
   checkOut: null,
-  guests: "2",
+  guests: "",
   comment: "",
 });
+
+const hotelImages = computed(() =>
+  Array.isArray(hotel.value?.images)
+    ? hotel.value.images.filter(Boolean)
+    : [],
+);
+
+const ratingStars = computed(() => {
+  const rating = Math.floor(Number(hotel.value?.rating || 0));
+  return Array.from({ length: Math.max(0, rating) }, (_, index) => index + 1);
+});
+
+const hasRating = computed(() => Number(hotel.value?.rating || 0) > 0);
+
+const roomTypes = computed(() =>
+  Array.isArray(hotel.value?.room_types) ? hotel.value.room_types : [],
+);
+
+const partnerLogo = computed(() => hotel.value?.partner?.logo || "");
+
+const partnerName = computed(
+  () => hotel.value?.partner?.name || hotel.value?.partner?.title || "",
+);
 
 const formatApiDate = (value) => {
   if (!value) {
@@ -724,55 +468,17 @@ useFetchSsr({
 
 hydrateRequestFormFromUser();
 
-const destroyInfoMap = () => {
-  if (infoMap.value && typeof infoMap.value.destroy === "function") {
-    infoMap.value.destroy();
-  }
-
-  infoMap.value = null;
+const closePreviewPicture = () => {
+  isOpenPreviewPicture.value = false;
+  previewImage.value = "";
 };
 
-const getInfoMap = async () => {
-  if (!yandexMapInfo.value || infoMap.value) {
+const openPreviewPicture = (image) => {
+  if (!image) {
     return;
   }
 
-  try {
-    infoMap.value = await createMap({
-      container: yandexMapInfo.value,
-      center: mapCenter,
-      zoom: 10,
-      markerCoordinates: mapCenter,
-      markerText: "Алматы",
-    });
-    isMapReady.value = true;
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-watch(
-  () => hotel.value,
-  async (value) => {
-    if (!value) {
-      return;
-    }
-
-    await nextTick();
-    await getInfoMap();
-  },
-  { immediate: true },
-);
-
-onBeforeUnmount(() => {
-  destroyInfoMap();
-});
-
-const closePreviewPicture = () => {
-  isOpenPreviewPicture.value = false;
-};
-
-const openPreviewPicture = () => {
+  previewImage.value = image;
   isOpenPreviewPicture.value = true;
 };
 </script>
@@ -923,6 +629,20 @@ const openPreviewPicture = () => {
     gap: 12px;
     align-items: center;
   }
+  &__swiper-img {
+    width: 100%;
+    height: 420px;
+    object-fit: cover;
+    border-radius: 16px;
+    cursor: pointer;
+  }
+  &__preview-img {
+    display: block;
+    width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+    border-radius: 16px;
+  }
   &__tabs {
     margin: 0 auto;
   }
@@ -938,6 +658,10 @@ const openPreviewPicture = () => {
   &__about {
     font-weight: 400;
     font-size: 16px;
+  }
+  &__description {
+    color: $surface-900;
+    line-height: 1.6;
   }
   &__list {
     display: flex;
@@ -984,7 +708,7 @@ const openPreviewPicture = () => {
   &__location {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
     position: relative;
     &-info {
       display: flex;
@@ -996,12 +720,16 @@ const openPreviewPicture = () => {
     }
     &-inner {
       display: flex;
-      gap: 4px;
-      align-items: center;
+      gap: 8px;
+      align-items: flex-start;
     }
     &-path {
       color: $red-500;
     }
+  }
+  &__address {
+    color: $surface-900;
+    line-height: 1.45;
   }
   &__map {
     max-width: 300px;
@@ -1234,6 +962,40 @@ const openPreviewPicture = () => {
   position: absolute !important;
 }
 
+@media (max-width: 768px) {
+  .details {
+    &__wrapper {
+      margin-top: 16px;
+    }
+
+    &__box {
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    &__content {
+      padding: 16px;
+      gap: 18px;
+    }
+
+    &__request {
+      &-card {
+        position: static;
+        max-width: 100%;
+        border-radius: 18px;
+      }
+
+      &-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    &__swiper-img {
+      height: 260px;
+    }
+  }
+}
+
 @media (max-width: 375px) {
   .details {
     &__wrapper {
@@ -1264,6 +1026,9 @@ const openPreviewPicture = () => {
       &-grid {
         grid-template-columns: 1fr;
       }
+    }
+    &__swiper-img {
+      height: 220px;
     }
     &__totals {
       &-header {

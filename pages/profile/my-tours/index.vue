@@ -9,10 +9,22 @@
       ></UiTabs>
 
       <div v-if="message" class="my-tours__message">{{ message }}</div>
-      <div v-if="errorMessage" class="my-tours__error">{{ errorMessage }}</div>
+      <div v-if="errorMessage && !hasLoadError" class="my-tours__error">
+        {{ errorMessage }}
+      </div>
 
       <div v-if="isLoading" class="my-tours__state">
         Загружаем бронирования...
+      </div>
+
+      <div
+        v-else-if="hasLoadError"
+        class="my-tours__state my-tours__state--error"
+      >
+        <p>{{ errorMessage }}</p>
+        <button class="my-tours__retry" type="button" @click="loadBookings">
+          Повторить
+        </button>
       </div>
 
       <div v-else class="my-tours__cards">
@@ -29,6 +41,11 @@
         </div>
       </div>
     </div>
+
+    <UiPagination
+      v-if="filteredBookings.length && !isLoading && !hasLoadError"
+      class="my-tours__pagination"
+    ></UiPagination>
   </div>
 </template>
 
@@ -56,6 +73,11 @@ useSeoMeta({
 });
 
 const normalizeString = (value) => String(value || "").trim();
+
+const hasLoadError = computed(
+  () =>
+    Boolean(errorMessage.value) && !bookings.value.length && !isLoading.value,
+);
 
 const sortBookings = (items = []) => {
   return [...items].sort(
@@ -86,21 +108,28 @@ const emptyStateText = computed(() => {
   return "Активных бронирований пока нет.";
 });
 
-const replaceBookingInList = (nextBooking) => {
-  if (!nextBooking?._id) {
+const replaceBookingInList = (bookingId, nextBooking = null) => {
+  if (!bookingId) {
     return;
   }
 
   bookings.value = sortBookings(
-    bookings.value.map((booking) =>
-      booking._id === nextBooking._id ? nextBooking : booking,
-    ),
+    bookings.value.map((booking) => {
+      if (booking._id !== bookingId) {
+        return booking;
+      }
+
+      return nextBooking?._id
+        ? nextBooking
+        : { ...booking, status: "cancelled" };
+    }),
   );
 };
 
 const loadBookings = async () => {
   isLoading.value = true;
   errorMessage.value = "";
+  message.value = "";
 
   try {
     const response = await api.client({
@@ -108,9 +137,13 @@ const loadBookings = async () => {
       method: "get",
     });
 
-    bookings.value = sortBookings(
-      Array.isArray(response?.data) ? response.data : [],
-    );
+    const items = Array.isArray(response?.data)
+      ? response.data
+      : Array.isArray(response)
+        ? response
+        : [];
+
+    bookings.value = sortBookings(items);
   } catch (error) {
     errorMessage.value = error?.message || "Не удалось загрузить бронирования.";
   } finally {
@@ -142,7 +175,7 @@ const handleCancelBooking = async (bookingId) => {
       method: "patch",
     });
 
-    replaceBookingInList(response?.data);
+    replaceBookingInList(bookingId, response?.data);
     message.value = "Бронирование отменено.";
     selectedTab.value = tabs.find((tab) => tab.id === "cancelled") || tabs[0];
   } catch (error) {
@@ -176,6 +209,11 @@ onMounted(loadBookings);
     margin: 24px 0;
   }
 
+  &__pagination {
+    margin: 0 auto;
+    margin-top: 24px;
+  }
+
   &__state,
   &__empty {
     padding: 28px 16px;
@@ -183,6 +221,28 @@ onMounted(loadBookings);
     background: rgba($red-500, 0.04);
     color: $surface-500;
     text-align: center;
+  }
+
+  &__state {
+    margin-top: 24px;
+
+    &--error {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      color: $orange-200;
+    }
+  }
+
+  &__retry {
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: 10px;
+    color: $white;
+    background: $red-500;
+    font-size: 14px;
+    font-weight: 700;
   }
 
   &__message,
@@ -206,6 +266,16 @@ onMounted(loadBookings);
     &__wrapper {
       background-color: transparent;
       padding: 0;
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .my-tours {
+    &__tabs {
+      justify-content: flex-start;
+      overflow-x: auto;
+      padding-bottom: 4px;
     }
   }
 }

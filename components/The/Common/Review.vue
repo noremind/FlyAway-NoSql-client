@@ -19,7 +19,7 @@
 
             <div class="review__header-inner">
               <p class="review__name">{{ userName }}</p>
-              <span class="review__date">{{ dateLabel }}</span>
+              <span v-if="dateLabel" class="review__date">{{ dateLabel }}</span>
             </div>
           </div>
 
@@ -34,16 +34,16 @@
           </div>
         </div>
 
-        <p class="review__comment">
+        <p v-if="reviewComment" class="review__comment">
           {{ reviewComment }}
         </p>
       </div>
 
       <div
-        v-if="type !== 'single' && showTourMeta && reviewTour"
+        v-if="type !== 'single' && showTourMeta && reviewTourTitle"
         class="review__footer"
       >
-        <div class="review__footer-box">
+        <div v-if="partnerTitle" class="review__footer-box">
           <img
             v-if="partnerAvatar"
             class="review__avatar review__avatar--small"
@@ -61,7 +61,7 @@
         </div>
 
         <NuxtLink class="review__info" :to="detailsLink">
-          {{ reviewTour.title }}
+          {{ reviewTourTitle }}
         </NuxtLink>
       </div>
     </div>
@@ -86,27 +86,67 @@ const props = defineProps({
 
 const normalizeString = (value) => String(value || "").trim();
 
+const getFirstString = (...values) => {
+  return values.map((value) => normalizeString(value)).find(Boolean) || "";
+};
+
 const reviewTour = computed(() => props.review?.tour || null);
 
+const reviewAuthor = computed(() => {
+  return (
+    props.review?.createdBy ||
+    props.review?.user ||
+    props.review?.author ||
+    props.review?.reviewer ||
+    null
+  );
+});
+
 const userName = computed(() => {
-  return normalizeString(props.review?.createdBy?.name) || "Гость FlyAway";
+  const author = reviewAuthor.value || {};
+  const fullName = getFirstString(
+    author.name,
+    author.fullName,
+    author.username,
+    props.review?.userName,
+    props.review?.authorName,
+  );
+
+  if (fullName) {
+    return fullName;
+  }
+
+  const nameParts = [author.firstName, author.lastName]
+    .map((item) => normalizeString(item))
+    .filter(Boolean);
+
+  return nameParts.join(" ") || getFirstString(author.email) || "Пользователь";
 });
 
 const userAvatar = computed(() => {
-  return normalizeString(props.review?.createdBy?.avatar) || "";
+  const author = reviewAuthor.value || {};
+  return getFirstString(
+    author.avatar,
+    author.photo,
+    author.image,
+    props.review?.userAvatar,
+  );
 });
 
 const userInitial = computed(() => userName.value.charAt(0).toUpperCase());
 
 const partnerTitle = computed(() => {
-  return normalizeString(reviewTour.value?.partner?.title) || "FlyAway Partner";
+  return getFirstString(
+    reviewTour.value?.partner?.title,
+    reviewTour.value?.partner?.name,
+  );
 });
 
 const partnerAvatar = computed(() => {
-  return (
-    normalizeString(reviewTour.value?.partner?.logo) ||
-    normalizeString(reviewTour.value?.partner?.avatar) ||
-    ""
+  return getFirstString(
+    reviewTour.value?.partner?.logo,
+    reviewTour.value?.partner?.avatar,
+    reviewTour.value?.partner?.image,
   );
 });
 
@@ -115,19 +155,24 @@ const partnerInitial = computed(() =>
 );
 
 const reviewRating = computed(() => {
-  return Math.max(1, Math.min(5, Number(props.review?.rating) || 5));
+  return Math.max(1, Math.min(5, Math.round(Number(props.review?.rating) || 5)));
 });
 
 const reviewComment = computed(() => {
-  return normalizeString(props.review?.comment) || "Отзыв появится позже.";
+  return getFirstString(
+    props.review?.comment,
+    props.review?.text,
+    props.review?.content,
+  );
 });
 
 const dateLabel = computed(() => {
-  const raw = props.review?.createdAt;
-  if (!raw) return "Недавно";
+  const raw =
+    props.review?.createdAt || props.review?.date || props.review?.updatedAt;
+  if (!raw) return "";
 
   const parsed = new Date(raw);
-  if (Number.isNaN(parsed.getTime())) return "Недавно";
+  if (Number.isNaN(parsed.getTime())) return "";
 
   return new Intl.DateTimeFormat("ru-RU", {
     day: "2-digit",
@@ -136,8 +181,10 @@ const dateLabel = computed(() => {
   }).format(parsed);
 });
 
+const reviewTourTitle = computed(() => getFirstString(reviewTour.value?.title));
+
 const detailsLink = computed(() => {
-  const id = reviewTour.value?._id;
+  const id = reviewTour.value?._id || props.review?.tourId;
   return id ? `/tours/${id}` : "/";
 });
 </script>

@@ -85,7 +85,7 @@
                 class="details__reviews-inner details__reviews-inner--mobile"
               >
                 <p class="details__reviews-count details__reviews-count">
-                  {{ reviewsCount }}
+                  {{ reviewsCountLabel }}
                 </p>
                 <UiIcons
                   icon="star"
@@ -481,7 +481,7 @@
           <div>
             <h3 class="details__reviews-title">Отзывы путешественников</h3>
             <div class="details__reviews-inner">
-              <p class="details__reviews-count">{{ reviewsCount }}</p>
+              <p class="details__reviews-count">{{ reviewsCountLabel }}</p>
               <UiIcons icon="star" color="yellow-500" size="size-14"></UiIcons>
               <p class="details__reviews-average">{{ ratingLabel }}</p>
             </div>
@@ -493,7 +493,16 @@
           >
         </div>
 
+        <div v-if="isReviewsLoading" class="details__reviews-empty">
+          Загружаем отзывы...
+        </div>
+
+        <div v-else-if="reviewsErrorMessage" class="details__reviews-error">
+          {{ reviewsErrorMessage }}
+        </div>
+
         <UiSwiper
+          v-else-if="tourReviews.length"
           :loop="false"
           :breakpoints="{
             1000: {
@@ -507,12 +516,15 @@
             },
           }"
         >
-          <swiper-slide v-for="review in tourReviews" :key="review._id">
-            <TheCommonReview :review="review" />
+          <swiper-slide
+            v-for="review in tourReviews"
+            :key="review._id || `${review.createdAt}-${review.comment}`"
+          >
+            <TheCommonReview :review="review" :show-tour-meta="false" />
           </swiper-slide>
         </UiSwiper>
 
-        <div v-if="!tourReviews.length" class="details__reviews-empty">
+        <div v-else class="details__reviews-empty">
           Пока отзывов нет.
         </div>
 
@@ -854,10 +866,15 @@ const tabs = reactive([
 ]);
 const selectedTab = ref(tabs[0]);
 const tourReviews = ref([]);
+const isReviewsLoading = ref(false);
+const reviewsErrorMessage = ref("");
 
 const canReviewTour = ref(false);
 
 const loadTourReviews = async () => {
+  isReviewsLoading.value = true;
+  reviewsErrorMessage.value = "";
+
   try {
     const response = await api.client({
       url: `/tour-reviews/tour/${route.params.id}`,
@@ -866,8 +883,12 @@ const loadTourReviews = async () => {
     });
 
     tourReviews.value = Array.isArray(response?.data) ? response.data : [];
-  } catch {
+  } catch (error) {
     tourReviews.value = [];
+    reviewsErrorMessage.value =
+      error?.message || "Не удалось загрузить отзывы.";
+  } finally {
+    isReviewsLoading.value = false;
   }
 };
 
@@ -1041,9 +1062,25 @@ const ratingLabel = computed(() => {
     Number(tour.value?.rating) || Number(tour.value?.partner?.rating) || 0;
   return rating.toFixed(1).replace(".", ",");
 });
-const reviewsCount = computed(() => {
-  const count =
-    Number(tour.value?.reviewsCount || 0) || tourReviews.value.length || 0;
+const reviewsCountValue = computed(
+  () => Number(tour.value?.reviewsCount || 0) || tourReviews.value.length || 0,
+);
+const reviewsCountLabel = computed(() => {
+  const count = reviewsCountValue.value;
+  const lastTwo = count % 100;
+  const last = count % 10;
+
+  if (lastTwo >= 11 && lastTwo <= 14) {
+    return `${count} отзывов`;
+  }
+
+  if (last === 1) {
+    return `${count} отзыв`;
+  }
+
+  if (last >= 2 && last <= 4) {
+    return `${count} отзыва`;
+  }
 
   return `${count} отзывов`;
 });
@@ -1621,6 +1658,13 @@ watch(
   },
 );
 
+watch(
+  () => authStore.isLoggedIn,
+  async () => {
+    await loadCanReviewTour();
+  },
+);
+
 await Promise.allSettled([
   favouritesStore.fetchFavourites(),
   fetchWallet(),
@@ -1702,6 +1746,13 @@ const closePaymentModal = () => {
     border-radius: 12px;
     background: rgba($red-500, 0.04);
     color: $surface-500;
+  }
+  &__reviews-error {
+    padding: 16px;
+    border-radius: 12px;
+    background: rgba($orange-200, 0.08);
+    color: $orange-200;
+    font-weight: 600;
   }
   &__content {
     background-color: $white;

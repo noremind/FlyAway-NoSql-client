@@ -25,9 +25,21 @@
             <p class="ticket__value">{{ bookingDate }}</p>
           </div>
 
-          <div class="ticket__meta-item ticket__meta-item--total">
-            <p class="ticket__label">Итого</p>
-            <p class="ticket__price">{{ bookingTotal }}</p>
+          <div class="ticket__info-box">
+            <p class="ticket__label">Гостей</p>
+            <p class="ticket__value">{{ guestsLabel }}</p>
+          </div>
+
+          <div class="ticket__info-box">
+            <p class="ticket__label">Оплата</p>
+            <p class="ticket__value">{{ paymentMethodLabel }}</p>
+          </div>
+
+          <div class="ticket__info-box ticket__info-box--mobile-total">
+            <p class="ticket__label">Сумма</p>
+            <p class="ticket__price ticket__price--mobile">
+              {{ bookingTotal }}
+            </p>
           </div>
         </div>
 
@@ -45,7 +57,7 @@
             class="ticket__cancel"
             type="button"
             :disabled="isCancelling"
-            @click="$emit('cancel', booking._id)"
+            @click="handleCancelClick"
           >
             {{ isCancelling ? "Отменяем..." : "Отменить бронь" }}
           </button>
@@ -77,12 +89,18 @@ const props = defineProps({
   },
 });
 
-defineEmits(["cancel"]);
+const emit = defineEmits(["cancel"]);
 
 const normalizeString = (value) => String(value || "").trim();
 
-const formatMoney = (value) =>
-  `${Number(value || 0).toLocaleString("ru-RU")} ₸`;
+const formatMoney = (value) => {
+  const amount = Number(value);
+  const formattedAmount = Number.isFinite(amount)
+    ? amount.toLocaleString("ru-RU")
+    : "0";
+
+  return `${formattedAmount} ₸`;
+};
 
 const parseDateValue = (value) => {
   const text = normalizeString(value);
@@ -97,9 +115,12 @@ const parseDateValue = (value) => {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
 
-const bookingStatus = computed(
-  () => normalizeString(props.booking?.status) || "active",
-);
+const bookingStatus = computed(() => {
+  const status = normalizeString(props.booking?.status);
+  return ["active", "completed", "cancelled"].includes(status)
+    ? status
+    : "active";
+});
 
 const reviewLink = computed(() => {
   const id = props.booking?.tour?._id;
@@ -144,8 +165,20 @@ const ticketNumber = computed(() => {
 });
 
 const detailsLink = computed(() => {
-  const id = props.booking?._id;
-  return id ? `/profile/my-tours/${id}` : "/profile/my-tours";
+  const id = props.booking?.tour?._id;
+  return id ? `/tours/${id}` : "/profile/my-tours";
+});
+
+const guestsLabel = computed(
+  () => `${Number(props.booking?.guests || 0) || 1}`,
+);
+
+const paymentMethodLabel = computed(() => {
+  const value = normalizeString(props.booking?.paymentMethod);
+
+  if (value === "bonus") return "Бонусами";
+  if (value === "installment") return "Рассрочка";
+  return "Банковская карта";
 });
 
 const ticketSummary = computed(() => {
@@ -158,6 +191,14 @@ const ticketSummary = computed(() => {
     .map((item) => `${item.title || "Билет"} × ${Number(item.quantity) || 0}`)
     .join(", ");
 });
+
+const handleCancelClick = () => {
+  if (!props.booking?._id || props.isCancelling) {
+    return;
+  }
+
+  emit("cancel", props.booking._id);
+};
 </script>
 
 <style lang="scss" scoped>
@@ -263,6 +304,12 @@ const ticketSummary = computed(() => {
     font-weight: 600;
   }
 
+  &__hint {
+    color: $surface-500;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
   &__price {
     color: $blue-500;
     font-size: 32px;
@@ -281,10 +328,7 @@ const ticketSummary = computed(() => {
   }
 
   &__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 4px;
+    margin-top: 16px;
   }
 
   &__open-link,
