@@ -1,132 +1,140 @@
 <template>
   <div class="profile-main">
     <div class="profile-main__wrapper">
-      <div class="profile-main__side">
-        <div class="profile-main__box">
-          <img
-            v-if="avatar"
-            class="profile-main__avatar"
-            :src="avatar"
-            alt="Avatar"
-          />
-          <span v-else class="profile-main__avatar profile-main__avatar--empty">
-            {{ userInitial }}
-          </span>
-          <div class="profile-main__inner">
-            <label class="profile-main__inner-box">
-              <UiIcons color="red-500" icon="upload"></UiIcons>
-              <p class="profile-main__box-text profile-main__box-text--upload">
-                Загрузить другое фото
-              </p>
-              <input
-                class="profile-main__file"
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                @change="handleAvatarChange"
-              />
-            </label>
-            <div class="profile-main__inner-box" @click="deleteAvatar()">
-              <UiIcons color="orange-200" icon="trash" size="size-14"></UiIcons>
-              <p class="profile-main__box-text profile-main__box-text--delete">
-                Удалить аватарку
-              </p>
-            </div>
+      <section class="profile-main__card profile-main__card--account">
+        <div class="profile-main__account-head">
+          <div class="profile-main__avatar-box">
+            <img
+              v-if="avatar"
+              class="profile-main__avatar"
+              :src="avatar"
+              alt="Avatar"
+            />
+            <span v-else class="profile-main__avatar profile-main__avatar--empty">
+              {{ userInitial }}
+            </span>
+          </div>
+
+          <div class="profile-main__account-texts">
+            <h2 class="profile-main__account-title">Личные данные</h2>
+            <p class="profile-main__account-subtitle">
+              Обновите фото профиля, имя и контактную информацию.
+            </p>
           </div>
         </div>
 
-        <div>
-          <UiInput
-            class="profile-main__input"
-            label="Ваше имя*"
-            placeholder="Дана"
-            v-model.trim="name"
-          ></UiInput>
-          <p class="profile-main__input-error" v-if="errorMessage.name">
-            {{ errorMessage.name }}
+        <div class="profile-main__avatar-actions">
+          <label class="profile-main__action profile-main__action--upload">
+            <UiIcons color="red-500" icon="upload"></UiIcons>
+            <span>Загрузить другое фото</span>
+            <input
+              class="profile-main__file"
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              @change="handleAvatarChange"
+            />
+          </label>
+
+          <button
+            type="button"
+            class="profile-main__action profile-main__action--delete"
+            @click="deleteAvatar()"
+          >
+            <UiIcons color="orange-200" icon="trash" size="size-14"></UiIcons>
+            <span>Удалить аватарку</span>
+          </button>
+        </div>
+
+        <div class="profile-main__partner-block" v-if="userStore.getUser?.role !== 'partner'">
+          <p class="profile-main__partner-title">Хотите размещать свои услуги?</p>
+          <p class="profile-main__partner-text">
+            Подайте заявку и подключитесь к FlyAway как партнер.
+          </p>
+          <UiButton
+            class="profile-main__btn profile-main__btn--partner"
+            label="Стать партнером"
+            @click="openPartnerModal"
+          ></UiButton>
+        </div>
+      </section>
+
+      <section class="profile-main__card profile-main__card--form">
+        <div class="profile-main__section-head">
+          <h2 class="profile-main__section-title">Основная информация</h2>
+          <p class="profile-main__section-subtitle">
+            Эти данные используются в вашем личном кабинете и при оформлении заявок.
           </p>
         </div>
-        <UiInput
-          class="profile-main__input"
-          label="Номер телефона*"
-          maska="8(###)-###-##-##"
-          v-model.trim="phone"
-        ></UiInput>
 
-        <UiButton
-          class="profile-main__btn button-primary"
-          label="Сохранить"
-          @click="postProfile"
-          :is-loading="isLoading"
-        ></UiButton>
+        <div class="profile-main__fields">
+          <div class="profile-main__field">
+            <UiInput
+              class="profile-main__input"
+              label="Ваше имя*"
+              placeholder="Дана"
+              v-model.trim="name"
+            ></UiInput>
+            <p class="profile-main__input-error" v-if="errorMessage.name">
+              {{ errorMessage.name }}
+            </p>
+          </div>
 
-        <UiButton
-          v-if="userStore.getUser?.role !== 'partner'"
-          class="profile-main__btn profile-main__btn--partner"
-          label="Стать партнером"
-          @click="openPartnerModal"
-        ></UiButton>
-      </div>
-      <div class="profile-main__side">
-        <UiInput
-          class="profile-main__input profile-main__input--mobile"
-          label="Ваше имя*"
-          v-model.trim="name"
-        ></UiInput>
+          <div class="profile-main__field">
+            <UiInput
+              class="profile-main__input"
+              label="Номер телефона*"
+              maska="8(###)-###-##-##"
+              placeholder="8 (___) ___ __ __"
+              v-model.trim="phone"
+            ></UiInput>
+          </div>
 
-        <div>
-          <UiInput
-            class="profile-main__input"
-            label="Ваша почта*"
-            v-model.trim="email"
-            placeholder="Не указан"
-            :disabled="true"
-          ></UiInput>
+          <div class="profile-main__field">
+            <UiInput
+              class="profile-main__input"
+              label="Ваша почта*"
+              v-model.trim="email"
+              placeholder="Не указан"
+              :disabled="true"
+            ></UiInput>
+          </div>
+
+          <div class="profile-main__field">
+            <UiCalendar
+              label="Дата рождения"
+              class="profile-main__calendar"
+              placeholder="dd.mm.yyyy"
+              v-model.trim="birthDate"
+            />
+          </div>
+
+          <div class="profile-main__field profile-main__field--full">
+            <UiSelect
+              class="profile-main__select"
+              v-model.trim="selectedGender"
+              :options="genders.slice(0, 3)"
+              label="Пол"
+              placeholder="Не указан"
+            ></UiSelect>
+          </div>
         </div>
 
-        <UiInput
-          class="profile-main__input profile-main__input--mobile"
-          label="Номер телефона*"
-          placeholder="8 (___) ___ __ __"
-          v-model.trim="phone"
-        ></UiInput>
+        <div class="profile-main__actions">
+          <UiButton
+            class="profile-main__btn button-primary"
+            label="Сохранить"
+            @click="postProfile"
+            :is-loading="isLoading"
+          ></UiButton>
 
-        <UiInput
-          class="profile-main__input profile-main__input--mobile"
-          label="Ваша почта"
-          :placeholder="email"
-          v-model.trim="email"
-          :disabled="true"
-        ></UiInput>
-
-        <UiCalendar
-          label="Дата рождения"
-          class="profile-main__calendar"
-          placeholder="dd.mm.yyyy"
-          v-model.trim="birthDate"
-        />
-
-        <UiSelect
-          class="profile-main__select"
-          v-model.trim="selectedGender"
-          :options="genders.slice(0, 3)"
-          label="Пол"
-          placeholder="Не указан"
-        ></UiSelect>
-
-        <UiButton
-          class="profile-main__btn profile-main__btn--mobile button-primary"
-          label="Сохранить"
-          @click="postProfile"
-          :is-loading="isLoading"
-        ></UiButton>
-
-        <UiButton
-          v-if="userStore.getUser?.role !== 'partner'"
-          class="profile-main__btn profile-main__btn--mobile"
-          label="Стать партнером"
-          @click="openPartnerModal"
-        ></UiButton>
-      </div>
+          <UiButton
+            v-if="userStore.getUser?.role !== 'partner'"
+            class="profile-main__btn profile-main__btn--partner profile-main__btn--mobile-partner"
+            label="Стать партнером"
+            @click="openPartnerModal"
+          ></UiButton>
+        </div>
+      </section>
     </div>
 
     <TheProfileBecomePartnerModal
@@ -289,98 +297,49 @@ watch(
 <style lang="scss" scoped>
 .profile-main {
   &__wrapper {
-    display: flex;
-    justify-content: space-between;
-    gap: 46px;
+    display: grid;
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: 24px;
     margin: 12px 0;
-    background-color: $white;
-    padding: 16px;
-    border-radius: 16px;
   }
-  &__side {
+
+  &__card {
+    background-color: $white;
+    border-radius: 24px;
+    box-shadow: 0px 8px 28px rgba(0, 0, 0, 0.06);
+    padding: 24px;
+
+    &--account {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-self: start;
+    }
+
+    &--form {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      min-width: 0;
+    }
+  }
+
+  &__account-head {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    width: 100%;
-    height: 100%;
-    &:last-child {
-      margin-top: 14px;
-    }
-  }
-  &__input {
-    display: block;
-    &--mobile {
-      display: none;
-    }
-    &-error {
-      color: $orange-200;
-      font-size: 14px;
-      &--mobile {
-        display: none;
-      }
-    }
-  }
-  &__select {
-    border-radius: 26px;
-    background-color: transparent;
-  }
-  &__btn {
-    margin-top: 16px;
-    &--partner {
-      justify-content: center;
-      color: $red-500;
-      border: 1px solid $red-500;
-    }
-    &--mobile {
-      display: none;
-    }
-  }
-  &__calendar {
-    border-radius: 26px;
-    background-color: transparent;
-    width: 100%;
-    padding: 4px;
-    &-text {
-      color: $surface-900;
-      font-size: 14px;
-      font-weight: 400;
-    }
-  }
-  &__box {
-    display: flex;
-    gap: 12px;
     align-items: center;
-    &-text {
-      font-size: 12px;
-      cursor: pointer;
-      &--upload {
-        color: $red-500;
-      }
-      &--delete {
-        color: $orange-200;
-      }
-    }
+    text-align: center;
   }
-  &__inner {
+
+  &__avatar-box {
     display: flex;
-    gap: 8px;
-    flex-direction: column;
-    &-box {
-      position: relative;
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
+    justify-content: center;
   }
-  &__file {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    cursor: pointer;
-  }
+
   &__avatar {
-    width: 66px;
-    height: 66px;
+    width: 92px;
+    height: 92px;
     border-radius: 50%;
     object-fit: cover;
 
@@ -390,51 +349,213 @@ watch(
       justify-content: center;
       color: $white;
       background: $red-500;
-      font-size: 24px;
+      font-size: 32px;
       font-weight: 700;
+    }
+  }
+
+  &__account-title,
+  &__section-title {
+    color: $surface-900;
+    font-size: 22px;
+    line-height: 1.2;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  &__account-subtitle,
+  &__section-subtitle,
+  &__partner-text {
+    color: $surface-500;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  &__section-head {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__avatar-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__action {
+    min-height: 44px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 14px;
+    font-size: 14px;
+    font-weight: 600;
+    position: relative;
+
+    &--upload {
+      color: $red-500;
+      background: rgba($red-500, 0.06);
+      border: 1px solid rgba($red-500, 0.18);
+    }
+
+    &--delete {
+      color: $orange-200;
+      background: rgba($orange-200, 0.08);
+      border: 1px solid rgba($orange-200, 0.18);
+    }
+  }
+
+  &__partner-block {
+    padding: 18px;
+    border-radius: 18px;
+    background: rgba($red-500, 0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__partner-title {
+    color: $surface-900;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  &__fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+
+    &--full {
+      grid-column: 1 / -1;
+    }
+  }
+
+  &__input,
+  &__calendar,
+  &__select {
+    display: block;
+  }
+
+  &__input-error {
+    color: $orange-200;
+    font-size: 14px;
+  }
+
+  &__calendar,
+  &__select {
+    border-radius: 26px;
+    background-color: transparent;
+    width: 100%;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-top: 4px;
+  }
+
+  &__btn {
+    min-height: 46px;
+
+    &--partner {
+      justify-content: center;
+      color: $red-500;
+      border: 1px solid $red-500;
+      background: transparent;
+    }
+
+    &--mobile-partner {
+      display: none;
+    }
+  }
+
+  &__file {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+}
+
+@media (max-width: 1024px) {
+  .profile-main {
+    &__wrapper {
+      grid-template-columns: 1fr;
+    }
+
+    &__card {
+      &--account {
+        align-self: stretch;
+      }
+    }
+
+    &__account-head {
+      align-items: flex-start;
+      text-align: left;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .profile-main {
+    &__wrapper {
+      gap: 16px;
+    }
+
+    &__card {
+      padding: 20px 16px;
+      border-radius: 18px;
+    }
+
+    &__fields {
+      grid-template-columns: 1fr;
+    }
+
+    &__actions {
+      flex-direction: column;
+    }
+
+    &__btn {
+      width: 100%;
+
+      &--mobile-partner {
+        display: inline-flex;
+      }
+    }
+
+    &__partner-block {
+      display: none;
     }
   }
 }
 
 @media (max-width: 375px) {
   .profile-main {
-    padding: 0;
     &__wrapper {
-      display: flex;
-      flex-direction: column;
-      background-color: transparent;
-      padding: 0;
+      margin: 0;
       gap: 12px;
     }
-    &__side:last-child,
-    &__box {
-      padding: 16px;
-      border-radius: 16px;
-      box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.1);
+
+    &__card {
       background-color: $white;
+      box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.06);
+      padding: 18px 14px;
     }
-    &__btn,
-    &__input {
-      display: none;
-    }
-    &__select,
-    &__calendar {
-      display: block;
-    }
-    &__btn {
-      &--mobile {
-        display: flex;
-      }
-    }
-    &__input {
-      &--mobile {
-        display: block;
-      }
-      &-error {
-        &--mobile {
-          display: block;
-        }
-      }
+
+    &__account-title,
+    &__section-title {
+      font-size: 20px;
     }
   }
 }
