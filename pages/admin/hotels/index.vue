@@ -4,19 +4,18 @@
       <div>
         <h2 class="admin-catalog__title">Отели</h2>
         <p class="admin-catalog__text">
-          Контроль гостиничного каталога, фото, рейтинга и размещения по
-          партнёрам.
+          Контроль гостиничного каталога, фото, рейтинга, контента и размещения
+          по партнёрам.
         </p>
       </div>
 
       <div class="admin-catalog__actions">
-        <NuxtLink class="admin-catalog__primary" to="/admin/hotels/create">
-          Создать отель
-        </NuxtLink>
-
         <button class="admin-catalog__ghost" type="button" @click="loadHotels">
           Обновить
         </button>
+        <NuxtLink class="admin-catalog__primary" to="/admin/hotels/create">
+          Создать отель
+        </NuxtLink>
       </div>
     </div>
 
@@ -31,12 +30,31 @@
       </article>
     </div>
 
+    <section class="admin-catalog__toolbar">
+      <UiInput
+        class="admin-catalog__search"
+        placeholder="Поиск по названию отеля"
+        after-icon="lupa"
+        icon-color="surface-500"
+        v-model="searchQuery"
+      />
+
+      <UiSelect
+        class="admin-catalog__filter"
+        placeholder="Все партнеры"
+        :options="partnerOptions"
+        option-label="label"
+        option-value="value"
+        v-model="selectedPartnerId"
+      />
+    </section>
+
     <p v-if="errorMessage" class="admin-catalog__error">{{ errorMessage }}</p>
 
     <div v-if="isLoading" class="admin-catalog__state">Загружаем отели...</div>
 
-    <div v-else-if="!hotels.length" class="admin-catalog__state">
-      Отелей пока нет.
+    <div v-else-if="!filteredHotels.length" class="admin-catalog__state">
+      Отели по выбранным условиям не найдены.
     </div>
 
     <div v-else class="admin-catalog__table-wrap">
@@ -50,22 +68,30 @@
             <th>Рейтинг</th>
             <th>Описание</th>
             <th>Создан</th>
-            <th>Сайт</th>
+            <th>Действие</th>
           </tr>
         </thead>
 
         <tbody>
-          <tr v-for="hotel in hotels" :key="hotel._id">
+          <tr v-for="hotel in filteredHotels" :key="hotel._id">
             <td>
               <div class="admin-catalog__cell-main">
                 <strong>{{ hotel.name }}</strong>
                 <span class="admin-catalog__muted">
-                  {{ truncateText(hotel.content, 80) || "Контент не заполнен" }}
+                  {{ truncateText(hotel.content, 90) || "Контент не заполнен" }}
                 </span>
               </div>
             </td>
 
-            <td>{{ hotel?.partner?.title || "—" }}</td>
+            <td>
+              <div class="admin-catalog__cell-main">
+                <strong>{{ hotel?.partner?.title || "—" }}</strong>
+                <span class="admin-catalog__muted">
+                  {{ hotel?.partner?.phone || hotel?.partner?.email || "Без контактов" }}
+                </span>
+              </div>
+            </td>
+
             <td>{{ hotel.location || "—" }}</td>
             <td>{{ getImagesCount(hotel) }}</td>
             <td>{{ formatRating(hotel.rating) }}</td>
@@ -73,13 +99,21 @@
             <td>{{ formatDate(hotel.createdAt) }}</td>
 
             <td>
-              <NuxtLink
-                class="admin-catalog__link"
-                :to="`/hotels/${hotel._id}`"
-                target="_blank"
-              >
-                Открыть
-              </NuxtLink>
+              <div class="admin-catalog__row-actions">
+                <NuxtLink
+                  class="admin-catalog__link"
+                  :to="`/admin/hotels/${hotel._id}`"
+                >
+                  Редактировать
+                </NuxtLink>
+                <NuxtLink
+                  class="admin-catalog__link admin-catalog__link--ghost"
+                  :to="`/hotels/${hotel._id}`"
+                  target="_blank"
+                >
+                  Открыть на сайте
+                </NuxtLink>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -103,6 +137,8 @@ const api = useApi();
 const hotels = ref([]);
 const isLoading = ref(false);
 const errorMessage = ref("");
+const searchQuery = ref("");
+const selectedPartnerId = ref("");
 
 const formatRating = (value) => {
   const rating = Number(value || 0);
@@ -132,6 +168,22 @@ const getImagesCount = (hotel) => {
   return Array.isArray(hotel?.images) ? hotel.images.length : 0;
 };
 
+const partnerOptions = computed(() => {
+  const partners = [...new Map(
+    hotels.value
+      .filter((hotel) => hotel?.partner?._id)
+      .map((hotel) => [hotel.partner._id, hotel.partner]),
+  ).values()];
+
+  return [
+    { label: "Все партнеры", value: "" },
+    ...partners.map((partner) => ({
+      label: partner.title || "Партнер",
+      value: partner._id,
+    })),
+  ];
+});
+
 const statItems = computed(() => {
   const total = hotels.value.length;
   const withPhotos = hotels.value.filter(
@@ -157,6 +209,24 @@ const statItems = computed(() => {
     { label: "Уникальных партнеров", value: uniquePartners },
     { label: "Средний рейтинг", value: String(avgRating).replace(".", ",") },
   ];
+});
+
+const filteredHotels = computed(() => {
+  const query = String(searchQuery.value || "").trim().toLowerCase();
+
+  return hotels.value.filter((hotel) => {
+    const matchesSearch = !query
+      ? true
+      : [hotel?.name, hotel?.description, hotel?.content, hotel?.partner?.title]
+          .map((item) => String(item || "").toLowerCase())
+          .some((item) => item.includes(query));
+
+    const matchesPartner = !selectedPartnerId.value
+      ? true
+      : String(hotel?.partner?._id || "") === String(selectedPartnerId.value);
+
+    return matchesSearch && matchesPartner;
+  });
 });
 
 const loadHotels = async () => {
@@ -197,10 +267,11 @@ onMounted(loadHotels);
   }
 
   &__text {
-    margin-top: 4px;
+    margin-top: 6px;
     color: $surface-500;
     font-size: 14px;
     line-height: 1.45;
+    max-width: 720px;
   }
 
   &__actions {
@@ -211,9 +282,9 @@ onMounted(loadHotels);
 
   &__primary,
   &__ghost {
-    min-height: 42px;
-    padding: 0 14px;
-    border-radius: 10px;
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 12px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -242,6 +313,7 @@ onMounted(loadHotels);
     border-radius: 18px;
     background: rgba(255, 255, 255, 0.92);
     border: 1px solid rgba($red-500, 0.08);
+    box-shadow: 0 10px 26px rgba(32, 36, 38, 0.04);
   }
 
   &__stat-value {
@@ -258,17 +330,25 @@ onMounted(loadHotels);
     line-height: 1.4;
   }
 
+  &__toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 260px;
+    gap: 14px;
+    align-items: center;
+  }
+
   &__table-wrap {
     overflow-x: auto;
     border-radius: 18px;
     background: rgba(255, 255, 255, 0.92);
     border: 1px solid rgba($red-500, 0.08);
     padding: 8px 0;
+    box-shadow: 0 10px 26px rgba(32, 36, 38, 0.04);
   }
 
   &__table {
     width: 100%;
-    min-width: 1040px;
+    min-width: 1100px;
     border-collapse: collapse;
 
     th,
@@ -283,6 +363,7 @@ onMounted(loadHotels);
     th {
       color: $surface-500;
       font-weight: 700;
+      white-space: nowrap;
     }
 
     td {
@@ -301,9 +382,20 @@ onMounted(loadHotels);
     line-height: 1.45;
   }
 
+  &__row-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 150px;
+  }
+
   &__link {
     color: $blue-500;
     font-weight: 700;
+
+    &--ghost {
+      color: $surface-500;
+    }
   }
 
   &__state,
@@ -329,6 +421,10 @@ onMounted(loadHotels);
   .admin-catalog {
     &__stats {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    &__toolbar {
+      grid-template-columns: 1fr;
     }
   }
 }
