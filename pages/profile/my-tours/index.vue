@@ -27,25 +27,32 @@
         </button>
       </div>
 
-      <div v-else class="my-tours__cards">
-        <TheProfileTourTicket
-          v-for="booking in filteredBookings"
-          :key="booking._id"
-          :booking="booking"
-          :is-cancelling="cancellingBookingId === booking._id"
-          @cancel="handleCancelBooking"
-        />
+      <div v-else class="my-tours__body">
+        <div class="my-tours__cards">
+          <TheProfileTourTicket
+            v-for="booking in paginatedBookings"
+            :key="booking._id"
+            :booking="booking"
+            :is-cancelling="cancellingBookingId === booking._id"
+            @cancel="handleCancelBooking"
+          />
 
-        <div v-if="!filteredBookings.length" class="my-tours__empty">
-          {{ emptyStateText }}
+          <div v-if="!paginatedBookings.length" class="my-tours__empty">
+            {{ emptyStateText }}
+          </div>
         </div>
+
+        <UiPagination
+          v-if="lastPage > 1"
+          class="my-tours__pagination"
+          :total-items="filteredBookings.length"
+          :current-page="currentPage"
+          :last-page="lastPage"
+          :per-page="perPage"
+          @change-page="changePage"
+        ></UiPagination>
       </div>
     </div>
-
-    <UiPagination
-      v-if="filteredBookings.length && !isLoading && !hasLoadError"
-      class="my-tours__pagination"
-    ></UiPagination>
   </div>
 </template>
 
@@ -64,6 +71,8 @@ const isLoading = ref(false);
 const cancellingBookingId = ref(null);
 const errorMessage = ref("");
 const message = ref("");
+const currentPage = ref(1);
+const perPage = 5;
 
 useSeoMeta({
   title: "FlyAway - Мои туры",
@@ -96,6 +105,15 @@ const filteredBookings = computed(() => {
   });
 });
 
+const lastPage = computed(() => {
+  return Math.max(1, Math.ceil(filteredBookings.value.length / perPage));
+});
+
+const paginatedBookings = computed(() => {
+  const startIndex = (currentPage.value - 1) * perPage;
+  return filteredBookings.value.slice(startIndex, startIndex + perPage);
+});
+
 const emptyStateText = computed(() => {
   if (selectedTab.value?.id === "completed") {
     return "Завершенных поездок пока нет.";
@@ -126,6 +144,16 @@ const replaceBookingInList = (bookingId, nextBooking = null) => {
   );
 };
 
+const syncPageBounds = () => {
+  if (currentPage.value > lastPage.value) {
+    currentPage.value = lastPage.value;
+  }
+
+  if (currentPage.value < 1) {
+    currentPage.value = 1;
+  }
+};
+
 const loadBookings = async () => {
   isLoading.value = true;
   errorMessage.value = "";
@@ -144,11 +172,16 @@ const loadBookings = async () => {
         : [];
 
     bookings.value = sortBookings(items);
+    currentPage.value = 1;
   } catch (error) {
     errorMessage.value = error?.message || "Не удалось загрузить бронирования.";
   } finally {
     isLoading.value = false;
   }
+};
+
+const changePage = (page) => {
+  currentPage.value = Math.min(Math.max(1, Number(page) || 1), lastPage.value);
 };
 
 const handleCancelBooking = async (bookingId) => {
@@ -178,12 +211,24 @@ const handleCancelBooking = async (bookingId) => {
     replaceBookingInList(bookingId, response?.data);
     message.value = "Бронирование отменено.";
     selectedTab.value = tabs.find((tab) => tab.id === "cancelled") || tabs[0];
+    currentPage.value = 1;
   } catch (error) {
     errorMessage.value = error?.message || "Не удалось отменить бронирование.";
   } finally {
     cancellingBookingId.value = null;
   }
 };
+
+watch(
+  () => selectedTab.value?.id,
+  () => {
+    currentPage.value = 1;
+    message.value = "";
+    errorMessage.value = "";
+  },
+);
+
+watch(filteredBookings, syncPageBounds);
 
 onMounted(loadBookings);
 </script>
@@ -192,8 +237,10 @@ onMounted(loadBookings);
 .my-tours {
   &__wrapper {
     background-color: $white;
-    padding: 16px;
-    border-radius: 16px;
+    padding: 28px 28px 32px;
+    border-radius: 24px;
+    box-shadow: 0px 8px 28px rgba(0, 0, 0, 0.06);
+    min-height: 640px;
   }
 
   &__tabs {
@@ -202,22 +249,27 @@ onMounted(loadBookings);
     align-items: center;
   }
 
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    margin-top: 20px;
+  }
+
   &__cards {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    margin: 24px 0;
+    gap: 20px;
   }
 
   &__pagination {
     margin: 0 auto;
-    margin-top: 24px;
   }
 
   &__state,
   &__empty {
-    padding: 28px 16px;
-    border-radius: 16px;
+    padding: 40px 24px;
+    border-radius: 20px;
     background: rgba($red-500, 0.04);
     color: $surface-500;
     text-align: center;
@@ -236,9 +288,9 @@ onMounted(loadBookings);
   }
 
   &__retry {
-    min-height: 40px;
-    padding: 0 16px;
-    border-radius: 10px;
+    min-height: 42px;
+    padding: 0 18px;
+    border-radius: 12px;
     color: $white;
     background: $red-500;
     font-size: 14px;
@@ -247,7 +299,7 @@ onMounted(loadBookings);
 
   &__message,
   &__error {
-    margin-top: 16px;
+    margin-top: 18px;
     font-size: 14px;
     font-weight: 600;
   }
@@ -261,11 +313,20 @@ onMounted(loadBookings);
   }
 }
 
-@media (max-width: 375px) {
+@media (max-width: 768px) {
   .my-tours {
     &__wrapper {
-      background-color: transparent;
-      padding: 0;
+      padding: 20px 16px 24px;
+      border-radius: 18px;
+      min-height: auto;
+    }
+
+    &__body {
+      gap: 22px;
+    }
+
+    &__cards {
+      gap: 16px;
     }
   }
 }
@@ -276,6 +337,16 @@ onMounted(loadBookings);
       justify-content: flex-start;
       overflow-x: auto;
       padding-bottom: 4px;
+    }
+  }
+}
+
+@media (max-width: 375px) {
+  .my-tours {
+    &__wrapper {
+      background-color: transparent;
+      box-shadow: none;
+      padding: 0;
     }
   }
 }
