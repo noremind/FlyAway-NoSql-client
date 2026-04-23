@@ -1,5 +1,32 @@
 <template>
   <section class="admin-bookings">
+    <div class="admin-bookings__head">
+      <div>
+        <h2 class="admin-bookings__title-page">Бронирования туров</h2>
+        <p class="admin-bookings__page-text">
+          Контроль активных поездок, завершённых туров, отмен и способов оплаты
+          по всем бронированиям.
+        </p>
+      </div>
+
+      <div class="admin-bookings__head-actions">
+        <button class="admin-bookings__reload" type="button" @click="loadBookings">
+          Обновить
+        </button>
+      </div>
+    </div>
+
+    <div class="admin-bookings__stats">
+      <article
+        v-for="item in statItems"
+        :key="item.label"
+        class="admin-bookings__stat"
+      >
+        <p class="admin-bookings__stat-value">{{ item.value }}</p>
+        <p class="admin-bookings__stat-label">{{ item.label }}</p>
+      </article>
+    </div>
+
     <div class="admin-bookings__toolbar">
       <div class="admin-bookings__filters">
         <UiSelect
@@ -56,9 +83,7 @@
         <div class="admin-bookings__grid">
           <div class="admin-bookings__field">
             <span class="admin-bookings__label">Дата</span>
-            <span class="admin-bookings__value">{{
-              formatDate(booking.date)
-            }}</span>
+            <span class="admin-bookings__value">{{ formatDate(booking.date) }}</span>
           </div>
 
           <div class="admin-bookings__field">
@@ -68,22 +93,28 @@
 
           <div class="admin-bookings__field">
             <span class="admin-bookings__label">Сумма</span>
-            <span class="admin-bookings__value"
-              >{{ formatMoney(booking.total) }} ₸</span
-            >
+            <span class="admin-bookings__value">{{ formatMoney(booking.total) }} ₸</span>
           </div>
 
           <div class="admin-bookings__field">
             <span class="admin-bookings__label">Оплата</span>
-            <span class="admin-bookings__value">{{
-              getPaymentLabel(booking.paymentMethod)
-            }}</span>
+            <span class="admin-bookings__value">{{ getPaymentLabel(booking.paymentMethod) }}</span>
+          </div>
+
+          <div class="admin-bookings__field">
+            <span class="admin-bookings__label">Создано</span>
+            <span class="admin-bookings__value">{{ formatDateTime(booking.createdAt) }}</span>
+          </div>
+
+          <div class="admin-bookings__field">
+            <span class="admin-bookings__label">Партнер</span>
+            <span class="admin-bookings__value">{{ booking?.tour?.partner?.title || '—' }}</span>
           </div>
 
           <div class="admin-bookings__field admin-bookings__field--full">
             <span class="admin-bookings__label">Билеты</span>
             <span class="admin-bookings__value">
-              {{ getTicketsSummary(booking.ticketSelections) }}
+              {{ getTicketsSummary(booking.ticketSelections) || 'Не выбраны' }}
             </span>
           </div>
         </div>
@@ -147,6 +178,21 @@ const formatDate = (value) => {
   }).format(parsed);
 };
 
+const formatDateTime = (value) => {
+  if (!value) return "Не указано";
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return String(value);
+
+  return new Intl.DateTimeFormat("ru-RU", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(parsed);
+};
+
 const getStatusLabel = (status) => {
   if (status === "completed") return "Завершено";
   if (status === "cancelled") return "Отменено";
@@ -166,6 +212,20 @@ const getTicketsSummary = (ticketSelections) => {
     .map((item) => `${item.title || "Билет"} × ${item.quantity}`)
     .join(", ");
 };
+
+const statItems = computed(() => {
+  const total = bookings.value.length;
+  const active = bookings.value.filter((item) => item?.status === "active").length;
+  const completed = bookings.value.filter((item) => item?.status === "completed").length;
+  const revenue = bookings.value.reduce((sum, item) => sum + (Number(item?.total) || 0), 0);
+
+  return [
+    { label: "Всего броней", value: total },
+    { label: "Активные", value: active },
+    { label: "Завершенные", value: completed },
+    { label: "Сумма броней", value: `${formatMoney(revenue)} ₸` },
+  ];
+});
 
 const loadBookings = async () => {
   isLoading.value = true;
@@ -226,6 +286,62 @@ onMounted(loadBookings);
   flex-direction: column;
   gap: 16px;
 
+  &__head {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: flex-end;
+  }
+
+  &__title-page {
+    color: $surface-900;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.05;
+  }
+
+  &__page-text {
+    margin-top: 6px;
+    max-width: 760px;
+    color: $surface-500;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  &__head-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  &__stat {
+    padding: 18px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba($red-500, 0.08);
+    box-shadow: 0 10px 26px rgba(32, 36, 38, 0.04);
+  }
+
+  &__stat-value {
+    color: $red-500;
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  &__stat-label {
+    margin-top: 10px;
+    color: $surface-500;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
   &__toolbar {
     display: flex;
     justify-content: space-between;
@@ -239,9 +355,9 @@ onMounted(loadBookings);
   }
 
   &__reload {
-    min-height: 42px;
-    padding: 0 14px;
-    border-radius: 10px;
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 12px;
     color: $red-500;
     background: rgba($red-500, 0.06);
     border: 1px solid rgba($red-500, 0.14);
@@ -262,6 +378,7 @@ onMounted(loadBookings);
     border-radius: 20px;
     background: rgba(255, 255, 255, 0.9);
     border: 1px solid rgba($red-500, 0.08);
+    box-shadow: 0 10px 26px rgba(32, 36, 38, 0.04);
   }
 
   &__card-head {
@@ -308,7 +425,7 @@ onMounted(loadBookings);
 
   &__grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px 18px;
   }
 
@@ -360,8 +477,21 @@ onMounted(loadBookings);
   }
 }
 
+@media (max-width: 1100px) {
+  .admin-bookings {
+    &__stats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    &__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}
+
 @media (max-width: 700px) {
   .admin-bookings {
+    &__head,
     &__toolbar {
       flex-direction: column;
       align-items: stretch;
@@ -372,6 +502,7 @@ onMounted(loadBookings);
       max-width: 100%;
     }
 
+    &__stats,
     &__grid {
       grid-template-columns: 1fr;
     }
