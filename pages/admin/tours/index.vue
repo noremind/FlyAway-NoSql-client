@@ -2,13 +2,17 @@
   <section class="admin-catalog">
     <div class="admin-catalog__head">
       <div>
-        <h2 class="admin-catalog__title"></h2>
+        <h2 class="admin-catalog__title">Туры</h2>
         <p class="admin-catalog__text">
-          <!-- Управление каталогом туров, датами, рейтингом и ценами. -->
+          Управление каталогом туров, датами, рейтингом, билетами и статусами
+          публикации.
         </p>
       </div>
 
       <div class="admin-catalog__actions">
+        <button class="admin-catalog__ghost" type="button" @click="loadTours">
+          Обновить
+        </button>
         <NuxtLink class="admin-catalog__primary" to="/admin/tours/create">
           Создать тур
         </NuxtLink>
@@ -26,12 +30,31 @@
       </article>
     </div>
 
+    <section class="admin-catalog__toolbar">
+      <UiInput
+        class="admin-catalog__search"
+        placeholder="Поиск по названию тура"
+        after-icon="lupa"
+        icon-color="surface-500"
+        v-model="searchQuery"
+      />
+
+      <UiSelect
+        class="admin-catalog__filter"
+        placeholder="Все статусы"
+        :options="statusOptions"
+        option-label="label"
+        option-value="value"
+        v-model="selectedStatus"
+      />
+    </section>
+
     <p v-if="errorMessage" class="admin-catalog__error">{{ errorMessage }}</p>
 
     <div v-if="isLoading" class="admin-catalog__state">Загружаем туры...</div>
 
-    <div v-else-if="!tours.length" class="admin-catalog__state">
-      Туров пока нет.
+    <div v-else-if="!filteredTours.length" class="admin-catalog__state">
+      Туры по выбранным условиям не найдены.
     </div>
 
     <div v-else class="admin-catalog__table-wrap">
@@ -41,8 +64,8 @@
             <th>Название</th>
             <th>Партнер</th>
             <th>Даты</th>
+            <th>Билеты</th>
             <th>Цена</th>
-            <th>Скидка</th>
             <th>Рейтинг</th>
             <th>Отзывы</th>
             <th>Статус</th>
@@ -52,7 +75,7 @@
         </thead>
 
         <tbody>
-          <tr v-for="tour in tours" :key="tour._id">
+          <tr v-for="tour in filteredTours" :key="tour._id">
             <td>
               <div class="admin-catalog__cell-main">
                 <strong>{{ tour.title }}</strong>
@@ -62,7 +85,14 @@
               </div>
             </td>
 
-            <td>{{ tour?.partner?.title || "—" }}</td>
+            <td>
+              <div class="admin-catalog__cell-main">
+                <strong>{{ tour?.partner?.title || "—" }}</strong>
+                <span class="admin-catalog__muted">
+                  {{ tour?.departureCity || tour?.departurePoint || "Без точки отправления" }}
+                </span>
+              </div>
+            </td>
 
             <td>
               <div class="admin-catalog__cell-main">
@@ -73,8 +103,24 @@
               </div>
             </td>
 
-            <td>{{ formatMoney(tour.price) }} ₸</td>
-            <td>{{ Number(tour.discount || 0) }}%</td>
+            <td>
+              <div class="admin-catalog__cell-main">
+                <strong>{{ getTicketsCount(tour) }}</strong>
+                <span class="admin-catalog__muted">
+                  {{ getCheapestTicketLabel(tour) }}
+                </span>
+              </div>
+            </td>
+
+            <td>
+              <div class="admin-catalog__cell-main">
+                <strong>{{ formatMoney(getFinalPrice(tour)) }} ₸</strong>
+                <span class="admin-catalog__muted">
+                  {{ Number(tour.discount || 0) }}% скидка
+                </span>
+              </div>
+            </td>
+
             <td>{{ formatRating(tour.rating) }}</td>
             <td>{{ Number(tour.reviewsCount || 0) }}</td>
 
@@ -93,12 +139,17 @@
             <td>{{ formatDate(tour.createdAt) }}</td>
 
             <td>
-              <NuxtLink
-                class="admin-catalog__link"
-                :to="`/admin/tours/${tour._id}`"
-              >
-                Открыть
-              </NuxtLink>
+              <div class="admin-catalog__row-actions">
+                <NuxtLink
+                  class="admin-catalog__link"
+                  :to="`/admin/tours/${tour._id}`"
+                >
+                  Редактировать
+                </NuxtLink>
+                <NuxtLink class="admin-catalog__link admin-catalog__link--ghost" :to="`/tours/${tour._id}`">
+                  Открыть на сайте
+                </NuxtLink>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -122,6 +173,14 @@ const api = useApi();
 const tours = ref([]);
 const isLoading = ref(false);
 const errorMessage = ref("");
+const searchQuery = ref("");
+const selectedStatus = ref("");
+
+const statusOptions = [
+  { label: "Все статусы", value: "" },
+  { label: "Горящие", value: "hot" },
+  { label: "Обычные", value: "regular" },
+];
 
 const formatMoney = (value) => Number(value || 0).toLocaleString("ru-RU");
 
@@ -181,6 +240,28 @@ const getAvailabilitySummary = (tour) => {
   return `мест: ${Math.max(0, totalSeats - bookedSeats)} свободно`;
 };
 
+const getTicketsCount = (tour) => {
+  return Array.isArray(tour?.ticketTypes) ? tour.ticketTypes.filter(Boolean).length : 0;
+};
+
+const getCheapestTicketLabel = (tour) => {
+  const ticketTypes = Array.isArray(tour?.ticketTypes) ? tour.ticketTypes : [];
+  const minPrice = ticketTypes.reduce((min, item) => {
+    const price = Number(item?.price) || 0;
+    if (!price) return min;
+    return min === null ? price : Math.min(min, price);
+  }, null);
+
+  return minPrice ? `от ${formatMoney(minPrice)} ₸` : "Без билетов";
+};
+
+const getFinalPrice = (tour) => {
+  const price = Number(tour?.price) || 0;
+  const discount = Number(tour?.discount) || 0;
+  const total = price - (price * discount) / 100;
+  return total > 0 ? total : price;
+};
+
 const statItems = computed(() => {
   const total = tours.value.length;
   const hot = tours.value.filter((tour) => tour?.is_hot).length;
@@ -196,8 +277,7 @@ const statItems = computed(() => {
 
   const avgPrice = total
     ? Math.round(
-        tours.value.reduce((sum, tour) => sum + (Number(tour?.price) || 0), 0) /
-          total,
+        tours.value.reduce((sum, tour) => sum + getFinalPrice(tour), 0) / total,
       )
     : 0;
 
@@ -207,6 +287,26 @@ const statItems = computed(() => {
     { label: "Средний рейтинг", value: String(avgRating).replace(".", ",") },
     { label: "Средняя цена", value: `${formatMoney(avgPrice)} ₸` },
   ];
+});
+
+const filteredTours = computed(() => {
+  const query = String(searchQuery.value || "").trim().toLowerCase();
+
+  return tours.value.filter((tour) => {
+    const matchesSearch = !query
+      ? true
+      : [tour?.title, tour?.description, tour?.partner?.title]
+          .map((item) => String(item || "").toLowerCase())
+          .some((item) => item.includes(query));
+
+    const matchesStatus = !selectedStatus.value
+      ? true
+      : selectedStatus.value === "hot"
+        ? Boolean(tour?.is_hot)
+        : !tour?.is_hot;
+
+    return matchesSearch && matchesStatus;
+  });
 });
 
 const loadTours = async () => {
@@ -247,10 +347,11 @@ onMounted(loadTours);
   }
 
   &__text {
-    margin-top: 4px;
+    margin-top: 6px;
     color: $surface-500;
     font-size: 14px;
     line-height: 1.45;
+    max-width: 720px;
   }
 
   &__actions {
@@ -261,9 +362,9 @@ onMounted(loadTours);
 
   &__primary,
   &__ghost {
-    min-height: 42px;
-    padding: 0 14px;
-    border-radius: 10px;
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 12px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -292,6 +393,7 @@ onMounted(loadTours);
     border-radius: 18px;
     background: rgba(255, 255, 255, 0.92);
     border: 1px solid rgba($red-500, 0.08);
+    box-shadow: 0 10px 26px rgba(32, 36, 38, 0.04);
   }
 
   &__stat-value {
@@ -308,17 +410,25 @@ onMounted(loadTours);
     line-height: 1.4;
   }
 
+  &__toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 240px;
+    gap: 14px;
+    align-items: center;
+  }
+
   &__table-wrap {
     overflow-x: auto;
     border-radius: 18px;
     background: rgba(255, 255, 255, 0.92);
     border: 1px solid rgba($red-500, 0.08);
     padding: 8px 0;
+    box-shadow: 0 10px 26px rgba(32, 36, 38, 0.04);
   }
 
   &__table {
     width: 100%;
-    min-width: 1080px;
+    min-width: 1200px;
     border-collapse: collapse;
 
     th,
@@ -333,6 +443,7 @@ onMounted(loadTours);
     th {
       color: $surface-500;
       font-weight: 700;
+      white-space: nowrap;
     }
 
     td {
@@ -354,8 +465,8 @@ onMounted(loadTours);
   &__badge {
     display: inline-flex;
     align-items: center;
-    min-height: 26px;
-    padding: 0 10px;
+    min-height: 28px;
+    padding: 0 12px;
     border-radius: 999px;
     color: $white;
     font-size: 12px;
@@ -370,9 +481,20 @@ onMounted(loadTours);
     }
   }
 
+  &__row-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 140px;
+  }
+
   &__link {
     color: $blue-500;
     font-weight: 700;
+
+    &--ghost {
+      color: $surface-500;
+    }
   }
 
   &__state,
@@ -398,6 +520,10 @@ onMounted(loadTours);
   .admin-catalog {
     &__stats {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    &__toolbar {
+      grid-template-columns: 1fr;
     }
   }
 }
