@@ -34,7 +34,11 @@
           </div>
         </div>
 
-        <p v-if="reviewComment" class="review__comment">
+        <p
+          v-if="reviewComment"
+          class="review__comment"
+          :class="{ 'review__comment--clamped': type !== 'single' }"
+        >
           {{ reviewComment }}
         </p>
       </div>
@@ -174,11 +178,28 @@ const dateLabel = computed(() => {
   const parsed = new Date(raw);
   if (Number.isNaN(parsed.getTime())) return "";
 
-  return new Intl.DateTimeFormat("ru-RU", {
+  const now = new Date();
+  const isToday =
+    parsed.getDate() === now.getDate() &&
+    parsed.getMonth() === now.getMonth() &&
+    parsed.getFullYear() === now.getFullYear();
+
+  const time = new Intl.DateTimeFormat("ru-RU", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(parsed);
+
+  if (isToday) {
+    return `сегодня в ${time}`;
+  }
+
+  const date = new Intl.DateTimeFormat("ru-RU", {
     day: "2-digit",
     month: "long",
     year: "numeric",
   }).format(parsed);
+
+  return `${date} • ${time}`;
 });
 
 const reviewTourTitle = computed(() => getFirstString(reviewTour.value?.title));
@@ -193,45 +214,58 @@ const detailsLink = computed(() => {
 .review {
   &__wrapper {
     background-color: $white;
-    padding: 16px;
-    border-radius: 16px;
-    border: 0.5px solid $surface-300;
+    padding: 18px;
+    border-radius: 18px;
+    border: 1px solid rgba($surface-300, 0.55);
+    box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.04);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    max-width: 480px;
-    min-width: 327px;
-    gap: 16px;
+    max-width: 100%;
+    min-width: 0;
+    gap: 18px;
 
     &--full {
       max-width: 100%;
       min-width: 100%;
+      padding: 20px 18px;
     }
+  }
+
+  &__inner {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
   }
 
   &__header {
     display: flex;
     justify-content: space-between;
     gap: 12px;
-    align-items: center;
+    align-items: flex-start;
 
     &-box {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       min-width: 0;
+      flex: 1;
     }
 
     &-inner {
       min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
     }
   }
 
   &__avatar {
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    height: 42px;
     object-fit: cover;
     border-radius: 50%;
+    flex: 0 0 42px;
 
     &--empty {
       display: inline-flex;
@@ -244,9 +278,18 @@ const detailsLink = computed(() => {
     }
 
     &--small {
-      width: 24px;
-      height: 24px;
+      width: 26px;
+      height: 26px;
+      flex-basis: 26px;
     }
+  }
+
+  &__stars {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+    padding-top: 2px;
   }
 
   &__date {
@@ -257,21 +300,31 @@ const detailsLink = computed(() => {
 
   &__name {
     color: $surface-900;
-    font-weight: 400;
+    font-weight: 700;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    line-height: 1.2;
 
     &--small {
       font-size: 14px;
+      font-weight: 600;
     }
   }
 
   &__comment {
     font-size: 14px;
-    font-weight: 100;
+    font-weight: 400;
     color: $surface-900;
-    line-height: 1.55;
+    line-height: 1.65;
+    white-space: pre-line;
+
+    &--clamped {
+      display: -webkit-box;
+      -webkit-line-clamp: 5;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
   }
 
   &__footer {
@@ -279,31 +332,39 @@ const detailsLink = computed(() => {
     justify-content: space-between;
     gap: 12px;
     align-items: center;
+    padding-top: 2px;
 
     &-box {
       display: flex;
       gap: 8px;
       align-items: center;
       min-width: 0;
+      flex: 1;
     }
   }
 
   &__info {
     color: $red-500;
     font-weight: 700;
-    line-height: 17.5px;
+    line-height: 1.4;
     font-size: 14px;
     cursor: pointer;
     text-align: right;
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .review {
+    &__wrapper {
+      padding: 16px;
+      border-radius: 16px;
+    }
   }
 }
 
 @media (max-width: 640px) {
   .review {
-    &__wrapper {
-      min-width: 100%;
-    }
-
     &__footer {
       flex-direction: column;
       align-items: flex-start;
