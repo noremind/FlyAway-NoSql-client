@@ -87,7 +87,9 @@
                       :key="star"
                       icon="star"
                       size="size-18"
-                      :color="star <= roundedRating ? 'yellow-500' : 'surface-300'"
+                      :color="
+                        star <= roundedRating ? 'yellow-500' : 'surface-300'
+                      "
                     />
                     <span class="hotel-page__meta-note">{{ ratingText }}</span>
                   </div>
@@ -259,10 +261,7 @@
                 />
               </div>
 
-              <div
-                v-if="selectedRoom"
-                class="hotel-page__selected-room"
-              >
+              <div v-if="selectedRoom" class="hotel-page__selected-room">
                 <UiIcons icon="circle-check" size="size-18" color="red-500" />
                 <span>Вы выбрали {{ selectedRoom.name }}</span>
               </div>
@@ -298,14 +297,17 @@
                   </strong>
                 </div>
 
-                <div class="hotel-page__summary-row hotel-page__summary-row--total">
+                <div
+                  class="hotel-page__summary-row hotel-page__summary-row--total"
+                >
                   <span>Итого</span>
                   <strong>{{ totalPriceLabel }}</strong>
                 </div>
               </div>
 
               <p class="hotel-page__booking-note">
-                После отправки заявки менеджер проверит доступность и свяжется с вами.
+                После отправки заявки менеджер проверит доступность и свяжется с
+                вами.
               </p>
 
               <UiButton
@@ -370,7 +372,7 @@
 
 <script setup>
 import placeholderImage from "@/assets/image/content/main-image.png";
-import mapPreview from "@/assets/image/content/map.png";
+import mapPreview from "@/assets/image/content/map.svg";
 
 const api = useApi();
 const authStore = useAuthStore();
@@ -411,8 +413,10 @@ const bookingForm = reactive({
 });
 
 useSeoMeta({
-  title: () => (hotelName.value ? `${hotelName.value} | FlyAway` : "Отель | FlyAway"),
-  ogTitle: () => (hotelName.value ? `${hotelName.value} | FlyAway` : "Отель | FlyAway"),
+  title: () =>
+    hotelName.value ? `${hotelName.value} | FlyAway` : "Отель | FlyAway",
+  ogTitle: () =>
+    hotelName.value ? `${hotelName.value} | FlyAway` : "Отель | FlyAway",
   description: () =>
     hotelDescription.value || "FlyAway - сайт для бронирования туров и отелей",
   ogDescription: () =>
@@ -422,15 +426,16 @@ useSeoMeta({
 const normalizeString = (value) => String(value || "").trim();
 
 const stripHtml = (value) =>
-  normalizeString(value).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  normalizeString(value)
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
 const formatMoney = (value) => Number(value || 0).toLocaleString("ru-RU");
 
 const normalizeList = (value) => {
   if (Array.isArray(value)) {
-    return value
-      .map((item) => normalizeString(item))
-      .filter(Boolean);
+    return value.map((item) => normalizeString(item)).filter(Boolean);
   }
 
   if (!value || typeof value !== "string") {
@@ -495,28 +500,41 @@ const hasRating = computed(() => Number(hotel.value?.rating || 0) > 0);
 
 const ratingText = computed(() => {
   if (!hasRating.value) return "Без рейтинга";
-  return `${Number(hotel.value?.rating || 0).toFixed(1).replace(".", ",")} звездочный отель`;
+  return `${Number(hotel.value?.rating || 0)
+    .toFixed(1)
+    .replace(".", ",")} звездочный отель`;
 });
 
 const roomTypes = computed(() =>
   Array.isArray(hotel.value?.room_types) ? hotel.value.room_types : [],
 );
 
-const selectedRoom = computed(() =>
-  roomTypes.value.find((room) => getRoomId(room) === selectedRoomId.value) || null,
+const selectedRoom = computed(
+  () =>
+    roomTypes.value.find((room) => getRoomId(room) === selectedRoomId.value) ||
+    null,
 );
 
 const partnerName = computed(
-  () => hotel.value?.partner?.title || hotel.value?.partner?.name || "FlyAway Partner",
+  () =>
+    hotel.value?.partner?.title ||
+    hotel.value?.partner?.name ||
+    "FlyAway Partner",
 );
 
 const partnerLogo = computed(() => hotel.value?.partner?.logo || "");
 
-const partnerInitial = computed(() => partnerName.value.charAt(0).toUpperCase());
+const partnerInitial = computed(() =>
+  partnerName.value.charAt(0).toUpperCase(),
+);
 
-const discount = computed(() => Math.max(0, Number(hotel.value?.discount) || 0));
+const discount = computed(() =>
+  Math.max(0, Number(hotel.value?.discount) || 0),
+);
 
-const discountLabel = computed(() => (discount.value ? `-${discount.value}%` : ""));
+const discountLabel = computed(() =>
+  discount.value ? `-${discount.value}%` : "",
+);
 
 const nearbyPoints = computed(() => {
   const items =
@@ -573,11 +591,15 @@ const amenityGroups = computed(() => {
     },
     {
       title: "Платные услуги",
-      items: normalizeList(hotel.value?.paid_services || hotel.value?.extra_services),
+      items: normalizeList(
+        hotel.value?.paid_services || hotel.value?.extra_services,
+      ),
     },
     {
       title: "Особенности для семей",
-      items: normalizeList(hotel.value?.family_features || hotel.value?.family_options),
+      items: normalizeList(
+        hotel.value?.family_features || hotel.value?.family_options,
+      ),
     },
     {
       title: "Доступность",
@@ -593,7 +615,8 @@ const amenityGroups = computed(() => {
 });
 
 const contactsItems = computed(() => {
-  const contacts = hotel.value?.contacts || hotel.value?.partner?.contacts || {};
+  const contacts =
+    hotel.value?.contacts || hotel.value?.partner?.contacts || {};
 
   const items = [
     { icon: "globe", value: contacts.website || hotel.value?.website },
@@ -610,9 +633,12 @@ const nightsCount = computed(() => {
   const checkOut = bookingForm.checkOut ? new Date(bookingForm.checkOut) : null;
 
   if (!checkIn || !checkOut) return 1;
-  if (Number.isNaN(checkIn.getTime()) || Number.isNaN(checkOut.getTime())) return 1;
+  if (Number.isNaN(checkIn.getTime()) || Number.isNaN(checkOut.getTime()))
+    return 1;
 
-  const diff = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
+  const diff = Math.ceil(
+    (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24),
+  );
   return diff > 0 ? diff : 1;
 });
 
@@ -626,7 +652,9 @@ const totalWithDiscount = computed(() => {
   return Math.round(rawTotal.value * (1 - discount.value / 100));
 });
 
-const guestsLabel = computed(() => `${Math.max(1, Number(bookingForm.guests) || 1)}`);
+const guestsLabel = computed(
+  () => `${Math.max(1, Number(bookingForm.guests) || 1)}`,
+);
 
 const selectedRoomLabel = computed(() =>
   selectedRoom.value?.name ? `Вы выбрали ${selectedRoom.value.name}` : "",
@@ -723,7 +751,8 @@ const syncFavouriteHotelState = async () => {
         : [];
 
     isFavouriteHotel.value = items.some(
-      (item) => String(item?._id || item?.id || "") === String(hotel.value?._id),
+      (item) =>
+        String(item?._id || item?.id || "") === String(hotel.value?._id),
     );
   } catch {
     isFavouriteHotel.value = false;
@@ -804,7 +833,8 @@ const validateBookingForm = () => {
   }
 
   if (checkIn > checkOut) {
-    bookingStatusMessage.value = "Дата выезда не может быть раньше даты заезда.";
+    bookingStatusMessage.value =
+      "Дата выезда не может быть раньше даты заезда.";
     bookingStatusType.value = "error";
     return false;
   }
