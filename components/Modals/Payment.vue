@@ -96,6 +96,41 @@
             </button>
           </div>
 
+          <div v-if="selectedPaymentMethod === 'card'" class="payment__card-form">
+            <UiInput
+              label="Номер карты"
+              placeholder="4400 1234 5678 8909"
+              v-model="cardForm.number"
+              :is-error="Boolean(cardErrors.number)"
+            />
+
+            <UiInput
+              label="Имя держателя"
+              placeholder="NOREM ADMIN"
+              v-model.trim="cardForm.holder"
+              :is-error="Boolean(cardErrors.holder)"
+            />
+
+            <div class="payment__card-grid">
+              <UiInput
+                label="Срок действия"
+                placeholder="MM/YY"
+                v-model="cardForm.expiry"
+                :is-error="Boolean(cardErrors.expiry)"
+              />
+              <UiInput
+                label="CVV"
+                placeholder="123"
+                v-model="cardForm.cvv"
+                :is-error="Boolean(cardErrors.cvv)"
+              />
+            </div>
+
+            <p v-if="cardFormError" class="payment__form-error">
+              {{ cardFormError }}
+            </p>
+          </div>
+
           <p
             v-if="selectedPaymentMethod === 'bonus'"
             class="payment__note payment__note--bonus"
@@ -112,7 +147,7 @@
       </div>
 
       <UiButton
-        @click="emit('payed')"
+        @click="handleSubmit"
         class="payment__btn button-primary"
         :is-loading="isLoading"
         :label="payLabel"
@@ -197,7 +232,115 @@ const payLabel = computed(() =>
     : "Оплатить",
 );
 
+const cardForm = reactive({
+  number: "",
+  holder: "",
+  expiry: "",
+  cvv: "",
+});
+
+const cardErrors = reactive({
+  number: "",
+  holder: "",
+  expiry: "",
+  cvv: "",
+});
+
+const cardFormError = ref("");
+
 const formatMoney = (value) => Number(value || 0).toLocaleString("ru-RU");
+
+const clearCardErrors = () => {
+  cardErrors.number = "";
+  cardErrors.holder = "";
+  cardErrors.expiry = "";
+  cardErrors.cvv = "";
+  cardFormError.value = "";
+};
+
+const normalizeDigits = (value) => String(value || "").replace(/\D/g, "");
+
+watch(
+  () => selectedPaymentMethod.value,
+  (value) => {
+    if (value !== "card") {
+      clearCardErrors();
+    }
+  },
+);
+
+watch(
+  () => cardForm.number,
+  (value) => {
+    const digits = normalizeDigits(value).slice(0, 16);
+    const chunks = digits.match(/.{1,4}/g) || [];
+    const formatted = chunks.join(" ");
+    if (formatted !== value) {
+      cardForm.number = formatted;
+    }
+  },
+);
+
+watch(
+  () => cardForm.expiry,
+  (value) => {
+    const digits = normalizeDigits(value).slice(0, 4);
+    const formatted = digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
+    if (formatted !== value) {
+      cardForm.expiry = formatted;
+    }
+  },
+);
+
+watch(
+  () => cardForm.cvv,
+  (value) => {
+    const digits = normalizeDigits(value).slice(0, 3);
+    if (digits !== value) {
+      cardForm.cvv = digits;
+    }
+  },
+);
+
+const validateCardForm = () => {
+  clearCardErrors();
+
+  const numberDigits = normalizeDigits(cardForm.number);
+  const expiryDigits = normalizeDigits(cardForm.expiry);
+  const expiryMonth = Number(expiryDigits.slice(0, 2));
+
+  if (numberDigits.length !== 16) {
+    cardErrors.number = "Введите 16 цифр";
+  }
+
+  if (!String(cardForm.holder || "").trim()) {
+    cardErrors.holder = "Укажите держателя";
+  }
+
+  if (expiryDigits.length !== 4 || expiryMonth < 1 || expiryMonth > 12) {
+    cardErrors.expiry = "Формат MM/YY";
+  }
+
+  if (normalizeDigits(cardForm.cvv).length !== 3) {
+    cardErrors.cvv = "Введите 3 цифры";
+  }
+
+  const hasErrors = Object.values(cardErrors).some(Boolean);
+  if (hasErrors) {
+    cardFormError.value = "Проверьте данные банковской карты.";
+    return false;
+  }
+
+  return true;
+};
+
+const handleSubmit = () => {
+  if (selectedPaymentMethod.value === "card" && !validateCardForm()) {
+    return;
+  }
+
+  emit("payed");
+};
 </script>
 
 <style lang="scss" scoped>
@@ -375,6 +518,27 @@ const formatMoney = (value) => Number(value || 0).toLocaleString("ru-RU");
     line-height: 1.4;
   }
 
+  &__card-form {
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 18px;
+    background: rgba($surface-150, 0.8);
+    border: 1px solid rgba($red-500, 0.08);
+  }
+
+  &__card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  &__form-error {
+    color: $red-500;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
   &__note {
     padding: 14px 16px;
     border-radius: 16px;
@@ -437,8 +601,13 @@ const formatMoney = (value) => Number(value || 0).toLocaleString("ru-RU");
     }
 
     &__method-hint,
-    &__note {
+    &__note,
+    &__form-error {
       font-size: 13px;
+    }
+
+    &__card-grid {
+      grid-template-columns: 1fr;
     }
   }
 }
