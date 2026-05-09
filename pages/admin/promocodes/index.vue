@@ -1,5 +1,25 @@
 <template>
   <section class="admin-promocodes">
+    <div class="admin-promocodes__head">
+      <div>
+        <h2 class="admin-promocodes__title">Промокоды</h2>
+        <p class="admin-promocodes__text">
+          Управление скидками для туров, отелей и общих акций FlyAway.
+        </p>
+      </div>
+    </div>
+
+    <div class="admin-promocodes__stats">
+      <article class="admin-promocodes__stat">
+        <p class="admin-promocodes__stat-value">{{ promos.length }}</p>
+        <p class="admin-promocodes__stat-label">Всего промокодов</p>
+      </article>
+      <article class="admin-promocodes__stat">
+        <p class="admin-promocodes__stat-value">{{ activePromosCount }}</p>
+        <p class="admin-promocodes__stat-label">Активные</p>
+      </article>
+    </div>
+
     <div class="admin-promocodes__layout">
       <form class="admin-promocodes__form" @submit.prevent="createPromo">
         <UiInput label="Название" v-model.trim="form.title" />
@@ -79,17 +99,35 @@
           class="admin-promocodes__card"
         >
           <div class="admin-promocodes__card-top">
-            <strong>{{ promo.code }}</strong>
-            <span>{{ promo.discountType === "percent" ? "%" : "₸" }}</span>
+            <div>
+              <strong class="admin-promocodes__card-code">{{ promo.code }}</strong>
+              <p class="admin-promocodes__card-title">{{ promo.title || 'Без названия' }}</p>
+            </div>
+            <span class="admin-promocodes__card-badge">
+              {{ promo.discountType === 'percent' ? '%' : '₸' }}
+            </span>
           </div>
-          <p>{{ promo.title || "Без названия" }}</p>
-          <p>Скидка: {{ promo.value }}</p>
-          <p>Область: {{ promo.targetType }}</p>
-          <p>
-            Период:
-            {{ promo.startsAt || "без даты" }} -
-            {{ promo.endsAt || "без даты" }}
-          </p>
+
+          <div class="admin-promocodes__card-grid">
+            <div class="admin-promocodes__card-field">
+              <span>Скидка</span>
+              <strong>{{ promo.value }}</strong>
+            </div>
+            <div class="admin-promocodes__card-field">
+              <span>Область</span>
+              <strong>{{ promoScopeLabel(promo) }}</strong>
+            </div>
+            <div class="admin-promocodes__card-field admin-promocodes__card-field--full">
+              <span>Период</span>
+              <strong>{{ promo.startsAt || 'без даты' }} — {{ promo.endsAt || 'без даты' }}</strong>
+            </div>
+            <div class="admin-promocodes__card-field admin-promocodes__card-field--full">
+              <span>Статус</span>
+              <strong :class="promo.isActive ? 'admin-promocodes__status admin-promocodes__status--active' : 'admin-promocodes__status admin-promocodes__status--inactive'">
+                {{ promo.isActive ? 'Активен' : 'Выключен' }}
+              </strong>
+            </div>
+          </div>
         </article>
       </div>
     </div>
@@ -163,6 +201,18 @@ const hotelOptions = computed(() =>
     value: hotel._id,
   })),
 );
+
+const activePromosCount = computed(() => promos.value.filter((promo) => promo?.isActive).length);
+
+const promoScopeLabel = (promo) => {
+  if (promo?.targetType === 'tour') {
+    return promo?.tour?.title || 'Тур';
+  }
+  if (promo?.targetType === 'hotel') {
+    return promo?.hotel?.name || 'Отель';
+  }
+  return 'Для всего';
+};
 
 const formatApiDate = (value) => {
   if (!value) return "";
@@ -244,6 +294,49 @@ onMounted(loadData);
   display: grid;
   gap: 18px;
 
+  &__title {
+    color: $surface-900;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.05;
+  }
+
+  &__text {
+    margin-top: 6px;
+    max-width: 760px;
+    color: $surface-500;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  &__stat {
+    padding: 18px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba($red-500, 0.08);
+    box-shadow: 0 10px 26px rgba(32, 36, 38, 0.04);
+  }
+
+  &__stat-value {
+    color: $red-500;
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  &__stat-label {
+    margin-top: 10px;
+    color: $surface-500;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
   &__layout {
     display: grid;
     grid-template-columns: minmax(0, 460px) minmax(0, 1fr);
@@ -258,6 +351,11 @@ onMounted(loadData);
     border-radius: 24px;
     background: $white;
     box-shadow: 0 14px 36px rgba(32, 36, 38, 0.08);
+  }
+
+  &__list {
+    align-content: start;
+    grid-auto-rows: min-content;
   }
 
   &__grid {
@@ -285,24 +383,96 @@ onMounted(loadData);
 
   &__card {
     display: grid;
-    gap: 6px;
-    padding: 16px;
+    gap: 14px;
+    padding: 18px;
     border-radius: 18px;
     background: rgba($red-500, 0.04);
     color: $surface-900;
+    border: 1px solid rgba($red-500, 0.08);
   }
 
   &__card-top {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     gap: 12px;
+  }
+
+  &__card-code {
+    display: block;
+    font-size: 22px;
+    line-height: 1.1;
+  }
+
+  &__card-title {
+    margin-top: 8px;
+    color: $surface-500;
+    line-height: 1.45;
+  }
+
+  &__card-badge {
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0 10px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: $white;
+    color: $red-500;
+    font-weight: 800;
+  }
+
+  &__card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  &__card-field {
+    display: grid;
+    gap: 6px;
+
+    span {
+      color: $surface-500;
+      font-size: 13px;
+    }
+
+    strong {
+      color: $surface-900;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    &--full {
+      grid-column: 1 / -1;
+    }
+  }
+
+  &__status {
+    &--active {
+      color: $green-400 !important;
+    }
+
+    &--inactive {
+      color: $surface-400 !important;
+    }
   }
 }
 
 @media (max-width: 980px) {
   .admin-promocodes {
     &__layout {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+@media (max-width: 700px) {
+  .admin-promocodes {
+    &__stats,
+    &__grid,
+    &__card-grid {
       grid-template-columns: 1fr;
     }
   }
