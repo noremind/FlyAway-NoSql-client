@@ -172,6 +172,21 @@ const normalizedReviews = computed(() => {
   return Array.isArray(reviews.value) ? reviews.value.filter(Boolean) : [];
 });
 
+const liveReviewsCount = computed(() => normalizedReviews.value.length);
+
+const liveAverageRating = computed(() => {
+  if (!normalizedReviews.value.length) {
+    return 0;
+  }
+
+  const total = normalizedReviews.value.reduce(
+    (sum, review) => sum + (Number(review?.rating) || 0),
+    0,
+  );
+
+  return Number((total / normalizedReviews.value.length).toFixed(1));
+});
+
 const lastPage = computed(() => {
   return Math.max(1, Math.ceil(normalizedReviews.value.length / perPage));
 });
@@ -186,12 +201,12 @@ const tourTitle = computed(() => {
 });
 
 const reviewsCountLabel = computed(() => {
-  const count = Number(tour.value?.reviewsCount) || normalizedReviews.value.length || 0;
+  const count = liveReviewsCount.value || Number(tour.value?.reviewsCount) || 0;
   return `${count} отзывов`;
 });
 
 const ratingLabel = computed(() => {
-  const rating = Number(tour.value?.rating) || 0;
+  const rating = liveAverageRating.value || Number(tour.value?.rating) || 0;
   return rating ? rating.toFixed(1).replace('.', ',') : '0,0';
 });
 
@@ -310,8 +325,8 @@ const submitReview = async () => {
       if (tour.value) {
         tour.value = {
           ...tour.value,
-          reviewsCount: Number(tour.value.reviewsCount || 0) + 1,
-          rating: response.data?.tour?.rating || tour.value.rating,
+          reviewsCount: liveReviewsCount.value + 1,
+          rating: response.data?.tour?.rating || liveAverageRating.value,
         };
       }
     } else {
