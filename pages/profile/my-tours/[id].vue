@@ -109,6 +109,9 @@
                 </div>
                 <p class="tour-ticket-page__summary-row">Скидка</p>
                 <p class="tour-ticket-page__summary-row">Промокод</p>
+                <p v-if="paidWithBonuses > 0" class="tour-ticket-page__summary-row">
+                  Бонусы
+                </p>
                 <p class="tour-ticket-page__summary-row tour-ticket-page__summary-row--total">
                   Итого
                 </p>
@@ -128,6 +131,9 @@
                 </div>
                 <p class="tour-ticket-page__summary-value">-{{ discountLabel }}%</p>
                 <p class="tour-ticket-page__summary-value">{{ promoAmountLabel }}</p>
+                <p v-if="paidWithBonuses > 0" class="tour-ticket-page__summary-value">
+                  -{{ formatMoney(paidWithBonuses) }} Б
+                </p>
                 <p
                   class="tour-ticket-page__summary-value tour-ticket-page__summary-value--total"
                 >
@@ -139,7 +145,10 @@
             <div class="tour-ticket-page__payment">
               <p class="tour-ticket-page__payment-title">Способ оплаты</p>
               <p class="tour-ticket-page__payment-method">{{ paymentMethodLabel }}</p>
-              <p class="tour-ticket-page__payment-mask">4400 ... 8909</p>
+              <p v-if="paymentMaskLabel" class="tour-ticket-page__payment-mask">{{ paymentMaskLabel }}</p>
+              <p v-else-if="paidWithBonuses > 0" class="tour-ticket-page__payment-mask">
+                Списано бонусов: {{ formatMoney(paidWithBonuses) }} Б
+              </p>
             </div>
 
             <button
@@ -147,7 +156,7 @@
               class="tour-ticket-page__download"
               @click="downloadTicket"
             >
-              Скачать билет
+              Скачать билет в PDF
             </button>
 
             <div
@@ -308,10 +317,20 @@ const promoAmountLabel = computed(() => {
   return value ? `-${formatMoney(value)}` : "0 ₸";
 });
 
+const paidWithBonuses = computed(() => Math.max(0, Number(booking.value?.paidWithBonuses) || 0));
+
 const paymentMethodLabel = computed(() => {
   const value = normalizeString(booking.value?.paymentMethod);
   if (value === "bonus") return "Бонусы";
   return "Банковская карта";
+});
+
+const paymentMaskLabel = computed(() => {
+  if (normalizeString(booking.value?.paymentMethod) === "bonus") {
+    return "";
+  }
+
+  return normalizeString(booking.value?.paymentCardMask) || "4400 ... 8909";
 });
 
 const partnerTitle = computed(() => {
@@ -418,38 +437,90 @@ const handleCancelBooking = async (bookingId) => {
   }
 };
 
+const buildPrintableTicketMarkup = () => {
+  const ticketRows = ticketLines.value
+    .map(
+      (item) => `
+        <tr>
+          <td>${item.title}</td>
+          <td style="text-align:right;">${item.quantity} x ${formatMoney(item.price)}</td>
+        </tr>
+      `,
+    )
+    .join("");
+
+  return `
+    <!doctype html>
+    <html lang="ru">
+      <head>
+        <meta charset="UTF-8" />
+        <title>Билет №${ticketNumber.value}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 32px; color: #202426; }
+          .card { max-width: 760px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 20px; padding: 28px; }
+          .header { display:flex; justify-content:space-between; gap:16px; align-items:center; margin-bottom: 24px; }
+          .title { font-size: 28px; font-weight: 700; margin:0; }
+          .status { display:inline-flex; padding: 10px 18px; border-radius: 999px; background:#fa3946; color:#fff; font-weight:700; }
+          .section-title { font-size:18px; font-weight:700; margin: 22px 0 12px; }
+          .muted { color:#6b7280; line-height:1.5; }
+          table { width:100%; border-collapse: collapse; margin-top: 12px; }
+          td { padding: 8px 0; font-size: 14px; vertical-align: top; }
+          .accent { color:#fa3946; font-weight:700; }
+          .total { font-weight: 800; font-size: 18px; }
+          .qr { display:flex; justify-content:center; margin: 18px 0 8px; }
+          .qr img { width: 180px; height: 180px; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <div class="header">
+            <h1 class="title">Билет №${ticketNumber.value}</h1>
+            <span class="status">${statusLabel.value}</span>
+          </div>
+
+          <div class="qr">
+            <img src="${qrImageUrl.value}" alt="QR билет" />
+          </div>
+
+          <div class="section-title">${bookingTitle.value}</div>
+          <p class="muted">${bookingDescription.value}</p>
+
+          <table>
+            <tr><td>Дата</td><td style="text-align:right;">${bookingDate.value}</td></tr>
+            <tr><td class="accent" colspan="2">Ваши билеты</td></tr>
+            ${ticketRows}
+            <tr><td>Скидка</td><td style="text-align:right;">-${discountLabel.value}%</td></tr>
+            <tr><td>Промокод</td><td style="text-align:right;">${promoAmountLabel.value}</td></tr>
+            ${paidWithBonuses.value > 0 ? `<tr><td>Бонусы</td><td style="text-align:right;">-${formatMoney(paidWithBonuses.value)} Б</td></tr>` : ""}
+            <tr><td class="total">Итого</td><td class="total" style="text-align:right;">${bookingTotal.value}</td></tr>
+          </table>
+
+          <div class="section-title">Способ оплаты</div>
+          <p class="muted">${paymentMethodLabel.value}${paymentMaskLabel.value ? ` — ${paymentMaskLabel.value}` : paidWithBonuses.value > 0 ? ` — списано ${formatMoney(paidWithBonuses.value)} Б` : ""}</p>
+        </div>
+      </body>
+    </html>
+  `;
+};
+
 const downloadTicket = () => {
   if (typeof window === "undefined" || !booking.value) {
     return;
   }
 
-  const lines = [
-    `Билет №${ticketNumber.value}`,
-    `Тур: ${bookingTitle.value}`,
-    `Дата: ${bookingDate.value}`,
-    `Статус: ${statusLabel.value}`,
-    `Сумма: ${bookingTotal.value}`,
-    `Способ оплаты: ${paymentMethodLabel.value}`,
-  ];
-
-  if (ticketLines.value.length) {
-    lines.push("Билеты:");
-    ticketLines.value.forEach((item) => {
-      lines.push(`- ${item.title}: ${item.quantity} x ${formatMoney(item.price)}`);
-    });
+  const printWindow = window.open("", "_blank", "width=900,height=700");
+  if (!printWindow) {
+    return;
   }
 
-  const blob = new Blob([lines.join("\n")], {
-    type: "text/plain;charset=utf-8",
-  });
-  const blobUrl = window.URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = blobUrl;
-  link.download = `flyaway-ticket-${ticketNumber.value}.txt`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  window.URL.revokeObjectURL(blobUrl);
+  printWindow.document.open();
+  printWindow.document.write(buildPrintableTicketMarkup());
+  printWindow.document.close();
+  printWindow.focus();
+
+  window.setTimeout(() => {
+    printWindow.print();
+  }, 350);
 };
 
 const goToReviewPage = async () => {
@@ -703,7 +774,7 @@ onMounted(loadBooking);
   &__review-button {
     min-height: 48px;
     width: fit-content;
-    min-width: 180px;
+    min-width: 220px;
     padding: 0 24px;
     border-radius: 999px;
     font-size: 15px;
