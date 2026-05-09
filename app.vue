@@ -1,26 +1,26 @@
 <template>
-  <NuxtLayout>
-    <NuxtPage />
-  </NuxtLayout>
+	<NuxtLayout>
+		<NuxtPage />
+	</NuxtLayout>
 
-  <UiModal
-    :is-show="userStore.isOpenRegisteredModal || userStore.isOpenLoginModal"
-    max-width="600px"
-    @close="checkModal"
-    :full-screen="userStore.isMobileModal"
-  >
-    <ModalsAuthStep></ModalsAuthStep>
-  </UiModal>
+	<UiModal
+		:is-show="userStore.isOpenRegisteredModal || userStore.isOpenLoginModal"
+		max-width="600px"
+		@close="checkModal"
+		:full-screen="userStore.isMobileModal"
+	>
+		<ModalsAuthStep></ModalsAuthStep>
+	</UiModal>
 
-  <UiNotifyStack />
-  <UiLoader />
+	<UiNotifyStack />
+	<UiLoader />
 </template>
 
 <script setup>
-const userStore = useAuthStore();
+const userStore = useAuthStore()
 const checkModal = computed(() =>
-  userStore.isOpenRegisteredModal
-    ? userStore.closeAuthModalRegister
-    : userStore.closeAuthModalLogin,
-);
+	userStore.isOpenRegisteredModal
+		? userStore.closeAuthModalRegister
+		: userStore.closeAuthModalLogin,
+)
 </script>
