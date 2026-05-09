@@ -13,7 +13,7 @@
           placeholder="Введите название"
           after-icon="lupa"
           v-model="filters.search"
-        ></UiInput>
+        />
         <button class="tours__top-text" type="button" @click="openFilterMobile">
           Фильтр
         </button>
@@ -23,31 +23,26 @@
         class="tours__tabs tours__tabs--mobile"
         :tabs="tabsMobile"
         v-model="selectedTabMobile"
-      ></UiTabs>
+      />
 
       <div
         class="tours__hero"
-        :class="{
-          'tours__hero--map-mobile': selectedTabMobile.id === 3,
-        }"
+        :class="{ 'tours__hero--map-mobile': selectedTabMobile.id === 3 }"
       >
         <h1 class="tours__title title">Туры</h1>
+
         <UiTabs
           class="tours__tabs tours__tabs--desktop"
           :tabs="tabs"
           v-model="selectedTab"
-        ></UiTabs>
+        />
       </div>
 
       <div class="tours__content" v-show="selectedTabMobile.id !== 3">
         <aside class="tours__sidebar">
           <section class="tours__filters">
             <div class="tours__filters-header">
-              <UiIcons
-                icon="filter-burger"
-                size="size-36"
-                color="red-500"
-              ></UiIcons>
+              <UiIcons icon="filter-burger" size="size-36" color="red-500" />
               <h2 class="tours__filters-title">Фильтр</h2>
             </div>
 
@@ -58,7 +53,7 @@
                 after-icon="lupa"
                 icon-color="surface-900"
                 v-model="filters.search"
-              ></UiInput>
+              />
 
               <div class="tours__filters-group">
                 <p class="tours__filters-text">Дата поездки</p>
@@ -76,33 +71,6 @@
                 </div>
               </div>
 
-              <div class="tours__filters-range">
-                <div>
-                  <p class="tours__filters-text">Цена</p>
-                  <UiRange></UiRange>
-                </div>
-
-                <div class="tours__filters-inner">
-                  <span>от</span>
-                  <UiInput
-                    type="number"
-                    placeholder="0"
-                    v-model="filters.priceFrom"
-                  ></UiInput>
-                  <span>₸</span>
-                </div>
-
-                <div class="tours__filters-inner">
-                  <span>до</span>
-                  <UiInput
-                    type="number"
-                    placeholder="0"
-                    v-model="filters.priceTo"
-                  ></UiInput>
-                  <span>₸</span>
-                </div>
-              </div>
-
               <UiSelect
                 label="Продолжительность"
                 placeholder="Выберите длительность"
@@ -110,7 +78,7 @@
                 option-label="label"
                 option-value="value"
                 v-model="filters.duration"
-              ></UiSelect>
+              />
 
               <UiSelect
                 label="Локация"
@@ -119,7 +87,7 @@
                 option-label="label"
                 option-value="value"
                 v-model="filters.location"
-              ></UiSelect>
+              />
 
               <div class="tours__filters-actions">
                 <button class="tours__filters-reset" type="button" @click="resetFilters">
@@ -129,7 +97,7 @@
             </div>
           </section>
 
-          <TheCommonAdBanner class="tours__ad"></TheCommonAdBanner>
+          <TheCommonAdBanner class="tours__ad" />
         </aside>
 
         <div class="tours__block">
@@ -144,9 +112,7 @@
                 :key="group.value"
                 type="button"
                 class="tours__sort-chip"
-                :class="{
-                  'tours__sort-chip--active': selectedSortGroup === group.value,
-                }"
+                :class="{ 'tours__sort-chip--active': selectedSortGroup === group.value }"
                 @click="selectSortGroup(group.value)"
               >
                 <span class="tours__sort-radio"></span>
@@ -162,10 +128,12 @@
               option-value="value"
               v-model="selectedSortDirection"
               :disabled="selectedSortGroup !== 'price'"
-            ></UiSelect>
+            />
           </section>
 
-          <div v-if="isLoading" class="tours__state">Загружаем туры...</div>
+          <div v-if="isLoading" class="tours__state">
+            Загружаем туры...
+          </div>
 
           <div v-else-if="errorMessage" class="tours__state tours__state--error">
             {{ errorMessage }}
@@ -179,10 +147,10 @@
             >
               <TheCommonTourCard
                 v-for="tour in tours"
-                :key="tour._id"
+                :key="tour._id || tour.id"
                 :tour="tour"
                 :view-type="selectedTabMobile.id === 1 ? 'tablet' : 'list'"
-              ></TheCommonTourCard>
+              />
             </div>
 
             <div v-show="selectedTab?.id === 2" class="tours__location">
@@ -192,30 +160,29 @@
                 <div class="tours__scroll-cards">
                   <TheCommonTourCard
                     v-for="tour in tours"
-                    :key="tour._id || tour.id"
+                    :key="`location-${tour._id || tour.id}`"
                     :tour="tour"
                     view-type="list"
-                  ></TheCommonTourCard>
+                  />
                 </div>
               </div>
             </div>
 
             <UiPagination
-              v-if="pagination?.last_page && pagination?.last_page !== 1"
-              :total-items="pagination?.total_items"
+              v-if="pagination.last_page > 1"
+              :total-items="pagination.total_items"
               :current-page="currentPage"
-              @change-page="paginationPage"
-              :last-page="pagination?.last_page"
-              :per-page="pagination?.per_page"
+              :last-page="pagination.last_page"
+              :per-page="pagination.per_page"
               class="tours__pagination"
-            ></UiPagination>
+              @change-page="paginationPage"
+            />
           </template>
 
           <div v-else class="tours__empty">
             <h3 class="tours__empty-title">Туры не найдены</h3>
             <p class="tours__empty-text">
-              По выбранным фильтрам туры не нашлись. Попробуйте изменить
-              диапазон цены, даты или поисковый запрос.
+              Попробуйте изменить даты поездки, локацию или поисковый запрос.
             </p>
           </div>
         </div>
@@ -235,7 +202,7 @@
         after-icon="lupa"
         icon-color="surface-900"
         v-model="filters.search"
-      ></UiInput>
+      />
 
       <div class="tours__filters-group">
         <p class="tours__filters-text">Дата поездки</p>
@@ -253,33 +220,6 @@
         </div>
       </div>
 
-      <div class="tours__filters-range">
-        <div>
-          <p class="tours__filters-text">Цена</p>
-          <UiRange></UiRange>
-        </div>
-
-        <div class="tours__filters-inner">
-          <span>от</span>
-          <UiInput
-            type="number"
-            placeholder="0"
-            v-model="filters.priceFrom"
-          ></UiInput>
-          <span>₸</span>
-        </div>
-
-        <div class="tours__filters-inner">
-          <span>до</span>
-          <UiInput
-            type="number"
-            placeholder="0"
-            v-model="filters.priceTo"
-          ></UiInput>
-          <span>₸</span>
-        </div>
-      </div>
-
       <UiSelect
         label="Продолжительность"
         placeholder="Выберите длительность"
@@ -287,7 +227,7 @@
         option-label="label"
         option-value="value"
         v-model="filters.duration"
-      ></UiSelect>
+      />
 
       <UiSelect
         label="Локация"
@@ -296,25 +236,25 @@
         option-label="label"
         option-value="value"
         v-model="filters.location"
-      ></UiSelect>
+      />
 
       <div class="tours__sort-mobile">
         <p class="tours__filters-text">Сортировка</p>
+
         <div class="tours__sort-groups tours__sort-groups--mobile">
           <button
             v-for="group in sortGroups"
             :key="`${group.value}-mobile`"
             type="button"
             class="tours__sort-chip"
-            :class="{
-              'tours__sort-chip--active': selectedSortGroup === group.value,
-            }"
+            :class="{ 'tours__sort-chip--active': selectedSortGroup === group.value }"
             @click="selectSortGroup(group.value)"
           >
             <span class="tours__sort-radio"></span>
             <span>{{ group.label }}</span>
           </button>
         </div>
+
         <UiSelect
           placeholder="Порядок"
           :options="sortDirectionOptions"
@@ -322,7 +262,7 @@
           option-value="value"
           v-model="selectedSortDirection"
           :disabled="selectedSortGroup !== 'price'"
-        ></UiSelect>
+        />
       </div>
 
       <div class="tours__filters-actions">
@@ -342,98 +282,90 @@
       <div v-if="isLoading" class="tours__state tours__state--mobile">
         Загружаем туры...
       </div>
+
       <div
         v-else-if="errorMessage"
         class="tours__state tours__state--error tours__state--mobile"
       >
         {{ errorMessage }}
       </div>
+
       <div v-else class="tours__cards tours__cards--mobile-sheet">
         <TheCommonTourCard
           v-for="tour in tours"
-          :key="tour._id || tour.id"
+          :key="`mobile-location-${tour._id || tour.id}`"
           :tour="tour"
           view-type="list"
-        ></TheCommonTourCard>
+        />
       </div>
     </template>
   </UiPartialModal>
 </template>
 
 <script setup>
+const api = useApi();
+const router = useRouter();
+const { createMap } = useYandexMaps();
+
 const mapContainer = ref(null);
 const mapContainerMobile = ref(null);
+const desktopMap = shallowRef(null);
+const mobileMap = shallowRef(null);
+
 const isOpenFilterMobile = ref(false);
 const isOpenPartialLocationCards = ref(false);
 const isLoading = ref(false);
 const errorMessage = ref("");
 const tours = ref([]);
+const currentPage = ref(1);
+const debounceHandle = ref(null);
+
+const locationOptions = ref([{ label: "Все локации", value: "" }]);
+const durationOptions = ref([{ label: "Все варианты", value: "" }]);
+
 const pagination = reactive({
   last_page: 1,
   total_items: 0,
   per_page: 9,
 });
-const currentPage = ref(1);
-const route = useRoute();
-const router = useRouter();
-const api = useApi();
+
 const filters = reactive({
   search: "",
   dateFrom: null,
   dateTo: null,
-  priceFrom: "",
-  priceTo: "",
   duration: "",
   location: "",
   sortBy: "price_desc",
 });
-let syncSearchFromRoute = false;
 
 const tabs = reactive([
-  {
-    id: 1,
-    name: "Список",
-    icon: "burger-list",
-  },
-  {
-    id: 2,
-    name: "Локация",
-    icon: "location",
-  },
+  { id: 1, name: "Список", icon: "burger-list" },
+  { id: 2, name: "Локация", icon: "location" },
 ]);
+
 const tabsMobile = reactive([
-  {
-    id: 1,
-    name: "Плитка",
-    icon: "tablets",
-  },
-  {
-    id: 2,
-    name: "Список",
-    icon: "burger-list",
-  },
-  {
-    id: 3,
-    name: "Локация",
-    icon: "location",
-  },
+  { id: 1, name: "Плитка", icon: "tablets" },
+  { id: 2, name: "Список", icon: "burger-list" },
+  { id: 3, name: "Локация", icon: "location" },
 ]);
+
 const selectedTab = ref(tabs[0]);
 const selectedTabMobile = ref(tabsMobile[0]);
-const mapCenter = [76.889709, 43.238949];
-const desktopMap = shallowRef(null);
-const mobileMap = shallowRef(null);
+
 const sortGroups = [
   { label: "по цене", value: "price" },
   { label: "по популярности", value: "popularity" },
   { label: "по отзывам", value: "reviews" },
 ];
+
 const sortDirectionOptions = [
   { label: "по возрастанию", value: "asc" },
   { label: "по убыванию", value: "desc" },
 ];
+
 const selectedSortGroup = ref("price");
 const selectedSortDirection = ref("desc");
+const mapCenter = [76.889709, 43.238949];
 
 useSeoMeta({
   title: "FlyAway - Туры",
@@ -442,43 +374,55 @@ useSeoMeta({
   ogDescription: "FlyAway - сайт для бронирования туров и отелей",
 });
 
-const { createMap } = useYandexMaps();
+const normalizeString = (value) => String(value || "").trim();
 
-const normalizeNumberInput = (value) => {
-  if (value === null || value === undefined || value === "") {
-    return "";
-  }
+const formatQueryDate = (value) => {
+  if (!value) return "";
 
-  const parsed = Math.max(0, Number(value) || 0);
-  return parsed ? String(parsed) : "";
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
 };
 
-const uniqueOptionsFromTours = (mapper, fallbackLabel) => {
-  const values = [...new Set((Array.isArray(tours.value) ? tours.value : [])
-    .map(mapper)
-    .map((item) => String(item || "").trim())
-    .filter(Boolean))];
+const normalizeDateRange = () => {
+  if (!filters.dateFrom || !filters.dateTo) return;
+
+  const from = new Date(filters.dateFrom);
+  const to = new Date(filters.dateTo);
+
+  if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) return;
+  if (from.getTime() <= to.getTime()) return;
+
+  const nextFrom = filters.dateTo;
+  filters.dateTo = filters.dateFrom;
+  filters.dateFrom = nextFrom;
+};
+
+const buildFallbackOptions = (mapper, emptyLabel) => {
+  const values = [
+    ...new Set(
+      tours.value
+        .map(mapper)
+        .map((item) => normalizeString(item))
+        .filter(Boolean),
+    ),
+  ];
 
   return [
-    { label: fallbackLabel, value: "" },
+    { label: emptyLabel, value: "" },
     ...values.map((value) => ({ label: value, value })),
   ];
 };
 
-const durationOptions = computed(() =>
-  uniqueOptionsFromTours((tour) => tour?.duration, "Все варианты"),
-);
-
-const locationOptions = computed(() =>
-  uniqueOptionsFromTours(
-    (tour) => tour?.departureCity || tour?.departurePoint,
-    "Все локации",
-  ),
-);
-
-const applySortByUi = () => {
+const syncSortBy = () => {
   if (selectedSortGroup.value === "price") {
-    filters.sortBy = selectedSortDirection.value === "asc" ? "price_asc" : "price_desc";
+    filters.sortBy =
+      selectedSortDirection.value === "asc" ? "price_asc" : "price_desc";
     return;
   }
 
@@ -490,7 +434,7 @@ const applySortByUi = () => {
   filters.sortBy = "popularity";
 };
 
-const syncSortUiFromFilters = () => {
+const syncSortControlsFromSortBy = () => {
   if (filters.sortBy === "price_asc") {
     selectedSortGroup.value = "price";
     selectedSortDirection.value = "asc";
@@ -514,69 +458,33 @@ const syncSortUiFromFilters = () => {
   filters.sortBy = "price_desc";
 };
 
-const selectSortGroup = (value) => {
-  selectedSortGroup.value = value;
-  applySortByUi();
-};
+const mapMarkers = computed(() => {
+  return tours.value
+    .map((tour) => {
+      const x = Number(tour?.departureLocation?.x);
+      const y = Number(tour?.departureLocation?.y);
+      const id = String(tour?._id || tour?.id || "");
 
-const syncFiltersFromRoute = () => {
-  syncSearchFromRoute = true;
-  filters.search = String(route.query.search || "");
-  filters.dateFrom = parseQueryDate(route.query.dateFrom);
-  filters.dateTo = parseQueryDate(route.query.dateTo);
-  filters.priceFrom = normalizeNumberInput(route.query.priceFrom);
-  filters.priceTo = normalizeNumberInput(route.query.priceTo);
-  filters.duration = String(route.query.duration || "");
-  filters.location = String(route.query.location || "");
-  filters.sortBy = String(route.query.sortBy || "price_desc");
-  syncSortUiFromFilters();
-};
+      if (!id || !Number.isFinite(x) || !Number.isFinite(y)) return null;
 
-const updateRouteFilters = async () => {
-  if (syncSearchFromRoute) {
-    syncSearchFromRoute = false;
-    return;
-  }
-
-  const normalizedRange = normalizeDateRange(filters.dateFrom, filters.dateTo);
-  filters.dateFrom = normalizedRange.from;
-  filters.dateTo = normalizedRange.to;
-
-  const priceFrom = normalizeNumberInput(filters.priceFrom);
-  const priceTo = normalizeNumberInput(filters.priceTo);
-
-  if (priceFrom && priceTo && Number(priceFrom) > Number(priceTo)) {
-    filters.priceFrom = priceTo;
-    filters.priceTo = priceFrom;
-  } else {
-    filters.priceFrom = priceFrom;
-    filters.priceTo = priceTo;
-  }
-
-  const nextQuery = buildQueryObject({
-    search: filters.search,
-    dateFrom: formatQueryDate(filters.dateFrom),
-    dateTo: formatQueryDate(filters.dateTo),
-    priceFrom: filters.priceFrom,
-    priceTo: filters.priceTo,
-    duration: filters.duration,
-    location: filters.location,
-    sortBy: filters.sortBy !== "price_desc" ? filters.sortBy : "",
-  });
-
-  if (areQueriesEqual(nextQuery, route.query)) {
-    return;
-  }
-
-  await router.replace({ query: nextQuery });
-};
+      return {
+        id,
+        coordinates: [x, y],
+        title: normalizeString(tour?.title) || "Тур",
+        onClick: () => router.push(`/tours/${id}`),
+      };
+    })
+    .filter(Boolean);
+});
 
 const getTours = async () => {
   isLoading.value = true;
   errorMessage.value = "";
 
   try {
-    const res = await api.client({
+    normalizeDateRange();
+
+    const response = await api.client({
       url: "/tours",
       method: "get",
       query: {
@@ -585,21 +493,34 @@ const getTours = async () => {
         search: filters.search || undefined,
         dateFrom: formatQueryDate(filters.dateFrom) || undefined,
         dateTo: formatQueryDate(filters.dateTo) || undefined,
-        priceFrom: filters.priceFrom || undefined,
-        priceTo: filters.priceTo || undefined,
         duration: filters.duration || undefined,
         location: filters.location || undefined,
         sortBy: filters.sortBy || undefined,
       },
     });
 
-    tours.value = Array.isArray(res?.data) ? res.data : [];
+    tours.value = Array.isArray(response?.data) ? response.data : [];
 
-    const meta = res?.meta || {};
+    const meta = response?.meta || {};
     pagination.last_page = Number(meta.last_page) || 1;
-    pagination.total_items = Number(meta.total_items ?? meta.total) || tours.value.length;
+    pagination.total_items =
+      Number(meta.total_items ?? meta.total) || tours.value.length;
     pagination.per_page = Number(meta.per_page) || pagination.per_page || 9;
     currentPage.value = Number(meta.current_page) || currentPage.value;
+
+    if (locationOptions.value.length <= 1) {
+      locationOptions.value = buildFallbackOptions(
+        (tour) => tour?.departureCity || tour?.departurePoint,
+        "Все локации",
+      );
+    }
+
+    if (durationOptions.value.length <= 1) {
+      durationOptions.value = buildFallbackOptions(
+        (tour) => tour?.duration,
+        "Все варианты",
+      );
+    }
   } catch (error) {
     tours.value = [];
     errorMessage.value = error?.message || "Не удалось загрузить туры.";
@@ -608,27 +529,43 @@ const getTours = async () => {
   }
 };
 
-const resetFilters = async () => {
-  filters.search = "";
-  filters.dateFrom = null;
-  filters.dateTo = null;
-  filters.priceFrom = "";
-  filters.priceTo = "";
-  filters.duration = "";
-  filters.location = "";
-  selectedSortGroup.value = "price";
-  selectedSortDirection.value = "desc";
-  applySortByUi();
-  currentPage.value = 1;
-  await updateRouteFilters();
-};
+const loadFilterOptions = async () => {
+  try {
+    const [citiesResponse, durationsResponse] = await Promise.all([
+      api.client({
+        url: "/tours/filter/cities",
+        method: "get",
+      }),
+      api.client({
+        url: "/tours/filter/durations",
+        method: "get",
+      }),
+    ]);
 
-syncFiltersFromRoute();
-await getTours();
+    const cities = Array.isArray(citiesResponse?.data) ? citiesResponse.data : [];
+    const durations = Array.isArray(durationsResponse?.data)
+      ? durationsResponse.data
+      : [];
 
-const paginationPage = async (page) => {
-  currentPage.value = page;
-  await getTours();
+    locationOptions.value = [
+      { label: "Все локации", value: "" },
+      ...cities.filter((item) => normalizeString(item?.value || item?.label)),
+    ];
+
+    durationOptions.value = [
+      { label: "Все варианты", value: "" },
+      ...durations.filter((item) => normalizeString(item?.value || item?.label)),
+    ];
+  } catch {
+    locationOptions.value = buildFallbackOptions(
+      (tour) => tour?.departureCity || tour?.departurePoint,
+      "Все локации",
+    );
+    durationOptions.value = buildFallbackOptions(
+      (tour) => tour?.duration,
+      "Все варианты",
+    );
+  }
 };
 
 const destroyMap = (mapRef) => {
@@ -640,9 +577,7 @@ const destroyMap = (mapRef) => {
 };
 
 const mountMap = async (containerRef, mapRef) => {
-  if (!containerRef.value || mapRef.value) {
-    return;
-  }
+  if (!containerRef.value || mapRef.value) return;
 
   try {
     mapRef.value = await createMap({
@@ -656,46 +591,96 @@ const mountMap = async (containerRef, mapRef) => {
   }
 };
 
-const mapMarkers = computed(() => {
-  return (Array.isArray(tours.value) ? tours.value : [])
-    .map((tour) => {
-      const x = Number(tour?.departureLocation?.x);
-      const y = Number(tour?.departureLocation?.y);
-      const id = String(tour?._id || "");
+const refreshToursDebounced = () => {
+  clearTimeout(debounceHandle.value);
 
-      if (!Number.isFinite(x) || !Number.isFinite(y) || !id) {
-        return null;
-      }
+  debounceHandle.value = setTimeout(async () => {
+    currentPage.value = 1;
+    await getTours();
+  }, 300);
+};
 
-      return {
-        id,
-        coordinates: [x, y],
-        title: tour?.title || "Тур",
-        onClick: () => router.push(`/tours/${id}`),
-      };
-    })
-    .filter(Boolean);
-});
+const selectSortGroup = async (value) => {
+  selectedSortGroup.value = value;
+  syncSortBy();
+  currentPage.value = 1;
+  await getTours();
+};
 
-onMounted(async () => {
-  await nextTick();
+const resetFilters = async () => {
+  filters.search = "";
+  filters.dateFrom = null;
+  filters.dateTo = null;
+  filters.duration = "";
+  filters.location = "";
+  selectedSortGroup.value = "price";
+  selectedSortDirection.value = "desc";
+  syncSortBy();
+  currentPage.value = 1;
+  await getTours();
+};
 
-  if (selectedTab.value.id === 2) {
-    await mountMap(mapContainer, desktopMap);
-  }
+const paginationPage = async (page) => {
+  currentPage.value = page;
+  await getTours();
+};
 
-  if (selectedTabMobile.value.id === 3) {
-    await mountMap(mapContainerMobile, mobileMap);
-  }
-});
+const openFilterMobile = () => {
+  isOpenFilterMobile.value = true;
+};
+
+const closeFilterMobile = () => {
+  isOpenFilterMobile.value = false;
+};
+
+const openPartialLocationCards = () => {
+  isOpenPartialLocationCards.value = true;
+};
+
+const closePartialLocationCards = () => {
+  isOpenPartialLocationCards.value = false;
+};
+
+watch(
+  () => [filters.search, filters.dateFrom, filters.dateTo, filters.duration, filters.location],
+  () => {
+    refreshToursDebounced();
+  },
+  { deep: true },
+);
+
+watch(
+  () => selectedSortDirection.value,
+  async () => {
+    if (selectedSortGroup.value !== "price") return;
+
+    syncSortBy();
+    currentPage.value = 1;
+    await getTours();
+  },
+);
 
 watch(
   () => selectedTab.value.id,
-  async (tabId) => {
-    if (tabId === 2) {
+  async (value) => {
+    if (value !== 2) return;
+
+    await nextTick();
+    await mountMap(mapContainer, desktopMap);
+  },
+);
+
+watch(
+  () => selectedTabMobile.value.id,
+  async (value) => {
+    if (value === 3) {
       await nextTick();
-      await mountMap(mapContainer, desktopMap);
+      await mountMap(mapContainerMobile, mobileMap);
+      openPartialLocationCards();
+      return;
     }
+
+    closePartialLocationCards();
   },
 );
 
@@ -708,85 +693,27 @@ watch(
   { deep: true },
 );
 
-watch(
-  () => selectedTabMobile.value.id,
-  async (tabId) => {
-    if (tabId === 3) {
-      await nextTick();
-      await mountMap(mapContainerMobile, mobileMap);
-      openPartialLocationCards();
-      return;
-    }
+onMounted(async () => {
+  syncSortControlsFromSortBy();
 
-    closePartialLocationCards();
-  },
-);
+  await Promise.all([loadFilterOptions(), getTours()]);
 
-watch(
-  () => selectedSortDirection.value,
-  () => {
-    if (selectedSortGroup.value === "price") {
-      applySortByUi();
-    }
-  },
-);
+  await nextTick();
 
-watch(
-  () => filters.sortBy,
-  () => {
-    syncSortUiFromFilters();
-  },
-);
+  if (selectedTab.value.id === 2) {
+    await mountMap(mapContainer, desktopMap);
+  }
+
+  if (selectedTabMobile.value.id === 3) {
+    await mountMap(mapContainerMobile, mobileMap);
+  }
+});
 
 onBeforeUnmount(() => {
+  clearTimeout(debounceHandle.value);
   destroyMap(desktopMap);
   destroyMap(mobileMap);
 });
-
-const openFilterMobile = () => {
-  isOpenFilterMobile.value = true;
-};
-
-const closeFilterMobile = () => {
-  isOpenFilterMobile.value = false;
-};
-
-const closePartialLocationCards = () => {
-  isOpenPartialLocationCards.value = false;
-};
-
-const openPartialLocationCards = () => {
-  isOpenPartialLocationCards.value = true;
-};
-
-watch(
-  () => route.query,
-  async () => {
-    syncFiltersFromRoute();
-    currentPage.value = 1;
-    await getTours();
-  },
-  { deep: true },
-);
-
-useWatchDebounced(
-  () =>
-    JSON.stringify({
-      search: filters.search,
-      dateFrom: formatQueryDate(filters.dateFrom),
-      dateTo: formatQueryDate(filters.dateTo),
-      priceFrom: filters.priceFrom,
-      priceTo: filters.priceTo,
-      duration: filters.duration,
-      location: filters.location,
-      sortBy: filters.sortBy,
-    }),
-  async () => {
-    currentPage.value = 1;
-    await updateRouteFilters();
-  },
-  350,
-);
 </script>
 
 <style lang="scss" scoped>
@@ -882,8 +809,7 @@ useWatchDebounced(
     }
   }
 
-  &__filters-group,
-  &__filters-range {
+  &__filters-group {
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -899,12 +825,6 @@ useWatchDebounced(
     font-size: 14px;
     font-weight: 600;
     color: $surface-900;
-  }
-
-  &__filters-inner {
-    display: flex;
-    gap: 8px;
-    align-items: center;
   }
 
   &__filters-actions {
@@ -1002,6 +922,19 @@ useWatchDebounced(
     align-items: stretch;
     padding: 16px;
     gap: 16px;
+
+    &--tablet {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    &--mobile-sheet {
+      background: transparent;
+      box-shadow: none;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
   }
 
   &__location {
@@ -1009,10 +942,12 @@ useWatchDebounced(
     grid-template-columns: minmax(0, 1fr) 340px;
     gap: 0;
     height: 610px;
+    min-height: 610px;
     border-radius: 20px;
     overflow: hidden;
     background: $white;
     box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.04);
+    align-items: stretch;
   }
 
   &__map {
@@ -1032,14 +967,18 @@ useWatchDebounced(
   }
 
   &__scroll-wrapper {
+    min-height: 0;
     height: 100%;
+    overflow: hidden;
     background: $white;
     border-left: 1px solid rgba($surface-300, 0.3);
   }
 
   &__scroll-cards {
+    min-height: 0;
     height: 100%;
     overflow-y: auto;
+    overscroll-behavior: contain;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -1066,7 +1005,7 @@ useWatchDebounced(
     &--mobile {
       background: transparent;
       box-shadow: none;
-      padding: 28px 16px;
+      padding: 12px 0;
     }
   }
 
@@ -1088,22 +1027,29 @@ useWatchDebounced(
     display: none;
   }
 
-  &__cards--mobile-sheet {
-    background: transparent;
-    box-shadow: none;
-    grid-template-columns: 1fr;
-    padding: 0;
+  &__sort-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
+}
+
+.tours__scroll-cards :deep(.tour) {
+  width: 100%;
+}
+
+.tours__scroll-cards :deep(.tour__wrapper) {
+  max-width: 100%;
 }
 
 @media (max-width: 1200px) {
   .tours {
-    &__cards {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
     &__sort {
       grid-template-columns: 1fr;
+    }
+
+    &__cards {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 }
@@ -1119,7 +1065,7 @@ useWatchDebounced(
     }
 
     &__cards {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: 1fr;
     }
   }
 }
@@ -1163,21 +1109,11 @@ useWatchDebounced(
       }
     }
 
-    &__hero {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    &__title {
-      font-size: 28px;
-    }
-
-    &__cards {
-      grid-template-columns: 1fr;
-      padding: 0;
+    &__cards,
+    &__location {
       background: transparent;
       box-shadow: none;
+      padding: 0;
     }
 
     &__cards--tablet {
@@ -1187,9 +1123,8 @@ useWatchDebounced(
 
     &__location {
       grid-template-columns: 1fr;
+      min-height: auto;
       height: auto;
-      background: transparent;
-      box-shadow: none;
     }
 
     &__scroll-wrapper {
@@ -1202,18 +1137,6 @@ useWatchDebounced(
       &--mobile {
         display: block;
       }
-    }
-  }
-}
-
-@media (max-width: 375px) {
-  .tours {
-    &__title {
-      font-size: 24px;
-    }
-
-    &__cards--tablet {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 }
