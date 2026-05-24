@@ -1,177 +1,82 @@
 <template>
-  <UiOverlay
-    :is-show="true"
-    header-icon="share"
-    :have-footer="true"
-    @close="goTo('/partners')"
-  >
-    <section class="partner">
-      <div class="partner__wrapper" v-if="!!partner">
-        <UiGoBack
-          class="partner__go-back"
-          label="Партнеры"
-          go-back="/partners"
-        ></UiGoBack>
+  <section class="partner">
+    <div class="partner__wrapper">
+      <UiGoBack class="partner__go-back" label="Партнеры" go-back="/partners" />
 
-        <div class="partner__box">
-          <div class="partner__info">
-            <img
-              class="partner__avatar"
-              src="@/assets/image/common/tour-avatar.png"
-              alt="Partner"
-            />
-            <h2 class="partner__author">{{ partner.title }}</h2>
-            <div class="partner__review">
-              <p class="partner__count">{{ partner?.review_count }} отзывов</p>
-              <UiIcons icon="star" color="yellow-500" size="size-14"></UiIcons>
-              <p class="partner__average">{{ partner.rating }}</p>
-            </div>
-            <ThePartnersCard class="partner__info-card"></ThePartnersCard>
-            <ul class="partner__list">
-              <li class="partner__list-item">
-                <p class="partner__text">Количество туров</p>
-                <p class="partner__number">{{ partner.tours?.length }}</p>
-              </li>
-              <li class="partner__list-item">
-                <p class="partner__text">Количество отелей</p>
-                <p class="partner__number">{{ partner.hotels?.length }}</p>
-              </li>
-            </ul>
+      <div v-if="!partner" class="partner__state">Загружаем партнера...</div>
 
+      <template v-else>
+        <aside class="partner__info">
+          <img v-if="avatar" class="partner__avatar" :src="avatar" :alt="partnerTitle" />
+          <span v-else class="partner__avatar partner__avatar--empty">{{ partnerInitial }}</span>
+          <h1 class="partner__author">{{ partnerTitle }}</h1>
+
+          <div class="partner__review">
+            <p class="partner__count">{{ reviewsCount }} отзывов</p>
+            <UiIcons icon="star" color="yellow-500" size="size-14" />
+            <p class="partner__average">{{ ratingLabel }}</p>
+          </div>
+
+          <ul class="partner__list">
+            <li class="partner__list-item">
+              <p class="partner__text">Количество туров</p>
+              <p class="partner__number">{{ tours.length }}</p>
+            </li>
+            <li class="partner__list-item">
+              <p class="partner__text">Количество отелей</p>
+              <p class="partner__number">{{ hotels.length }}</p>
+            </li>
+          </ul>
+
+          <template v-if="partner.description">
             <p class="partner__bold">О нас</p>
-            <p class="partner__description">
-              {{ partner.description }}
-            </p>
+            <p class="partner__description">{{ partner.description }}</p>
+          </template>
 
+          <template v-if="contacts.length">
             <p class="partner__bold">Контакты</p>
             <ul class="partner__contacts">
-              <li
-                class="partner__contacts-item"
-                v-for="item in contacts"
-                :key="item.id"
-              >
-                <UiIcons
-                  :icon="item.icon"
-                  color="red-500"
-                  size="size-24"
-                ></UiIcons>
+              <li class="partner__contacts-item" v-for="item in contacts" :key="item.icon">
+                <UiIcons :icon="item.icon" color="red-500" size="size-24" />
                 <p class="partner__contacts-text">{{ item.name }}</p>
               </li>
             </ul>
-          </div>
-          <div class="partner__content">
-            <section class="partner__block">
-              <div class="partner__block-header">
-                <h2 class="title">Туры</h2>
-                <nuxt-link
-                  v-if="partner.tours?.length > 5"
-                  class="partner__block-link"
-                  to="/tours"
-                  >Все туры</nuxt-link
-                >
-              </div>
-              <div class="partner__tours" v-if="partner?.tours.length">
-                <TheCommonTourCard
-                  v-for="tour in partner?.tours"
-                  :key="tour._id"
-                  :tour="tour"
-                />
-              </div>
-              <p v-else>Пока пусто</p>
-            </section>
+          </template>
+        </aside>
 
-            <section class="partner__block">
-              <div class="partner__block-header">
-                <h2 class="title">Отели</h2>
-              </div>
-              <div class="partner__hotels" v-if="partner?.hotels.length">
-                <!-- <TheHotelsBlock
-                  v-for="hotel in 2"
-                  :key="hotel"
-                ></TheHotelsBlock> -->
-              </div>
-              <p v-else>Пока пусто</p>
-            </section>
-          </div>
-
-          <UiTabs
-            class="partner__tabs"
-            type="line"
-            v-model="selectedTab"
-            :tabs="tabs"
-          ></UiTabs>
-
-          <div class="partner__tours partner__tours--mobile" v-if="!!partner">
-            <TheCommonTourCard v-for="card in 6" :key="card" />
-          </div>
-
-          <UiButton
-            class="partner__btn button-secondary partner__btn--mobile"
-            label="Все туры"
-            after-icon="chevron"
-            icon-color="red-500"
-            icon-size="size-20"
-          ></UiButton>
-        </div>
-
-        <div class="partner__footer">
-          <section class="partner__reviews">
-            <div class="partner__reviews-box">
-              <div>
-                <h3 class="partner__reviews-title">Отзывы посетителей</h3>
-                <div class="partner__reviews-inner">
-                  <p class="partner__reviews-count">20 отзывов</p>
-                  <UiIcons
-                    icon="star"
-                    color="yellow-500"
-                    size="size-14"
-                  ></UiIcons>
-                  <p class="partner__reviews-average">4,1</p>
-                </div>
-              </div>
-              <nuxt-link class="partner__reviews-link" to="/tours/1/reviews"
-                >Все отзывы</nuxt-link
-              >
+        <div class="partner__content">
+          <section class="partner__block">
+            <div class="partner__block-header">
+              <h2 class="title">Туры</h2>
+              <nuxt-link v-if="tours.length" class="partner__block-link" to="/tours">Все туры</nuxt-link>
             </div>
+            <div class="partner__tours" v-if="tours.length">
+              <TheCommonTourCard v-for="tour in tours" :key="tour._id" :tour="tour" />
+            </div>
+            <p v-else class="partner__empty">У партнера пока нет туров.</p>
+          </section>
 
-            <UiSwiper
-              :loop="false"
-              :breakpoints="{
-                1000: {
-                  slidesPerView: 1.8,
-                },
-                375: {
-                  slidesPerView: 1,
-                },
-                0: {
-                  slidesPerView: 1,
-                },
-              }"
-            >
-              <swiper-slide v-for="review in 5" :key="review">
-                <TheCommonReview />
-              </swiper-slide>
-            </UiSwiper>
-
-            <UiButton
-              class="partner__btn button-secondary partner__btn--mobile"
-              label="Все отзывы"
-              after-icon="chevron"
-              icon-color="red-500"
-              icon-size="size-20"
-            ></UiButton>
+          <section class="partner__block">
+            <div class="partner__block-header">
+              <h2 class="title">Отели</h2>
+              <nuxt-link v-if="hotels.length" class="partner__block-link" to="/hotels">Все отели</nuxt-link>
+            </div>
+            <div class="partner__hotels" v-if="hotels.length">
+              <TheHotelsBlock v-for="hotel in hotels" :key="hotel._id" :hotel="hotel" view-type="list" />
+            </div>
+            <p v-else class="partner__empty">У партнера пока нет отелей.</p>
           </section>
         </div>
-      </div>
-    </section>
-  </UiOverlay>
+      </template>
+    </div>
+  </section>
 </template>
 
 <script setup>
-const isOpenOverlayMobile = ref(false);
 const partner = ref(null);
-
 const route = useRoute();
+
+const normalizeString = (value) => String(value || "").trim();
 
 useFetchSsr({
   url: `/partners/${route.params.id}`,
@@ -180,304 +85,226 @@ useFetchSsr({
   partner.value = res.data;
 });
 
-const tabs = reactive([
-  {
-    id: 1,
-    name: "Туры",
-    value: "tours",
-  },
-  {
-    id: 2,
-    name: "Отели",
-    value: "hotels",
-  },
-  {
-    id: 3,
-    name: "Активности",
-    value: "actives",
-  },
-]);
-const selectedTab = ref(tabs[0]);
+const partnerTitle = computed(() => normalizeString(partner.value?.title) || "Партнер FlyAway");
+const partnerInitial = computed(() => partnerTitle.value.charAt(0).toUpperCase());
+const avatar = computed(() => normalizeString(partner.value?.logo || partner.value?.avatar));
+const ratingLabel = computed(() => Number(partner.value?.rating || 0).toFixed(1).replace(".", ","));
+const reviewsCount = computed(() => Number(partner.value?.reviews_count || partner.value?.review_count || 0));
+const tours = computed(() => Array.isArray(partner.value?.tours) ? partner.value.tours : []);
+const hotels = computed(() => Array.isArray(partner.value?.hotels) ? partner.value.hotels : []);
+const contacts = computed(() => {
+  const source = partner.value?.contacts || {};
+  return [
+    { icon: "globe", name: source.website },
+    { icon: "location", name: source.address },
+    { icon: "phone", name: source.phone },
+  ].filter((item) => normalizeString(item.name));
+});
 
-let contacts;
-
-watchEffect(() => {
-  contacts = [
-    {
-      id: 1,
-      icon: "globe",
-      name: partner.value?.contacts.website,
-    },
-    {
-      id: 2,
-      icon: "location",
-      name: partner.value?.contacts.address,
-    },
-    {
-      id: 3,
-      icon: "phone",
-      name: partner.value?.contacts.phone,
-    },
-  ];
+useSeoMeta({
+  title: () => `${partnerTitle.value} | FlyAway`,
+  ogTitle: () => `${partnerTitle.value} | FlyAway`,
+  description: () => normalizeString(partner.value?.description) || "Партнер FlyAway",
+  ogDescription: () => normalizeString(partner.value?.description) || "Партнер FlyAway",
 });
 </script>
 
 <style lang="scss" scoped>
 .partner {
   &__wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 36px;
-    margin: 36px 0;
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    gap: 24px;
+    margin: 48px 0;
     color: $surface-900;
-    position: relative;
+    align-items: start;
   }
-  &__box {
-    display: flex;
-    gap: 16px;
-    position: relative;
+
+  &__go-back {
+    grid-column: 1 / -1;
   }
-  &__info {
+
+  &__state {
+    grid-column: 1 / -1;
+    padding: 36px;
+    text-align: center;
+    color: $surface-500;
+    background: $white;
+    border-radius: 20px;
+  }
+
+  &__info,
+  &__block {
     background-color: $white;
-    border-radius: 16px;
-    padding: 16px;
-    width: 255px;
+    border-radius: 20px;
+    box-shadow: 0 12px 30px rgba(32, 36, 38, 0.06);
+    border: 1px solid rgba($red-500, 0.08);
+  }
+
+  &__info {
+    padding: 22px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    height: 100%;
+    gap: 14px;
+    position: sticky;
+    top: 120px;
   }
+
   &__avatar {
-    width: 64px;
-    height: 64px;
+    width: 82px;
+    height: 82px;
     border-radius: 50%;
+    object-fit: cover;
     margin: 0 auto;
+
+    &--empty {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: $white;
+      background: $red-500;
+      font-size: 28px;
+      font-weight: 800;
+    }
   }
+
   &__author {
     font-size: 24px;
-    font-weight: 700;
-    margin: 0 auto;
+    font-weight: 800;
+    text-align: center;
+    line-height: 1.15;
   }
+
   &__review {
     display: flex;
-    gap: 4px;
+    gap: 5px;
     align-items: center;
-    margin: 0 auto;
+    justify-content: center;
   }
-  &__count {
-    font-size: 12.5px;
-    color: $surface-400;
+
+  &__count,
+  &__average,
+  &__text,
+  &__description,
+  &__contacts-text,
+  &__empty {
+    color: $surface-500;
   }
-  &__average {
-    font-size: 12.5px;
-    font-weight: 400;
+
+  &__average,
+  &__number {
+    font-weight: 800;
   }
+
   &__list {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  &__list-item {
+    display: grid;
     gap: 4px;
-    &-item {
-      display: flex;
-      gap: 4px;
-      align-items: center;
-    }
+    padding: 12px;
+    border-radius: 14px;
+    background: rgba($red-500, 0.05);
+    text-align: center;
   }
-  &__text {
-    font-size: 12px;
-    color: $surface-400;
-  }
+
   &__number {
     color: $red-500;
-    font-weight: 400;
-    font-size: 14px;
+    font-size: 22px;
   }
+
   &__bold {
-    font-weight: 400;
+    font-weight: 800;
   }
+
   &__description {
     font-size: 14px;
+    line-height: 1.55;
   }
-  &__baige {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    &-text {
-      font-size: 14px;
-      font-weight: 400;
-    }
-  }
+
   &__contacts {
-    display: flex;
-    flex-direction: column;
+    display: grid;
     gap: 8px;
-    &-item {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      cursor: pointer;
-    }
   }
+
+  &__contacts-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
   &__content {
-    flex-grow: 1;
     display: flex;
     flex-direction: column;
     gap: 24px;
+    min-width: 0;
   }
+
   &__block {
-    padding: 16px;
-    border-radius: 16px;
-    background-color: $white;
+    padding: 18px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    width: 100%;
-    &-header {
-      display: flex;
-      justify-content: space-between;
-      gap: 4px;
-      align-items: center;
-    }
-    &-link {
-      color: $red-500;
-      font-weight: 600;
-    }
+    gap: 18px;
   }
-  &__tours {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    align-items: start;
-    gap: 16px;
-    &--mobile {
-      display: none;
-    }
-  }
-  &__tabs {
-    display: none;
-  }
-  &__hotels {
+
+  &__block-header {
     display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  &__teams {
-    display: flex;
-    gap: 36px;
-    justify-content: center;
+    justify-content: space-between;
+    gap: 12px;
     align-items: center;
   }
-  &__reviews {
-    margin: 16px 0;
-    display: flex;
-    flex-direction: column;
+
+  &__block-link {
+    color: $red-500;
+    font-weight: 800;
+  }
+
+  &__tours {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 16px;
-    width: calc(100% - 255px - 16px);
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    &-box {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      align-items: center;
-    }
-    &-link {
-      color: $red-500;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    &-inner {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      margin-top: 8px;
-    }
-    &-count {
-      font-size: 14px;
-      color: $surface-400;
-    }
-    &-average {
-      font-size: 14px;
-      color: $surface-900;
-      font-weight: 400;
-    }
-    &-cards {
-      margin: 12px 0;
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-    }
   }
-  &__footer {
-    position: relative;
-    height: 395px;
+
+  &__hotels {
+    display: grid;
+    gap: 16px;
   }
-  &__info-card {
-    display: none;
-  }
-  &__tabs {
-    margin: 0 auto;
-  }
-  &__btn {
-    display: none;
+
+  &__empty {
+    padding: 24px;
+    text-align: center;
+    border-radius: 16px;
+    background: rgba($surface-150, 0.7);
   }
 }
 
-@media (max-width: 375px) {
+@media (max-width: 980px) {
   .partner {
     &__wrapper {
-      padding: 0;
+      grid-template-columns: 1fr;
     }
-    &__box {
-      display: flex;
-      flex-direction: column;
-    }
-    &__footer {
-      height: 450px;
-    }
+
     &__info {
-      width: 100%;
-      padding: 0;
-      background-color: transparent;
+      position: static;
     }
-    &__btn {
-      &--mobile {
-        display: flex;
-        margin: 0 auto;
-        width: 100%;
-      }
-    }
-    &__info-card {
-      display: flex;
-    }
-    &__avatar,
-    &__author,
-    &__list,
-    &__content,
-    &__go-back,
-    &__review {
-      display: none;
-    }
-    &__tabs {
-      display: flex;
-    }
+
     &__tours {
-      &--mobile {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        align-items: start;
-        gap: 6px;
-      }
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-    &__reviews {
-      display: flex;
-      position: absolute;
-      width: 100%;
-      &-inner {
-        display: none;
-      }
-      &-link {
-        display: none;
-      }
+  }
+}
+
+@media (max-width: 560px) {
+  .partner {
+    &__wrapper {
+      margin: 24px 0;
+    }
+
+    &__tours {
+      grid-template-columns: 1fr;
     }
   }
 }
