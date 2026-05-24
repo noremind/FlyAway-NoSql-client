@@ -19,25 +19,14 @@
           <li
             v-for="list in navList"
             :key="list.id"
-            :class="{ 'header__list-item--active': list.link === route.path }"
+            :class="{ 'header__list-item--active': isActiveLink(list.link) }"
             class="header__list-item"
           >
-            <nuxt-link :to="list.link" class="header__list-link">{{
-              list.name
-            }}</nuxt-link>
+            <nuxt-link :to="list.link" class="header__list-link">{{ list.name }}</nuxt-link>
           </li>
         </ul>
       </div>
       <div class="header__box">
-        <!-- <TheHeaderLocale></TheHeaderLocale> -->
-
-        <!-- <UiInput
-          custom-class="header__search"
-          placeholder="Введите название"
-          after-icon="lupa"
-          icon-color="red-500"
-        ></UiInput> -->
-
         <nuxt-link to="/profile/favourites" v-if="userStore.isLoggedIn">
           <UiIcons icon="heart" size="size-24" color="red-500"></UiIcons>
         </nuxt-link>
@@ -107,17 +96,18 @@ const userInitial = computed(() =>
 );
 
 const navList = ref([
-  {
-    id: 1,
-    name: "Туры",
-    link: "/tours",
-  },
-  {
-    id: 2,
-    name: "Отели",
-    link: "/hotels",
-  },
+  { id: 1, name: "Туры", link: "/tours" },
+  { id: 2, name: "Отели", link: "/hotels" },
+  { id: 3, name: "Партнеры", link: "/partners" },
+  { id: 4, name: "Горячие туры", link: "/#hot-tours" },
+  { id: 5, name: "FAQ", link: "/#faq" },
+  { id: 6, name: "Контакты", link: "/#contacts" },
 ]);
+
+const isActiveLink = (link) => {
+  if (link.includes("#")) return route.fullPath === link;
+  return route.path === link;
+};
 
 const clickOutsideDropdown = (event) => {
   if (headerDropdown.value && !headerDropdown.value?.contains(event.target)) {
@@ -166,7 +156,7 @@ watch(
   &__wrapper {
     width: 100%;
     max-width: 1240px;
-    height: 110px;
+    min-height: 110px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -179,13 +169,6 @@ watch(
     cursor: pointer;
     &--mobile {
       display: none;
-    }
-  }
-  &__city {
-    :deep(.select__wrapper) {
-      background-color: $surface-150;
-      border: none;
-      box-shadow: none;
     }
   }
   &__avatar {
@@ -209,22 +192,29 @@ watch(
     display: flex;
     gap: 26px;
     align-items: center;
+    min-width: 0;
   }
   &__box {
     display: flex;
     gap: 12px;
     align-items: center;
+    flex-shrink: 0;
   }
   &__list {
     display: flex;
-    gap: 26px;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
     &-link {
       color: inherit;
+      transition: color 0.2s ease;
     }
     &-item {
       font-size: 14px;
-      font-weight: 400;
-      &--active {
+      font-weight: 500;
+      white-space: nowrap;
+      &--active,
+      &:hover {
         color: $red-500;
       }
     }
@@ -235,10 +225,7 @@ watch(
     align-items: center;
     font-size: 14px;
     line-height: 17.5px;
-  }
-  &__search {
-    background-color: $surface-150;
-    border: none;
+    flex-shrink: 0;
   }
   &__burger {
     display: none;
@@ -250,6 +237,14 @@ watch(
       height: 44px;
       background-color: $surface-150;
       border-radius: 50%;
+    }
+  }
+}
+
+@media (max-width: 980px) {
+  .header {
+    &__list {
+      gap: 12px;
     }
   }
 }
@@ -285,10 +280,6 @@ watch(
     }
     &__link {
       order: 2;
-    }
-    &__city {
-      order: 1;
-      background-color: transparent;
     }
   }
 }
