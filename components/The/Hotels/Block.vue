@@ -1,19 +1,30 @@
 <template>
   <section class="hotel-card">
-    <article class="hotel-card__wrapper" :class="`hotel-card__wrapper--${viewType}`">
+    <article
+      class="hotel-card__wrapper"
+      :class="`hotel-card__wrapper--${viewType}`"
+    >
       <div class="hotel-card__preview">
         <div class="hotel-card__top-actions">
           <span v-if="isHot" class="hotel-card__hot">
             <UiIcons icon="hot" size="size-20" color="orange-200" />
           </span>
 
-          <button type="button" class="hotel-card__favourite" @click="goToHotel">
+          <button
+            type="button"
+            class="hotel-card__favourite"
+            @click="goToHotel"
+          >
             <UiIcons icon="heart" size="size-28" color="white" />
           </button>
         </div>
 
         <UiSwiper class="hotel-card__swiper" :pagination="{ clickable: true }">
-          <swiper-slide v-for="image in previewImages" :key="image">
+          <swiper-slide
+            v-for="image in previewImages"
+            :key="image"
+            class="hotel-card__slide"
+          >
             <img class="hotel-card__image" :src="image" :alt="hotelTitle" />
           </swiper-slide>
         </UiSwiper>
@@ -28,7 +39,10 @@
               :src="partnerLogo"
               :alt="partnerName"
             />
-            <span v-else class="hotel-card__partner-logo hotel-card__partner-logo--empty">
+            <span
+              v-else
+              class="hotel-card__partner-logo hotel-card__partner-logo--empty"
+            >
               {{ partnerInitial }}
             </span>
             <p class="hotel-card__partner-name">{{ partnerName }}</p>
@@ -62,10 +76,16 @@
             </p>
 
             <div class="hotel-card__meta">
-              <span v-if="discountLabel" class="hotel-card__badge hotel-card__badge--discount">
+              <span
+                v-if="discountLabel"
+                class="hotel-card__badge hotel-card__badge--discount"
+              >
                 {{ discountLabel }}
               </span>
-              <span v-else-if="isNew" class="hotel-card__badge hotel-card__badge--new">
+              <span
+                v-else-if="isNew"
+                class="hotel-card__badge hotel-card__badge--new"
+              >
                 Новинка
               </span>
 
@@ -78,7 +98,11 @@
 
           <div class="hotel-card__side">
             <ul v-if="benefits.length" class="hotel-card__benefits">
-              <li v-for="benefit in benefits" :key="benefit" class="hotel-card__benefit">
+              <li
+                v-for="benefit in benefits"
+                :key="benefit"
+                class="hotel-card__benefit"
+              >
                 <UiIcons icon="check" color="red-500" size="size-18" />
                 <span>{{ benefit }}</span>
               </li>
@@ -95,7 +119,10 @@
               </div>
 
               <NuxtLink :to="detailLink">
-                <UiButton label="Забронировать" class="hotel-card__btn button-primary" />
+                <UiButton
+                  label="Забронировать"
+                  class="hotel-card__btn button-primary"
+                />
               </NuxtLink>
             </div>
           </div>
@@ -122,48 +149,88 @@ const props = defineProps({
 const router = useRouter();
 
 const normalizeString = (value) => String(value || "").trim();
-const stripHtml = (value) => normalizeString(value).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+const stripHtml = (value) =>
+  normalizeString(value)
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 const formatMoney = (value) => Number(value || 0).toLocaleString("ru-RU");
 
 const hotelId = computed(() => props.hotel?._id || props.hotel?.id || "");
-const detailLink = computed(() => (hotelId.value ? `/hotels/${hotelId.value}` : "/hotels"));
-const hotelTitle = computed(() => normalizeString(props.hotel?.name) || "Отель");
-const partnerName = computed(() => normalizeString(props.hotel?.partner?.title || props.hotel?.partner?.name) || "FlyAway Partner");
+const detailLink = computed(() =>
+  hotelId.value ? `/hotels/${hotelId.value}` : "/hotels",
+);
+const hotelTitle = computed(
+  () => normalizeString(props.hotel?.name) || "Отель",
+);
+const partnerName = computed(
+  () =>
+    normalizeString(
+      props.hotel?.partner?.title || props.hotel?.partner?.name,
+    ) || "FlyAway Partner",
+);
 const partnerLogo = computed(() => normalizeString(props.hotel?.partner?.logo));
-const partnerInitial = computed(() => partnerName.value.charAt(0).toUpperCase());
-const roundedRating = computed(() => Math.max(0, Math.min(5, Math.round(Number(props.hotel?.rating) || 0))));
+const partnerInitial = computed(() =>
+  partnerName.value.charAt(0).toUpperCase(),
+);
+const roundedRating = computed(() =>
+  Math.max(0, Math.min(5, Math.round(Number(props.hotel?.rating) || 0))),
+);
 const ratingLabel = computed(() => {
   const rating = Number(props.hotel?.rating || 0);
   return rating ? rating.toFixed(1).replace(".", ",") : "0,0";
 });
-const reviewsCount = computed(() => Number(props.hotel?.reviewsCount || props.hotel?.reviews || 0));
+const reviewsCount = computed(() =>
+  Number(props.hotel?.reviewsCount || props.hotel?.reviews || 0),
+);
 const reviewsCountLabel = computed(() => `${reviewsCount.value} отзывов`);
-const regionLabel = computed(() => normalizeString(props.hotel?.location).split(",")[0] || "Локация уточняется");
+const regionLabel = computed(
+  () =>
+    normalizeString(props.hotel?.location).split(",")[0] ||
+    "Локация уточняется",
+);
 const shortDescription = computed(() => {
   const text = stripHtml(props.hotel?.description || props.hotel?.content);
   if (!text) return "Описание отеля скоро появится.";
   return text.length > 140 ? `${text.slice(0, 140)}...` : text;
 });
 const previewImages = computed(() => {
-  const items = Array.isArray(props.hotel?.images) ? props.hotel.images.filter(Boolean) : [];
+  const items = Array.isArray(props.hotel?.images)
+    ? props.hotel.images.filter(Boolean)
+    : [];
   return items.length ? items : [placeholderImage];
 });
-const roomTypes = computed(() => (Array.isArray(props.hotel?.room_types) ? props.hotel.room_types.filter(Boolean) : []));
+const roomTypes = computed(() =>
+  Array.isArray(props.hotel?.room_types)
+    ? props.hotel.room_types.filter(Boolean)
+    : [],
+);
 const minRoomPrice = computed(() => {
-  const prices = roomTypes.value.map((room) => Number(room?.price) || 0).filter((price) => price > 0);
+  const prices = roomTypes.value
+    .map((room) => Number(room?.price) || 0)
+    .filter((price) => price > 0);
   if (prices.length) return Math.min(...prices);
   return Number(props.hotel?.price) || 0;
 });
-const discount = computed(() => Math.max(0, Number(props.hotel?.discount) || 0));
+const discount = computed(() =>
+  Math.max(0, Number(props.hotel?.discount) || 0),
+);
 const oldRoomPrice = computed(() => {
   if (!minRoomPrice.value || !discount.value) return 0;
   return Math.round(minRoomPrice.value / (1 - discount.value / 100));
 });
-const minPriceLabel = computed(() => (minRoomPrice.value ? `${formatMoney(minRoomPrice.value)} ₸` : "По запросу"));
-const oldPriceLabel = computed(() => (oldRoomPrice.value ? `${formatMoney(oldRoomPrice.value)} ₸` : ""));
-const discountLabel = computed(() => (discount.value ? `-${discount.value}%` : ""));
+const minPriceLabel = computed(() =>
+  minRoomPrice.value ? `${formatMoney(minRoomPrice.value)} ₸` : "По запросу",
+);
+const oldPriceLabel = computed(() =>
+  oldRoomPrice.value ? `${formatMoney(oldRoomPrice.value)} ₸` : "",
+);
+const discountLabel = computed(() =>
+  discount.value ? `-${discount.value}%` : "",
+);
 const benefits = computed(() => {
-  const roomBenefitSource = roomTypes.value[0]?.benefits || roomTypes.value[0]?.description;
+  const roomBenefitSource =
+    roomTypes.value[0]?.benefits || roomTypes.value[0]?.description;
   const candidate = Array.isArray(roomBenefitSource)
     ? roomBenefitSource
     : normalizeString(roomBenefitSource)
@@ -204,7 +271,7 @@ const goToHotel = () => {
     box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.06);
 
     &--tablet {
-      grid-template-columns: 1fr;
+      // grid-template-columns: 1fr;
       min-height: auto;
     }
   }
@@ -235,13 +302,20 @@ const goToHotel = () => {
   }
 
   &__swiper {
-    height: 100%;
+    border-radius: 12px;
+    position: relative;
+  }
+
+  &__slide {
+    height: 290px;
+    position: relative;
   }
 
   &__image {
     width: 100%;
-    height: 240px;
+    height: 290px;
     object-fit: cover;
+    border-radius: 12px;
   }
 
   &__content {
@@ -438,10 +512,15 @@ const goToHotel = () => {
     width: 100%;
     justify-content: center;
   }
+  &:deep(.swiper-pagination) {
+    position: absolute;
+    z-index: 2;
+  }
 }
 
-.hotel-card__swiper :deep(.custom-swiper::part(pagination)) {
+:deep(.custom-swiper::part(pagination)) {
   position: absolute !important;
+  z-index: 2;
 }
 
 @media (max-width: 1024px) {

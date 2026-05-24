@@ -412,16 +412,16 @@ const bookingForm = reactive({
   comment: "",
 });
 
-useSeoMeta({
-  title: () =>
-    hotelName.value ? `${hotelName.value} | FlyAway` : "Отель | FlyAway",
-  ogTitle: () =>
-    hotelName.value ? `${hotelName.value} | FlyAway` : "Отель | FlyAway",
-  description: () =>
-    hotelDescription.value || "FlyAway - сайт для бронирования туров и отелей",
-  ogDescription: () =>
-    hotelDescription.value || "FlyAway - сайт для бронирования туров и отелей",
-});
+// useSeoMeta({
+//   title: () =>
+//     hotelName.value ? `${hotelName.value} | FlyAway` : "Отель | FlyAway",
+//   ogTitle: () =>
+//     hotelName.value ? `${hotelName.value} | FlyAway` : "Отель | FlyAway",
+//   description: () =>
+//     hotelDescription.value || "FlyAway - сайт для бронирования туров и отелей",
+//   ogDescription: () =>
+//     hotelDescription.value || "FlyAway - сайт для бронирования туров и отелей",
+// });
 
 const normalizeString = (value) => String(value || "").trim();
 

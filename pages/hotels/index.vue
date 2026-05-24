@@ -14,7 +14,11 @@
           after-icon="lupa"
           v-model="filters.search"
         />
-        <button class="hotels__top-text" type="button" @click="openFilterMobile">
+        <button
+          class="hotels__top-text"
+          type="button"
+          @click="openFilterMobile"
+        >
           Фильтр
         </button>
       </div>
@@ -25,9 +29,16 @@
         v-model="selectedTabMobile"
       />
 
-      <div class="hotels__header" :class="{ 'hotels__header--visible': selectedTabMobile.id === 3 }">
+      <div
+        class="hotels__header"
+        :class="{ 'hotels__header--visible': selectedTabMobile.id === 3 }"
+      >
         <h1 class="hotels__title title">Отели</h1>
-        <UiTabs class="hotels__tabs hotels__tabs--desktop" :tabs="tabs" v-model="selectedTab" />
+        <UiTabs
+          class="hotels__tabs hotels__tabs--desktop"
+          :tabs="tabs"
+          v-model="selectedTab"
+        />
       </div>
 
       <div class="hotels__content" v-show="selectedTabMobile.id !== 3">
@@ -48,8 +59,16 @@
 
               <div class="hotels__filters-group">
                 <p class="hotels__filters-text">Дата</p>
-                <UiCalendar class="hotels__filters-calendar" label="от" v-model="filters.checkIn" />
-                <UiCalendar class="hotels__filters-calendar" label="до" v-model="filters.checkOut" />
+                <UiCalendar
+                  class="hotels__filters-calendar"
+                  label="от"
+                  v-model="filters.checkIn"
+                />
+                <UiCalendar
+                  class="hotels__filters-calendar"
+                  label="до"
+                  v-model="filters.checkOut"
+                />
               </div>
 
               <div class="hotels__filters-range">
@@ -60,13 +79,21 @@
 
                 <div class="hotels__filters-inner">
                   <span>от</span>
-                  <UiInput type="number" placeholder="0" v-model="filters.priceFrom" />
+                  <UiInput
+                    type="number"
+                    placeholder="0"
+                    v-model="filters.priceFrom"
+                  />
                   <span>₸</span>
                 </div>
 
                 <div class="hotels__filters-inner">
                   <span>до</span>
-                  <UiInput type="number" placeholder="0" v-model="filters.priceTo" />
+                  <UiInput
+                    type="number"
+                    placeholder="0"
+                    v-model="filters.priceTo"
+                  />
                   <span>₸</span>
                 </div>
               </div>
@@ -90,7 +117,11 @@
               />
 
               <div class="hotels__filters-actions">
-                <button class="hotels__filters-reset" type="button" @click="resetFilters">
+                <button
+                  class="hotels__filters-reset"
+                  type="button"
+                  @click="resetFilters"
+                >
                   Сбросить фильтры
                 </button>
               </div>
@@ -109,7 +140,10 @@
                 :key="group.value"
                 type="button"
                 class="hotels__sort-chip"
-                :class="{ 'hotels__sort-chip--active': selectedSortGroup === group.value }"
+                :class="{
+                  'hotels__sort-chip--active':
+                    selectedSortGroup === group.value,
+                }"
                 @click="selectedSortGroup = group.value"
               >
                 <span class="hotels__sort-radio"></span>
@@ -127,12 +161,19 @@
           </section>
 
           <div v-if="isLoading" class="hotels__state">Загружаем отели...</div>
-          <div v-else-if="errorMessage" class="hotels__state hotels__state--error">{{ errorMessage }}</div>
+          <div
+            v-else-if="errorMessage"
+            class="hotels__state hotels__state--error"
+          >
+            {{ errorMessage }}
+          </div>
           <template v-else-if="hotels.length">
             <div v-show="selectedTab.id === 1" class="hotels__cards">
               <div
                 class="hotels__cards-inner"
-                :class="{ 'hotels__cards-inner--tablet': selectedTabMobile.id === 1 }"
+                :class="{
+                  'hotels__cards-inner--tablet': selectedTabMobile.id === 1,
+                }"
               >
                 <TheHotelsBlock
                   v-for="hotel in paginatedHotels"
@@ -171,7 +212,8 @@
           <div v-else class="hotels__empty">
             <h3 class="hotels__empty-title">Отели не найдены</h3>
             <p class="hotels__empty-text">
-              Попробуйте изменить фильтры, дату заезда, рейтинг или поисковый запрос.
+              Попробуйте изменить фильтры, дату заезда, рейтинг или поисковый
+              запрос.
             </p>
           </div>
         </div>
@@ -179,7 +221,11 @@
     </div>
   </section>
 
-  <UiOverlay :is-show="isOpenFilterMobile" @close="closeFilterMobile" title="Фильтр">
+  <UiOverlay
+    :is-show="isOpenFilterMobile"
+    @close="closeFilterMobile"
+    title="Фильтр"
+  >
     <div class="hotels__filters-box hotels__filters-box--mobile">
       <UiInput
         placeholder="Введите название"
@@ -187,10 +233,28 @@
         icon-color="surface-900"
         v-model="filters.search"
       />
-      <UiCalendar class="hotels__filters-calendar" label="Дата от" v-model="filters.checkIn" />
-      <UiCalendar class="hotels__filters-calendar" label="Дата до" v-model="filters.checkOut" />
-      <UiInput type="number" label="Цена от" placeholder="0" v-model="filters.priceFrom" />
-      <UiInput type="number" label="Цена до" placeholder="0" v-model="filters.priceTo" />
+      <UiCalendar
+        class="hotels__filters-calendar"
+        label="Дата от"
+        v-model="filters.checkIn"
+      />
+      <UiCalendar
+        class="hotels__filters-calendar"
+        label="Дата до"
+        v-model="filters.checkOut"
+      />
+      <UiInput
+        type="number"
+        label="Цена от"
+        placeholder="0"
+        v-model="filters.priceFrom"
+      />
+      <UiInput
+        type="number"
+        label="Цена до"
+        placeholder="0"
+        v-model="filters.priceTo"
+      />
       <UiSelect
         label="Регион"
         :options="locationOptions"
@@ -218,7 +282,9 @@
           :key="`${group.value}-mobile`"
           type="button"
           class="hotels__sort-chip"
-          :class="{ 'hotels__sort-chip--active': selectedSortGroup === group.value }"
+          :class="{
+            'hotels__sort-chip--active': selectedSortGroup === group.value,
+          }"
           @click="selectedSortGroup = group.value"
         >
           <span class="hotels__sort-radio"></span>
@@ -226,7 +292,11 @@
         </button>
       </div>
       <div class="hotels__filters-actions">
-        <button class="hotels__filters-reset" type="button" @click="resetFilters">
+        <button
+          class="hotels__filters-reset"
+          type="button"
+          @click="resetFilters"
+        >
           Сбросить фильтры
         </button>
       </div>
@@ -281,7 +351,7 @@ const tabs = reactive([
 ]);
 const selectedTab = ref(tabs[0]);
 const tabsMobile = reactive([
-  { id: 1, name: "Плитка", icon: "tablets" },
+  // { id: 1, name: "Плитка", icon: "tablets" },
   { id: 2, name: "Список", icon: "burger-list" },
   { id: 3, name: "Локация", icon: "location" },
 ]);
@@ -328,7 +398,10 @@ const locationOptions = computed(() => {
         .filter(Boolean),
     ),
   ];
-  return [{ label: "Все регионы", value: "" }, ...values.map((value) => ({ label: value, value }))];
+  return [
+    { label: "Все регионы", value: "" },
+    ...values.map((value) => ({ label: value, value })),
+  ];
 });
 
 const ratingOptions = [
@@ -348,7 +421,9 @@ const sortBy = computed(() => {
   return "popularity";
 });
 
-const lastPage = computed(() => Math.max(1, Math.ceil(hotels.value.length / perPage)));
+const lastPage = computed(() =>
+  Math.max(1, Math.ceil(hotels.value.length / perPage)),
+);
 const paginatedHotels = computed(() => {
   const start = (currentPage.value - 1) * perPage;
   return hotels.value.slice(start, start + perPage);
@@ -371,6 +446,21 @@ const resetFilters = async () => {
   currentPage.value = 1;
   await loadHotels();
 };
+const mountMap = async (containerRef, mapRef) => {
+  if (!containerRef.value || mapRef.value) return;
+  try {
+    mapRef.value = await createMap({
+      container: containerRef.value,
+      center: mapCenter,
+      zoom: 9,
+      markers: mapMarkers.value,
+      markerCoordinates: mapCenter,
+      markerText: "Отели FlyAway",
+    });
+  } catch (error) {
+    console.error(error);
+  }
+};
 
 const loadHotels = async () => {
   isLoading.value = true;
@@ -391,9 +481,17 @@ const loadHotels = async () => {
       },
     });
     hotels.value = Array.isArray(res?.data) ? res.data : [];
-    if (!filters.search && !filters.region && !filters.priceFrom && !filters.priceTo && !filters.rating) {
+    if (
+      !filters.search &&
+      !filters.region &&
+      !filters.priceFrom &&
+      !filters.priceTo &&
+      !filters.rating
+    ) {
       allHotels.value = hotels.value;
     }
+    await mountMap(mapContainer, desktopMap);
+    await mountMap(mapContainerMobile, mobileMap);
   } catch (error) {
     errorMessage.value = error?.message || "Не удалось загрузить отели.";
     hotels.value = [];
@@ -439,53 +537,42 @@ const mapMarkers = computed(() => {
   }));
 });
 
-const mountMap = async (containerRef, mapRef) => {
-  if (!containerRef.value || mapRef.value) return;
-  try {
-    mapRef.value = await createMap({
-      container: containerRef.value,
-      center: mapCenter,
-      zoom: 9,
-      markers: mapMarkers.value,
-      markerCoordinates: mapCenter,
-      markerText: "Отели FlyAway",
-    });
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-onMounted(async () => {
-  await nextTick();
-  if (selectedTab.value.id === 2) {
-    await mountMap(mapContainer, desktopMap);
-  }
-  if (selectedTabMobile.value.id === 3) {
-    await mountMap(mapContainerMobile, mobileMap);
-  }
+onMounted(() => {
+  mountMap(mapContainer, desktopMap);
+  mountMap(mapContainerMobile, mobileMap);
 });
 
-watch(() => selectedTab.value.id, async (id) => {
-  if (id === 2) {
-    await nextTick();
-    await mountMap(mapContainer, desktopMap);
-  }
-});
+watch(
+  () => selectedTab.value.id,
+  async (id) => {
+    if (id === 2) {
+      await nextTick();
+      await mountMap(mapContainer, desktopMap);
+    }
+  },
+);
 
-watch(() => selectedTabMobile.value.id, async (id) => {
-  if (id === 3) {
-    await nextTick();
-    await mountMap(mapContainerMobile, mobileMap);
-    openPartialLocationCards();
-    return;
-  }
-  closePartialLocationCards();
-});
+watch(
+  () => selectedTabMobile.value.id,
+  async (id) => {
+    if (id === 3) {
+      await nextTick();
+      await mountMap(mapContainerMobile, mobileMap);
+      openPartialLocationCards();
+      return;
+    }
+    closePartialLocationCards();
+  },
+);
 
-watch(mapMarkers, (markers) => {
-  desktopMap.value?.setMarkers?.(markers);
-  mobileMap.value?.setMarkers?.(markers);
-}, { deep: true });
+watch(
+  mapMarkers,
+  (markers) => {
+    desktopMap.value?.setMarkers?.(markers);
+    mobileMap.value?.setMarkers?.(markers);
+  },
+  { deep: true },
+);
 
 watch(hotels, () => {
   if (currentPage.value > lastPage.value) currentPage.value = lastPage.value;
@@ -504,10 +591,10 @@ watch(
     selectedSortGroup.value,
     selectedSortDirection.value,
   ],
-  () => {
+  async () => {
     currentPage.value = 1;
     clearTimeout(filtersTimer);
-    filtersTimer = setTimeout(loadHotels, 350);
+    filtersTimer = await setTimeout(loadHotels, 350);
   },
   { deep: true },
 );
@@ -720,12 +807,13 @@ onBeforeUnmount(() => {
 
     &--tablet {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(1, minmax(0, 1fr));
     }
   }
 
   &__location {
-    display: grid;
+    display: flex;
+    flex-direction: column;
     grid-template-columns: minmax(0, 1fr) 360px;
     overflow: hidden;
     min-height: 610px;
@@ -818,9 +906,14 @@ onBeforeUnmount(() => {
     &__content {
       grid-template-columns: 1fr;
     }
-
     &__sidebar {
       display: none;
+    }
+    &__cards-inner {
+      gap: 8px;
+      &--tablet {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
     }
   }
 }
@@ -873,7 +966,7 @@ onBeforeUnmount(() => {
     &__cards-inner {
       gap: 8px;
       &--tablet {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(1, minmax(0, 1fr));
       }
     }
 
