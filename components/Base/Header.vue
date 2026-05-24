@@ -100,7 +100,7 @@ const navList = ref([
   { id: 2, name: "Отели", link: "/hotels" },
   { id: 3, name: "Партнеры", link: "/partners" },
   { id: 4, name: "Горячие туры", link: "/#hot-tours" },
-  { id: 5, name: "FAQ", link: "/#faq" },
+  { id: 5, name: "FAQ", link: "/faq" },
   { id: 6, name: "Контакты", link: "/#contacts" },
 ]);
 
