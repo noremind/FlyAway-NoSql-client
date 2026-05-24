@@ -1,165 +1,202 @@
 <template>
-  <section class="card">
-    <div class="card__wrapper">
-      <img class="card__avatar" :src="partner?.avatar" :alt="partner?.title" />
-      <div class="card__box">
-        <nuxt-link :to="`/partners/${partner?._id}`">
-          <h2 class="card__author">{{ partner?.title }}</h2>
-        </nuxt-link>
-        <div class="card__reviews card__reviews--laptop">
-          <p class="card__count">{{ partner?.reviews_count || 0 }} отзывов</p>
-          <UiIcons icon="star" color="yellow-500" size="size-14"></UiIcons>
-          <p class="card__average">{{ partner?.rating }}</p>
-        </div>
-        <ul class="card__list card__list--mobile">
-          <li class="card__list-item">
-            <p class="card__text">Количество туров</p>
-            <p class="card__number">{{ partner?.tour_count }}</p>
-          </li>
-          <li class="card__list-item">
-            <p class="card__text">Количество отелей</p>
-            <p class="card__number">{{ partner?.hotel_count }}</p>
-          </li>
-        </ul>
+  <NuxtLink class="card" :to="detailLink">
+    <article class="card__wrapper">
+      <div class="card__avatar-wrap">
+        <img v-if="avatar" class="card__avatar" :src="avatar" :alt="title" />
+        <span v-else class="card__avatar card__avatar--empty">{{ initial }}</span>
       </div>
-      <ul class="card__list card__list--laptop">
+
+      <div class="card__box">
+        <h2 class="card__author">{{ title }}</h2>
+        <p v-if="description" class="card__description">{{ description }}</p>
+
+        <div class="card__reviews">
+          <p class="card__count">{{ reviewsCount }} отзывов</p>
+          <UiIcons icon="star" color="yellow-500" size="size-14"></UiIcons>
+          <p class="card__average">{{ ratingLabel }}</p>
+        </div>
+      </div>
+
+      <ul class="card__list">
         <li class="card__list-item">
-          <p class="card__text">Количество туров</p>
-          <p class="card__number">{{ partner?.tour_count }}</p>
+          <p class="card__text">Туров</p>
+          <p class="card__number">{{ toursCount }}</p>
         </li>
         <li class="card__list-item">
-          <p class="card__text">Количество отелей</p>
-          <p class="card__number">{{ partner?.hotel_count }}</p>
+          <p class="card__text">Отелей</p>
+          <p class="card__number">{{ hotelsCount }}</p>
         </li>
       </ul>
-
-      <div class="card__reviews card__reviews--mobile">
-        <p class="card__count">{{ partner?.reviews_count }} отзывов</p>
-        <UiIcons icon="star" color="yellow-500" size="size-14"></UiIcons>
-        <p class="card__average">{{ partner?.rating }}</p>
-      </div>
-    </div>
-  </section>
+    </article>
+  </NuxtLink>
 </template>
 
 <script setup>
 const props = defineProps({
   partner: {
     type: Object,
-    defautl: () => {},
+    default: () => ({}),
   },
 });
+
+const normalizeString = (value) => String(value || "").trim();
+const title = computed(() => normalizeString(props.partner?.title) || "Партнер FlyAway");
+const initial = computed(() => title.value.charAt(0).toUpperCase());
+const avatar = computed(() => normalizeString(props.partner?.logo || props.partner?.avatar));
+const detailLink = computed(() => (props.partner?._id ? `/partners/${props.partner._id}` : "/partners"));
+const description = computed(() => {
+  const text = normalizeString(props.partner?.description);
+  return text.length > 86 ? `${text.slice(0, 86)}...` : text;
+});
+const toursCount = computed(() => Number(props.partner?.tour_count ?? props.partner?.tours?.length ?? 0));
+const hotelsCount = computed(() => Number(props.partner?.hotel_count ?? props.partner?.hotels?.length ?? 0));
+const reviewsCount = computed(() => Number(props.partner?.reviews_count ?? props.partner?.review_count ?? 0));
+const ratingLabel = computed(() => Number(props.partner?.rating || 0).toFixed(1).replace(".", ","));
 </script>
 
 <style lang="scss" scoped>
 .card {
+  display: block;
+  color: inherit;
+
   &__wrapper {
+    min-height: 260px;
     background-color: $white;
-    box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.1);
-    padding: 36px 16px;
-    border-radius: 16px;
+    box-shadow: 0px 12px 30px rgba(32, 36, 38, 0.08);
+    padding: 24px 16px;
+    border-radius: 20px;
     display: flex;
     flex-direction: column;
     gap: 16px;
     color: $surface-900;
+    border: 1px solid rgba($red-500, 0.08);
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
   }
+
+  &:hover &__wrapper {
+    transform: translateY(-3px);
+    box-shadow: 0px 16px 36px rgba(32, 36, 38, 0.12);
+  }
+
+  &__avatar-wrap {
+    display: flex;
+    justify-content: center;
+  }
+
   &__avatar {
-    width: 64px;
-    height: 64px;
+    width: 72px;
+    height: 72px;
     border-radius: 50%;
-    margin: 0 auto;
+    object-fit: cover;
+    border: 3px solid rgba($red-500, 0.08);
+
+    &--empty {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: $white;
+      background: $red-500;
+      font-size: 24px;
+      font-weight: 800;
+    }
   }
+
   &__author {
-    font-size: 24px;
-    font-weight: 700;
-    margin: 0 auto;
+    font-size: 22px;
+    font-weight: 800;
+    text-align: center;
     color: $surface-900;
+    line-height: 1.15;
   }
+
+  &__description {
+    margin-top: 8px;
+    color: $surface-500;
+    font-size: 13px;
+    line-height: 1.45;
+    text-align: center;
+  }
+
   &__reviews {
     display: flex;
     gap: 4px;
     align-items: center;
-    margin: 0 auto;
-    &--mobile {
-      display: none;
-    }
+    justify-content: center;
+    margin-top: 12px;
   }
+
   &__count {
     font-size: 12.5px;
     color: $surface-400;
   }
+
   &__average {
     font-size: 12.5px;
-    font-weight: 400;
+    font-weight: 700;
   }
+
   &__list {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    &--mobile {
-      display: none;
-    }
-    &-item {
-      display: flex;
-      gap: 4px;
-      align-items: center;
-    }
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: auto;
   }
+
+  &__list-item {
+    display: grid;
+    gap: 4px;
+    padding: 12px;
+    border-radius: 14px;
+    background: rgba($red-500, 0.05);
+    text-align: center;
+  }
+
   &__text {
     font-size: 12px;
     color: $surface-400;
   }
+
   &__number {
     color: $red-500;
-    font-weight: 400;
-    font-size: 14px;
+    font-weight: 800;
+    font-size: 20px;
   }
+
   &__box {
-    margin: 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 0;
   }
 }
 
-@media (max-width: 375px) {
+@media (max-width: 560px) {
   .card {
     &__wrapper {
-      display: flex;
-      flex-direction: row;
-      padding: 6px;
-      gap: 6px;
+      min-height: auto;
+      display: grid;
+      grid-template-columns: 70px minmax(0, 1fr);
+      align-items: center;
+      padding: 12px;
     }
-    &__avatar {
-      margin: auto;
-    }
-    &__author {
-      font-size: 16px;
-      margin: 0;
-    }
-    &__reviews {
-      white-space: nowrap;
 
-      &--laptop {
-        display: none;
-      }
-      &--mobile {
-        display: flex;
-        align-items: flex-start;
-      }
+    &__avatar {
+      width: 58px;
+      height: 58px;
     }
+
+    &__author,
+    &__description {
+      text-align: left;
+    }
+
+    &__reviews {
+      justify-content: flex-start;
+    }
+
     &__list {
-      font-size: 10px;
-      gap: 2px;
-      &-item {
-        white-space: nowrap;
-      }
-      &--mobile {
-        display: flex;
-      }
-      &--laptop {
-        display: none;
-      }
+      grid-column: 1 / -1;
     }
   }
 }
