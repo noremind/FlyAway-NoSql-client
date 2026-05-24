@@ -6,22 +6,26 @@
           class="partners__top-search"
           placeholder="Введите название"
           after-icon="lupa"
+          v-model="filters.search"
+          @input="debouncedGetPartners"
         ></UiInput>
         <p class="partners__top-text" @click="openFilterMobile">Фильтр</p>
       </div>
+
       <div class="partners__header">
-        <h1 class="partners__title title">Партнеры</h1>
+        <div>
+          <h1 class="partners__title title">Партнеры</h1>
+          <p class="partners__subtitle">
+            Туристические компании и отели, которые размещают предложения на FlyAway.
+          </p>
+        </div>
       </div>
 
       <div class="partners__content">
         <div class="partners__content-left">
           <section class="partners__filters">
             <div class="partners__filters-header">
-              <UiIcons
-                icon="filter-burger"
-                size="size-36"
-                color="red-500"
-              ></UiIcons>
+              <UiIcons icon="filter-burger" size="size-36" color="red-500"></UiIcons>
               <h2 class="partners__filters-title">Фильтр</h2>
             </div>
 
@@ -31,40 +35,38 @@
                 after-icon="lupa"
                 icon-color="surface-900"
                 label="Поиск по названию"
+                v-model="filters.search"
+                @input="debouncedGetPartners"
               ></UiInput>
-
-              <UiHashTag :tags="tags"></UiHashTag>
             </div>
           </section>
           <TheCommonAdBanner class="partners__ad"></TheCommonAdBanner>
         </div>
+
         <div class="partners__block">
           <section class="partners__sort">
             <h2 class="partners__sort-title">Сортировка</h2>
-            <UiCheckbox
-              v-for="(item, index) in options"
-              :key="index"
-              :label="item.label"
-            ></UiCheckbox>
+            <label v-for="option in sortOptions" :key="option.value" class="partners__sort-option">
+              <input
+                type="radio"
+                name="partner-sort"
+                :value="option.value"
+                v-model="filters.sortBy"
+                @change="getPartners"
+              />
+              <span>{{ option.label }}</span>
+            </label>
           </section>
 
-          <div class="partners__cards" v-if="!!partners && partners?.length">
+          <div v-if="isLoading" class="partners__state">Загружаем партнеров...</div>
+          <div v-else-if="partners.length" class="partners__cards">
             <ThePartnersCard
               v-for="partner in partners"
               :key="partner._id"
               :partner="partner"
             ></ThePartnersCard>
           </div>
-
-          <UiPagination
-            v-if="pagination?.last_page && pagination?.last_page !== 1"
-            :total-items="pagination?.total_items"
-            :current-page="currentPage"
-            @change-page="paginationPage"
-            :last-page="pagination?.last_page"
-            :per-page="pagination?.per_page"
-            class="partners__pagination"
-          ></UiPagination>
+          <div v-else class="partners__state">Партнеры не найдены.</div>
         </div>
       </div>
     </div>
@@ -76,22 +78,49 @@
     title="Фильтр"
   >
     <div class="partners__overlay-checkboxs">
-      <p class="partners__overlay-bold">Сортировка</p>
-      <UiCheckbox
-        v-for="(item, index) in options"
-        :key="index"
-        :label="item.label"
-      ></UiCheckbox>
+      <p class="partners__overlay-bold">Поиск</p>
+      <UiInput
+        placeholder="Введите название"
+        after-icon="lupa"
+        v-model="filters.search"
+        @input="debouncedGetPartners"
+      />
     </div>
-    <UiHashTag :tags="tags"></UiHashTag>
+
+    <div class="partners__overlay-checkboxs">
+      <p class="partners__overlay-bold">Сортировка</p>
+      <label v-for="option in sortOptions" :key="option.value" class="partners__sort-option">
+        <input
+          type="radio"
+          name="partner-sort-mobile"
+          :value="option.value"
+          v-model="filters.sortBy"
+          @change="getPartners"
+        />
+        <span>{{ option.label }}</span>
+      </label>
+    </div>
   </UiOverlay>
 </template>
 
 <script setup>
-const partners = ref(null);
-const pagination = reactive({});
-const currentPage = ref(1);
+const api = useApi();
+const partners = ref([]);
+const isLoading = ref(false);
 const isOpenFilterMobile = ref(false);
+const debounceTimer = ref(null);
+
+const filters = reactive({
+  search: '',
+  sortBy: 'rating_desc',
+});
+
+const sortOptions = [
+  { label: 'по рейтингу ↓', value: 'rating_desc' },
+  { label: 'по рейтингу ↑', value: 'rating_asc' },
+  { label: 'А–Я', value: 'title_asc' },
+  { label: 'Я–А', value: 'title_desc' },
+];
 
 const openFilterMobile = () => {
   isOpenFilterMobile.value = true;
@@ -101,51 +130,40 @@ const closeFilterMobile = () => {
   isOpenFilterMobile.value = false;
 };
 
-const options = [
-  { label: "по цене", value: "price" },
-  { label: "по популярности", value: "popularity" },
-];
-
-const tags = reactive([
-  {
-    id: 1,
-    name: "активный",
-  },
-  {
-    id: 2,
-    name: "экскурсионный",
-  },
-  {
-    id: 3,
-    name: "wellness",
-  },
-  {
-    id: 4,
-    name: "активный",
-  },
-]);
-
 useSeoMeta({
-  title: "FlyAway - Наши партнеры",
-  ogTitle: "FlyAway - Наши партнеры",
-  description: "FlyAway - сайт для бронирования туров и отелей",
-  ogDescription: "FlyAway - сайт для бронирования туров и отелей",
+  title: 'FlyAway - Наши партнеры',
+  ogTitle: 'FlyAway - Наши партнеры',
+  description: 'FlyAway - партнеры туристического сервиса',
+  ogDescription: 'FlyAway - партнеры туристического сервиса',
 });
 
-useFetchSsr({
-  url: "/partners",
-  method: "get",
-}).then((res) => {
-  partners.value = res.data;
-  // pagination.last_page = res.data.last_page;
-  // pagination.total_items = res.data.total;
-  // pagination.per_page = res.data.per_page;
-});
-
-const paginationPage = (page) => {
-  currentPage.value = page;
-  getPartners();
+const getPartners = async () => {
+  isLoading.value = true;
+  try {
+    const res = await api.client({
+      url: '/partners',
+      method: 'get',
+      query: {
+        search: filters.search || undefined,
+        sortBy: filters.sortBy,
+      },
+    });
+    partners.value = Array.isArray(res?.data) ? res.data : [];
+  } catch (error) {
+    partners.value = [];
+  } finally {
+    isLoading.value = false;
+  }
 };
+
+const debouncedGetPartners = () => {
+  clearTimeout(debounceTimer.value);
+  debounceTimer.value = setTimeout(getPartners, 350);
+};
+
+onMounted(getPartners);
+
+onBeforeUnmount(() => clearTimeout(debounceTimer.value));
 </script>
 
 <style lang="scss" scoped>
@@ -159,10 +177,14 @@ const paginationPage = (page) => {
     gap: 16px;
     align-items: center;
   }
+  &__subtitle {
+    margin-top: 8px;
+    color: $surface-500;
+    line-height: 1.5;
+  }
   &__content {
     width: 100%;
     display: flex;
-    // justify-content: space-between;
     gap: 24px;
     margin: 36px 0;
   }
@@ -174,36 +196,20 @@ const paginationPage = (page) => {
     &-box {
       display: flex;
       flex-direction: column;
-      gap: 36px;
+      gap: 24px;
       padding: 20px;
-    }
-    &-range {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    &-inner {
-      display: flex;
-      gap: 6px;
-      align-items: center;
     }
     &-header {
       display: flex;
       gap: 12px;
       align-items: center;
-      background-color: $blue-200;
+      background-color: rgba($red-500, 0.06);
       padding: 20px;
       border-radius: 16px;
     }
     &-title {
       color: $surface-900;
       font-size: 16px;
-    }
-    &-text {
-      font-size: 14px;
-      font-weight: 400;
-      color: $surface-900;
-      margin-bottom: 12px;
     }
   }
   &__block {
@@ -211,21 +217,36 @@ const paginationPage = (page) => {
     display: flex;
     flex-direction: column;
     gap: 24px;
+    min-width: 0;
   }
   &__sort {
     background-color: $white;
     border-radius: 16px;
     display: flex;
     align-items: center;
-    gap: 24px;
+    gap: 20px;
     box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.04);
+    flex-wrap: wrap;
     &-title {
       padding: 26px;
-      background-color: $blue-200;
+      background-color: rgba($red-500, 0.06);
       border-radius: 16px;
       color: $surface-900;
       font-size: 16px;
-      margin-right: 16px;
+      margin-right: 6px;
+    }
+    &-option {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: $surface-600;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+
+      input {
+        accent-color: $red-500;
+      }
     }
   }
   &__cards {
@@ -236,27 +257,22 @@ const paginationPage = (page) => {
     grid-template-columns: repeat(4, 1fr);
     gap: 16px;
   }
-  &__banner {
-    grid-column: 1 / -1;
-  }
-  &__pagination {
-    margin: 0 auto;
-    &--scroll {
-      position: absolute;
-      bottom: 0;
-      z-index: 3;
-      margin-bottom: 12px;
-    }
+  &__state {
+    padding: 36px;
+    border-radius: 16px;
+    background: $white;
+    color: $surface-500;
+    text-align: center;
   }
   &__overlay {
     &-checkboxs {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 12px;
       margin-bottom: 32px;
     }
     &-bold {
-      font-weight: 400;
+      font-weight: 700;
       font-size: 14px;
     }
   }
@@ -265,7 +281,30 @@ const paginationPage = (page) => {
   }
 }
 
-@media (max-width: 375px) {
+@media (max-width: 1100px) {
+  .partners {
+    &__cards {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+}
+
+@media (max-width: 820px) {
+  .partners {
+    &__content {
+      flex-direction: column;
+    }
+    &__content-left,
+    &__filters {
+      width: 100%;
+    }
+    &__cards {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+}
+
+@media (max-width: 560px) {
   .partners {
     &__wrapper {
       padding: 0;
@@ -281,7 +320,7 @@ const paginationPage = (page) => {
       gap: 12px;
       &-text {
         color: $red-500;
-        font-weight: 400;
+        font-weight: 700;
         cursor: pointer;
       }
       &-search {
@@ -291,16 +330,10 @@ const paginationPage = (page) => {
       }
     }
     &__content {
-      display: flex;
-      flex-direction: column;
-      margin-top: 0;
+      margin-top: 18px;
     }
-    &__filters {
-      display: none;
-    }
-    &__ad {
-      display: none;
-    }
+    &__filters,
+    &__ad,
     &__sort {
       display: none;
     }
