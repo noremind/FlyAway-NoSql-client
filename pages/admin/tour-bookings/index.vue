@@ -1,21 +1,5 @@
 <template>
   <section class="admin-bookings">
-    <div class="admin-bookings__head">
-      <div>
-        <h2 class="admin-bookings__title-page">Бронирования туров</h2>
-        <p class="admin-bookings__page-text">
-          Контроль активных поездок, завершённых туров, отмен и способов оплаты
-          по всем бронированиям.
-        </p>
-      </div>
-
-      <div class="admin-bookings__head-actions">
-        <button class="admin-bookings__reload" type="button" @click="loadBookings">
-          Обновить
-        </button>
-      </div>
-    </div>
-
     <div class="admin-bookings__stats">
       <article
         v-for="item in statItems"
@@ -83,7 +67,9 @@
         <div class="admin-bookings__grid">
           <div class="admin-bookings__field">
             <span class="admin-bookings__label">Дата</span>
-            <span class="admin-bookings__value">{{ formatDate(booking.date) }}</span>
+            <span class="admin-bookings__value">{{
+              formatDate(booking.date)
+            }}</span>
           </div>
 
           <div class="admin-bookings__field">
@@ -93,28 +79,36 @@
 
           <div class="admin-bookings__field">
             <span class="admin-bookings__label">Сумма</span>
-            <span class="admin-bookings__value">{{ formatMoney(booking.total) }} ₸</span>
+            <span class="admin-bookings__value"
+              >{{ formatMoney(booking.total) }} ₸</span
+            >
           </div>
 
           <div class="admin-bookings__field">
             <span class="admin-bookings__label">Оплата</span>
-            <span class="admin-bookings__value">{{ getPaymentLabel(booking.paymentMethod) }}</span>
+            <span class="admin-bookings__value">{{
+              getPaymentLabel(booking.paymentMethod)
+            }}</span>
           </div>
 
           <div class="admin-bookings__field">
             <span class="admin-bookings__label">Создано</span>
-            <span class="admin-bookings__value">{{ formatDateTime(booking.createdAt) }}</span>
+            <span class="admin-bookings__value">{{
+              formatDateTime(booking.createdAt)
+            }}</span>
           </div>
 
           <div class="admin-bookings__field">
             <span class="admin-bookings__label">Партнер</span>
-            <span class="admin-bookings__value">{{ booking?.tour?.partner?.title || '—' }}</span>
+            <span class="admin-bookings__value">{{
+              booking?.tour?.partner?.title || "—"
+            }}</span>
           </div>
 
           <div class="admin-bookings__field admin-bookings__field--full">
             <span class="admin-bookings__label">Билеты</span>
             <span class="admin-bookings__value">
-              {{ getTicketsSummary(booking.ticketSelections) || 'Не выбраны' }}
+              {{ getTicketsSummary(booking.ticketSelections) || "Не выбраны" }}
             </span>
           </div>
         </div>
@@ -215,9 +209,16 @@ const getTicketsSummary = (ticketSelections) => {
 
 const statItems = computed(() => {
   const total = bookings.value.length;
-  const active = bookings.value.filter((item) => item?.status === "active").length;
-  const completed = bookings.value.filter((item) => item?.status === "completed").length;
-  const revenue = bookings.value.reduce((sum, item) => sum + (Number(item?.total) || 0), 0);
+  const active = bookings.value.filter(
+    (item) => item?.status === "active",
+  ).length;
+  const completed = bookings.value.filter(
+    (item) => item?.status === "completed",
+  ).length;
+  const revenue = bookings.value.reduce(
+    (sum, item) => sum + (Number(item?.total) || 0),
+    0,
+  );
 
   return [
     { label: "Всего броней", value: total },

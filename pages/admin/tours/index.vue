@@ -1,23 +1,8 @@
 <template>
   <section class="admin-catalog">
-    <div class="admin-catalog__head">
-      <div>
-        <h2 class="admin-catalog__title">Туры</h2>
-        <p class="admin-catalog__text">
-          Управление каталогом туров, датами, рейтингом, билетами и статусами
-          публикации.
-        </p>
-      </div>
-
-      <div class="admin-catalog__actions">
-        <button class="admin-catalog__ghost" type="button" @click="loadTours">
-          Обновить
-        </button>
-        <NuxtLink class="admin-catalog__primary" to="/admin/tours/create">
-          Создать тур
-        </NuxtLink>
-      </div>
-    </div>
+    <NuxtLink class="admin-catalog__primary" to="/admin/tours/create">
+      Создать тур
+    </NuxtLink>
 
     <div class="admin-catalog__stats">
       <article
@@ -89,7 +74,11 @@
               <div class="admin-catalog__cell-main">
                 <strong>{{ tour?.partner?.title || "—" }}</strong>
                 <span class="admin-catalog__muted">
-                  {{ tour?.departureCity || tour?.departurePoint || "Без точки отправления" }}
+                  {{
+                    tour?.departureCity ||
+                    tour?.departurePoint ||
+                    "Без точки отправления"
+                  }}
                 </span>
               </div>
             </td>
@@ -146,7 +135,10 @@
                 >
                   Редактировать
                 </NuxtLink>
-                <NuxtLink class="admin-catalog__link admin-catalog__link--ghost" :to="`/tours/${tour._id}`">
+                <NuxtLink
+                  class="admin-catalog__link admin-catalog__link--ghost"
+                  :to="`/tours/${tour._id}`"
+                >
                   Открыть на сайте
                 </NuxtLink>
               </div>
@@ -241,7 +233,9 @@ const getAvailabilitySummary = (tour) => {
 };
 
 const getTicketsCount = (tour) => {
-  return Array.isArray(tour?.ticketTypes) ? tour.ticketTypes.filter(Boolean).length : 0;
+  return Array.isArray(tour?.ticketTypes)
+    ? tour.ticketTypes.filter(Boolean).length
+    : 0;
 };
 
 const getCheapestTicketLabel = (tour) => {
@@ -290,7 +284,9 @@ const statItems = computed(() => {
 });
 
 const filteredTours = computed(() => {
-  const query = String(searchQuery.value || "").trim().toLowerCase();
+  const query = String(searchQuery.value || "")
+    .trim()
+    .toLowerCase();
 
   return tours.value.filter((tour) => {
     const matchesSearch = !query

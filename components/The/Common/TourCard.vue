@@ -356,6 +356,12 @@ onMounted(() => {
     display: flex;
     flex-direction: column;
     height: 100%;
+    border: 1px solid #eaeaea;
+    transition: 0.4s linear;
+    &:hover {
+      box-shadow: -1px 0px 15px 0px rgba(40, 54, 24, 0.2);
+      transform: translate(-3px, -3px);
+    }
   }
   &__header {
     position: relative;

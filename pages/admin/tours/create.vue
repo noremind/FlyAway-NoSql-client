@@ -1,20 +1,5 @@
 <template>
   <section class="admin-editor-page">
-    <div class="admin-editor-page__hero">
-      <div>
-        <p class="admin-editor-page__eyebrow">Каталог туров</p>
-        <h2 class="admin-editor-page__title">Создать тур</h2>
-        <p class="admin-editor-page__text">
-          Заполните карточку тура по шагам: описание, маршрут, блок для
-          туристов, контакты, билеты и доступные даты.
-        </p>
-      </div>
-
-      <NuxtLink class="admin-editor-page__back" to="/admin/tours">
-        Назад к списку
-      </NuxtLink>
-    </div>
-
     <TheAdminToursForm mode="create" />
   </section>
 </template>

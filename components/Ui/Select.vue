@@ -130,7 +130,7 @@ const clearValue = () => {
     top: 50%;
     right: 34px;
     transform: translateY(-50%);
-    z-index: 2;
+    z-index: 1;
     width: 24px;
     height: 24px;
     display: inline-flex;

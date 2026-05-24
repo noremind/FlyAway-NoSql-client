@@ -1,21 +1,5 @@
 <template>
   <section class="admin-entities">
-    <div class="admin-entities__head">
-      <div>
-        <h2 class="admin-entities__title">Пользователи</h2>
-        <p class="admin-entities__text">
-          Список аккаунтов, ролей, бонусных балансов и активности пользователей в
-          экосистеме FlyAway.
-        </p>
-      </div>
-
-      <div class="admin-entities__actions">
-        <button class="admin-entities__ghost" type="button" @click="loadUsers">
-          Обновить
-        </button>
-      </div>
-    </div>
-
     <div class="admin-entities__stats">
       <article
         v-for="item in statItems"
@@ -116,7 +100,9 @@ const userRows = computed(() => {
 const statItems = computed(() => {
   const total = users.value.length;
   const admins = users.value.filter((user) => user?.role === "admin").length;
-  const partners = users.value.filter((user) => user?.role === "partner").length;
+  const partners = users.value.filter(
+    (user) => user?.role === "partner",
+  ).length;
   const verified = users.value.filter((user) => user?.isVerified).length;
 
   return [
@@ -135,7 +121,8 @@ const loadUsers = async () => {
     const res = await api.client({ url: "/users" });
     users.value = Array.isArray(res?.data) ? res.data : [];
   } catch (error) {
-    errorMessage.value = error?.message || "Не удалось загрузить пользователей.";
+    errorMessage.value =
+      error?.message || "Не удалось загрузить пользователей.";
   } finally {
     isLoading.value = false;
   }

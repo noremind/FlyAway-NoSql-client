@@ -1,22 +1,18 @@
 <template>
   <section class="admin-profile-page">
-    <div class="admin-profile-page__head">
-      <div>
-        <h2 class="admin-profile-page__title">Профиль</h2>
-        <p class="admin-profile-page__text">
-          Настройки аккаунта администратора или партнера, аватар, контакты и
-          корпоративные данные.
-        </p>
-      </div>
-    </div>
-
     <div class="admin-profile-page__stats">
       <article class="admin-profile-page__stat">
-        <p class="admin-profile-page__stat-value">{{ isPartnerSession ? 'Partner' : 'Admin' }}</p>
+        <p class="admin-profile-page__stat-value">
+          {{ isPartnerSession ? "Partner" : "Admin" }}
+        </p>
         <p class="admin-profile-page__stat-label">Тип сессии</p>
       </article>
       <article class="admin-profile-page__stat">
-        <p class="admin-profile-page__stat-value">{{ isPartnerSession ? partnerForm.title || '—' : userForm.name || '—' }}</p>
+        <p class="admin-profile-page__stat-value">
+          {{
+            isPartnerSession ? partnerForm.title || "—" : userForm.name || "—"
+          }}
+        </p>
         <p class="admin-profile-page__stat-label">Активный профиль</p>
       </article>
     </div>

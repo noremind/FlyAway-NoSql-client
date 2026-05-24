@@ -524,9 +524,7 @@
           </swiper-slide>
         </UiSwiper>
 
-        <div v-else class="details__reviews-empty">
-          Пока отзывов нет.
-        </div>
+        <div v-else class="details__reviews-empty">Пока отзывов нет.</div>
 
         <UiButton
           v-if="canReviewTour"
@@ -1672,6 +1670,10 @@ await Promise.allSettled([
   loadCanReviewTour(),
 ]);
 
+onMounted(() => {
+  mountInfoMap();
+});
+
 onBeforeUnmount(() => {
   destroyMap(infoMap);
   destroyMap(pathMap);
@@ -1792,6 +1794,9 @@ const closePaymentModal = () => {
     align-items: center;
   }
   &__title {
+    &--mobile {
+      display: none;
+    }
     color: $red-500;
     max-width: 590px;
   }
@@ -2399,6 +2404,17 @@ const closePaymentModal = () => {
     color: $red-500;
     font-size: 13px;
     font-weight: 600;
+  }
+}
+
+@media (max-width: 768px) {
+  .details {
+    &__box {
+      flex-direction: column;
+    }
+    &__totals {
+      max-width: 100%;
+    }
   }
 }
 

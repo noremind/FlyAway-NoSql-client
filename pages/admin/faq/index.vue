@@ -1,15 +1,5 @@
 <template>
   <section class="admin-faq">
-    <div class="admin-faq__head">
-      <div>
-        <h2 class="admin-faq__title">FAQ</h2>
-        <p class="admin-faq__text">
-          Внутренние подсказки для команды FlyAway: бронирование, партнеры,
-          бонусы и операционные правила работы.
-        </p>
-      </div>
-    </div>
-
     <div class="admin-faq__stats">
       <article class="admin-faq__stat">
         <p class="admin-faq__stat-value">{{ items.length }}</p>

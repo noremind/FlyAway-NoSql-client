@@ -170,7 +170,7 @@ watch(
     &-eye {
       position: absolute;
       top: 36px;
-      right: 13px;
+      right: 46px;
       cursor: pointer;
     }
   }

@@ -1,14 +1,5 @@
 <template>
   <section class="admin-promocodes">
-    <div class="admin-promocodes__head">
-      <div>
-        <h2 class="admin-promocodes__title">Промокоды</h2>
-        <p class="admin-promocodes__text">
-          Управление скидками для туров, отелей и общих акций FlyAway.
-        </p>
-      </div>
-    </div>
-
     <div class="admin-promocodes__stats">
       <article class="admin-promocodes__stat">
         <p class="admin-promocodes__stat-value">{{ promos.length }}</p>
@@ -100,11 +91,15 @@
         >
           <div class="admin-promocodes__card-top">
             <div>
-              <strong class="admin-promocodes__card-code">{{ promo.code }}</strong>
-              <p class="admin-promocodes__card-title">{{ promo.title || 'Без названия' }}</p>
+              <strong class="admin-promocodes__card-code">{{
+                promo.code
+              }}</strong>
+              <p class="admin-promocodes__card-title">
+                {{ promo.title || "Без названия" }}
+              </p>
             </div>
             <span class="admin-promocodes__card-badge">
-              {{ promo.discountType === 'percent' ? '%' : '₸' }}
+              {{ promo.discountType === "percent" ? "%" : "₸" }}
             </span>
           </div>
 
@@ -117,14 +112,27 @@
               <span>Область</span>
               <strong>{{ promoScopeLabel(promo) }}</strong>
             </div>
-            <div class="admin-promocodes__card-field admin-promocodes__card-field--full">
+            <div
+              class="admin-promocodes__card-field admin-promocodes__card-field--full"
+            >
               <span>Период</span>
-              <strong>{{ promo.startsAt || 'без даты' }} — {{ promo.endsAt || 'без даты' }}</strong>
+              <strong
+                >{{ promo.startsAt || "без даты" }} —
+                {{ promo.endsAt || "без даты" }}</strong
+              >
             </div>
-            <div class="admin-promocodes__card-field admin-promocodes__card-field--full">
+            <div
+              class="admin-promocodes__card-field admin-promocodes__card-field--full"
+            >
               <span>Статус</span>
-              <strong :class="promo.isActive ? 'admin-promocodes__status admin-promocodes__status--active' : 'admin-promocodes__status admin-promocodes__status--inactive'">
-                {{ promo.isActive ? 'Активен' : 'Выключен' }}
+              <strong
+                :class="
+                  promo.isActive
+                    ? 'admin-promocodes__status admin-promocodes__status--active'
+                    : 'admin-promocodes__status admin-promocodes__status--inactive'
+                "
+              >
+                {{ promo.isActive ? "Активен" : "Выключен" }}
               </strong>
             </div>
           </div>
@@ -202,16 +210,18 @@ const hotelOptions = computed(() =>
   })),
 );
 
-const activePromosCount = computed(() => promos.value.filter((promo) => promo?.isActive).length);
+const activePromosCount = computed(
+  () => promos.value.filter((promo) => promo?.isActive).length,
+);
 
 const promoScopeLabel = (promo) => {
-  if (promo?.targetType === 'tour') {
-    return promo?.tour?.title || 'Тур';
+  if (promo?.targetType === "tour") {
+    return promo?.tour?.title || "Тур";
   }
-  if (promo?.targetType === 'hotel') {
-    return promo?.hotel?.name || 'Отель';
+  if (promo?.targetType === "hotel") {
+    return promo?.hotel?.name || "Отель";
   }
-  return 'Для всего';
+  return "Для всего";
 };
 
 const formatApiDate = (value) => {

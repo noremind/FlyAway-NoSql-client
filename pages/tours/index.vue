@@ -90,7 +90,11 @@
               />
 
               <div class="tours__filters-actions">
-                <button class="tours__filters-reset" type="button" @click="resetFilters">
+                <button
+                  class="tours__filters-reset"
+                  type="button"
+                  @click="resetFilters"
+                >
                   Сбросить фильтры
                 </button>
               </div>
@@ -112,7 +116,9 @@
                 :key="group.value"
                 type="button"
                 class="tours__sort-chip"
-                :class="{ 'tours__sort-chip--active': selectedSortGroup === group.value }"
+                :class="{
+                  'tours__sort-chip--active': selectedSortGroup === group.value,
+                }"
                 @click="selectSortGroup(group.value)"
               >
                 <span class="tours__sort-radio"></span>
@@ -131,11 +137,12 @@
             />
           </section>
 
-          <div v-if="isLoading" class="tours__state">
-            Загружаем туры...
-          </div>
+          <div v-if="isLoading" class="tours__state">Загружаем туры...</div>
 
-          <div v-else-if="errorMessage" class="tours__state tours__state--error">
+          <div
+            v-else-if="errorMessage"
+            class="tours__state tours__state--error"
+          >
             {{ errorMessage }}
           </div>
 
@@ -247,7 +254,9 @@
             :key="`${group.value}-mobile`"
             type="button"
             class="tours__sort-chip"
-            :class="{ 'tours__sort-chip--active': selectedSortGroup === group.value }"
+            :class="{
+              'tours__sort-chip--active': selectedSortGroup === group.value,
+            }"
             @click="selectSortGroup(group.value)"
           >
             <span class="tours__sort-radio"></span>
@@ -266,7 +275,11 @@
       </div>
 
       <div class="tours__filters-actions">
-        <button class="tours__filters-reset" type="button" @click="resetFilters">
+        <button
+          class="tours__filters-reset"
+          type="button"
+          @click="resetFilters"
+        >
           Сбросить фильтры
         </button>
       </div>
@@ -542,7 +555,9 @@ const loadFilterOptions = async () => {
       }),
     ]);
 
-    const cities = Array.isArray(citiesResponse?.data) ? citiesResponse.data : [];
+    const cities = Array.isArray(citiesResponse?.data)
+      ? citiesResponse.data
+      : [];
     const durations = Array.isArray(durationsResponse?.data)
       ? durationsResponse.data
       : [];
@@ -554,7 +569,9 @@ const loadFilterOptions = async () => {
 
     durationOptions.value = [
       { label: "Все варианты", value: "" },
-      ...durations.filter((item) => normalizeString(item?.value || item?.label)),
+      ...durations.filter((item) =>
+        normalizeString(item?.value || item?.label),
+      ),
     ];
   } catch {
     locationOptions.value = buildFallbackOptions(
@@ -642,7 +659,13 @@ const closePartialLocationCards = () => {
 };
 
 watch(
-  () => [filters.search, filters.dateFrom, filters.dateTo, filters.duration, filters.location],
+  () => [
+    filters.search,
+    filters.dateFrom,
+    filters.dateTo,
+    filters.duration,
+    filters.location,
+  ],
   () => {
     refreshToursDebounced();
   },
@@ -924,7 +947,7 @@ onBeforeUnmount(() => {
     gap: 16px;
 
     &--tablet {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     &--mobile-sheet {
