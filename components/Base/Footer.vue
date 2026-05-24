@@ -1,5 +1,5 @@
 <template>
-  <footer class="footer">
+  <footer class="footer" id="contacts">
     <div class="footer__wrapper">
       <nuxt-link to="/">
         <img
@@ -17,7 +17,7 @@
         >
           <li
             v-for="list in section.list"
-            :key="list"
+            :key="list.name"
             class="footer__list-item"
           >
             <nuxt-link class="footer__link" :to="list.link">
@@ -40,71 +40,33 @@ const footerList = reactive([
   {
     id: 1,
     list: [
-      {
-        name: "О нас",
-        icon: "",
-        link: "",
-      },
-      {
-        name: "Контакты",
-        icon: "",
-        link: "",
-      },
+      { name: "О нас", icon: "", link: "/#about" },
+      { name: "FAQ", icon: "", link: "/#faq" },
+      { name: "Контакты", icon: "", link: "/#contacts" },
     ],
   },
   {
     id: 2,
     list: [
-      {
-        name: "Партнеры",
-        icon: "",
-        link: "",
-      },
-      {
-        name: "Туры",
-        icon: "",
-        link: "",
-      },
-      {
-        name: "Отели",
-        icon: "",
-        link: "",
-      },
-    ],
-  },
-  {
-    id: 2,
-    list: [
-      {
-        name: "@FlyAway.kz",
-        icon: "instagram",
-        link: "",
-      },
-      {
-        name: "FlyAway@gmail.com",
-        icon: "email",
-        link: "",
-      },
-      {
-        name: "@FlyAway.kz",
-        icon: "tiktok",
-        link: "",
-      },
+      { name: "Партнеры", icon: "", link: "/partners" },
+      { name: "Туры", icon: "", link: "/tours" },
+      { name: "Отели", icon: "", link: "/hotels" },
+      { name: "Горячие туры", icon: "", link: "/#hot-tours" },
     ],
   },
   {
     id: 3,
     list: [
-      {
-        name: "г. Алматы, ул. Такая, офис 67",
-        icon: "location",
-        link: "",
-      },
-      {
-        name: "+7 777 (777) 77 77",
-        icon: "phone",
-        link: "",
-      },
+      { name: "@FlyAway.kz", icon: "instagram", link: "/#contacts" },
+      { name: "FlyAway@gmail.com", icon: "email", link: "/#contacts" },
+      { name: "@FlyAway.kz", icon: "tiktok", link: "/#contacts" },
+    ],
+  },
+  {
+    id: 4,
+    list: [
+      { name: "г. Алматы, ул. Такая, офис 67", icon: "location", link: "/#contacts" },
+      { name: "+7 777 (777) 77 77", icon: "phone", link: "/#contacts" },
     ],
   },
 ]);
@@ -113,6 +75,7 @@ const footerList = reactive([
 <style lang="scss" scoped>
 .footer {
   background-color: $surface-900;
+  scroll-margin-top: 120px;
   &__wrapper {
     max-width: 1240px;
     width: 100%;
@@ -142,6 +105,7 @@ const footerList = reactive([
     gap: 4px;
     align-items: center;
     margin-top: 12px;
+    color: inherit;
   }
 }
 
