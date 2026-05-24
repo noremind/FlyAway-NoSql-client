@@ -8,8 +8,7 @@
               <p class="hotel-editor__eyebrow">Отель</p>
               <h2 class="hotel-editor__title">Создать отель</h2>
               <p class="hotel-editor__text">
-                Заполните карточку отеля, типы номеров, цены, контакты и блоки,
-                которые используются на публичной странице отеля.
+                Форма теперь работает как создание тура: адрес выбирается через карту, а изображения загружаются файлами.
               </p>
             </div>
           </div>
@@ -29,8 +28,22 @@
             <UiInput label="Рейтинг" type="number" placeholder="4.5" v-model="form.rating" />
             <UiInput label="Цена от" type="number" placeholder="15000" v-model="form.price" />
             <UiInput label="Скидка %" type="number" placeholder="20" v-model="form.discount" />
-            <UiInput label="Координата X / longitude" type="number" placeholder="76.889709" v-model="form.coordinates.x" />
-            <UiInput label="Координата Y / latitude" type="number" placeholder="43.238949" v-model="form.coordinates.y" />
+          </div>
+
+          <div class="hotel-editor__map">
+            <div class="hotel-editor__section-head">
+              <div>
+                <h2 class="hotel-editor__section-title">Адрес на карте</h2>
+                <p class="hotel-editor__text">Поставьте метку на Яндекс-карте. Координаты сохранятся в карточке отеля.</p>
+              </div>
+              <button class="hotel-editor__ghost" type="button" @click="clearLocation">Сбросить</button>
+            </div>
+            <UiMap
+              v-model="form.coordinates"
+              :selectable="true"
+              :center="[76.889709, 43.238949]"
+              marker-text="Отель"
+            />
           </div>
 
           <label class="hotel-editor__check">
@@ -44,13 +57,26 @@
           <div class="hotel-editor__stack">
             <UiTextarea label="Краткое описание*" :rows="4" v-model.trim="form.description" />
             <UiTextarea label="Подробное описание*" :rows="6" v-model.trim="form.content" />
-            <TheAdminToursListEditor
-              v-model="form.images"
-              add-label="Добавить фото"
-              placeholder="https://example.com/hotel.jpg"
-              item-label-prefix="Фото"
-              :default-item="''"
-            />
+
+            <div class="hotel-editor__gallery">
+              <div class="hotel-editor__cover">
+                <img v-if="coverPreview" class="hotel-editor__cover-img" :src="coverPreview" :alt="form.name || 'Отель'" />
+                <div v-else class="hotel-editor__cover-empty">Обложка отеля</div>
+              </div>
+              <div class="hotel-editor__upload-list">
+                <UiFileUpload
+                  v-model="coverFiles"
+                  title="Загрузить главное изображение"
+                  accept="image/png,image/jpeg,image/webp"
+                />
+                <UiFileUpload
+                  v-model="galleryFiles"
+                  title="Загрузить галерею отеля"
+                  accept="image/png,image/jpeg,image/webp"
+                  multiple
+                />
+              </div>
+            </div>
           </div>
         </section>
 
@@ -58,9 +84,7 @@
           <div class="hotel-editor__section-head">
             <div>
               <h2 class="hotel-editor__section-title">Виды номеров</h2>
-              <p class="hotel-editor__text">
-                Эти данные используются на странице отеля. Пользователь должен выбрать номер перед бронированием.
-              </p>
+              <p class="hotel-editor__text">Пользователь должен выбрать номер перед бронированием.</p>
             </div>
             <button type="button" class="hotel-editor__ghost" @click="addRoom">Добавить номер</button>
           </div>
@@ -84,12 +108,11 @@
                 item-label-prefix="Пункт"
                 :default-item="''"
               />
-              <TheAdminToursListEditor
-                v-model="room.images"
-                add-label="Добавить фото номера"
-                placeholder="https://example.com/room.jpg"
-                item-label-prefix="Фото"
-                :default-item="''"
+              <UiFileUpload
+                v-model="roomFiles[index]"
+                title="Загрузить фото номера"
+                accept="image/png,image/jpeg,image/webp"
+                multiple
               />
             </article>
           </div>
@@ -128,6 +151,7 @@
           <div class="hotel-editor__summary-row"><span>Цена от</span><strong>{{ priceLabel }}</strong></div>
           <div class="hotel-editor__summary-row"><span>Скидка</span><strong>{{ form.discount || 0 }}%</strong></div>
           <div class="hotel-editor__summary-row"><span>Номеров</span><strong>{{ form.room_types.length }}</strong></div>
+          <div class="hotel-editor__summary-row"><span>Фото</span><strong>{{ selectedFileCount }}</strong></div>
           <button class="hotel-editor__submit" type="submit" :disabled="isSubmitting">
             {{ isSubmitting ? 'Сохраняем...' : 'Создать отель' }}
           </button>
@@ -144,58 +168,60 @@ useSeo({ title: 'Создать отель', description: 'Создание от
 const userStore = useAuthStore();
 const api = useApi();
 const router = useRouter();
+const { uploadFiles } = useBlobFiles();
 const isSubmitting = ref(false);
 const message = ref('');
 const partners = ref([]);
+const coverFiles = ref([]);
+const galleryFiles = ref([]);
+const roomFiles = ref([[]]);
+const localCoverPreview = ref('');
 
-const createEmptyRoom = () => ({
-  name: '',
-  price: '',
-  description: '',
-  benefits: [''],
-  images: [''],
-});
+const createEmptyRoom = () => ({ name: '', price: '', description: '', benefits: [''], images: [] });
 
 const form = reactive({
-  name: '',
-  partner: '',
-  location: '',
-  rating: '',
-  price: '',
-  discount: '',
-  is_hot: false,
-  description: '',
-  content: '',
-  images: [''],
-  coordinates: { x: '', y: '', address: '', label: '' },
+  name: '', partner: '', location: '', rating: '', price: '', discount: '', is_hot: false,
+  description: '', content: '', images: [],
+  coordinates: null,
   contacts: { website: '', phone: '', address: '', instagram: '' },
   room_types: [createEmptyRoom()],
-  policy: [''],
-  meals: [''],
-  amenities: [''],
-  paid_services: [''],
-  family_features: [''],
-  accessibility: [''],
-  entertainment: [''],
+  policy: [''], meals: [''], amenities: [''], paid_services: [''], family_features: [''], accessibility: [''], entertainment: [''],
 });
 
 const isPartnerUser = computed(() => userStore.getUser?.role === 'partner');
 const partnerOptions = computed(() => partners.value.map((partner) => ({ label: partner.title, value: partner._id })));
 const priceLabel = computed(() => Number(form.price || 0) ? `${Number(form.price).toLocaleString('ru-RU')} ₸` : 'По запросу');
+const selectedFileCount = computed(() => coverFiles.value.length + galleryFiles.value.length + roomFiles.value.flat().length);
+const coverPreview = computed(() => localCoverPreview.value || form.images[0] || '');
 
 const cleanList = (list) => Array.isArray(list) ? list.map((item) => String(item || '').trim()).filter(Boolean) : [];
-const cleanRooms = () => form.room_types.map((room) => ({
-  name: String(room.name || '').trim(),
-  price: Number(room.price) || 0,
-  description: String(room.description || '').trim(),
-  benefits: cleanList(room.benefits),
-  images: cleanList(room.images),
-})).filter((room) => room.name || room.price || room.description || room.images.length);
 
-const addRoom = () => form.room_types.push(createEmptyRoom());
+const buildLocalPreview = (file) => {
+  if (typeof File === 'undefined' || !(file instanceof File) || !file.type?.startsWith('image/')) return '';
+  return URL.createObjectURL(file);
+};
+const revokeLocalPreview = () => {
+  if (!localCoverPreview.value) return;
+  URL.revokeObjectURL(localCoverPreview.value);
+  localCoverPreview.value = '';
+};
+
+watch(coverFiles, (files) => {
+  revokeLocalPreview();
+  localCoverPreview.value = buildLocalPreview(files?.[0]);
+}, { deep: true });
+
+const addRoom = () => {
+  form.room_types.push(createEmptyRoom());
+  roomFiles.value.push([]);
+};
 const removeRoom = (index) => {
   if (form.room_types.length === 1) return;
   form.room_types.splice(index, 1);
+  roomFiles.value.splice(index, 1);
+};
+const clearLocation = () => {
+  form.coordinates = null;
 };
 
 const loadPartners = async () => {
@@ -210,43 +236,55 @@ const loadPartners = async () => {
   partners.value = Array.isArray(response.data) ? response.data : [];
 };
 
-const buildPayload = () => ({
-  name: form.name.trim(),
-  partner: form.partner,
-  location: form.location.trim(),
-  rating: Number(form.rating) || 0,
-  price: Number(form.price) || 0,
-  discount: Number(form.discount) || 0,
-  is_hot: Boolean(form.is_hot),
-  description: form.description.trim(),
-  content: form.content.trim(),
-  images: cleanList(form.images),
-  coordinates: {
-    x: form.coordinates.x === '' ? null : Number(form.coordinates.x),
-    y: form.coordinates.y === '' ? null : Number(form.coordinates.y),
-    address: form.coordinates.address || form.location,
-    label: form.coordinates.label || form.name,
-  },
+const uploadHotelFiles = async () => {
+  const entityId = form.partner || 'draft';
+  const coverUploads = coverFiles.value.length ? await uploadFiles({ files: coverFiles.value, bucket: 'hotels', entityId, scope: 'cover' }) : [];
+  const galleryUploads = galleryFiles.value.length ? await uploadFiles({ files: galleryFiles.value, bucket: 'hotels', entityId, scope: 'gallery' }) : [];
+  const roomsUploads = [];
+
+  for (const files of roomFiles.value) {
+    const uploaded = files?.length ? await uploadFiles({ files, bucket: 'hotels', entityId, scope: 'room' }) : [];
+    roomsUploads.push(uploaded.map((item) => item.url).filter(Boolean));
+  }
+
+  const hotelImages = [...coverUploads, ...galleryUploads].map((item) => item.url).filter(Boolean);
+  return { hotelImages, roomsUploads };
+};
+
+const buildCoordinates = () => {
+  const coords = form.coordinates;
+  if (!coords || typeof coords !== 'object') return null;
+  return {
+    x: coords.x ?? coords[0] ?? null,
+    y: coords.y ?? coords[1] ?? null,
+    address: coords.address || form.location,
+    label: coords.label || form.name,
+  };
+};
+
+const buildPayload = (uploaded) => ({
+  name: form.name.trim(), partner: form.partner, location: form.location.trim(),
+  rating: Number(form.rating) || 0, price: Number(form.price) || 0, discount: Number(form.discount) || 0, is_hot: Boolean(form.is_hot),
+  description: form.description.trim(), content: form.content.trim(), images: uploaded.hotelImages,
+  coordinates: buildCoordinates(),
   contacts: { ...form.contacts },
-  room_types: cleanRooms(),
-  policy: cleanList(form.policy),
-  meals: cleanList(form.meals),
-  amenities: cleanList(form.amenities),
-  paid_services: cleanList(form.paid_services),
-  family_features: cleanList(form.family_features),
-  accessibility: cleanList(form.accessibility),
-  entertainment: cleanList(form.entertainment),
+  room_types: form.room_types.map((room, index) => ({
+    name: String(room.name || '').trim(), price: Number(room.price) || 0, description: String(room.description || '').trim(),
+    benefits: cleanList(room.benefits), images: uploaded.roomsUploads[index] || [],
+  })).filter((room) => room.name || room.price || room.description || room.images.length),
+  policy: cleanList(form.policy), meals: cleanList(form.meals), amenities: cleanList(form.amenities), paid_services: cleanList(form.paid_services), family_features: cleanList(form.family_features), accessibility: cleanList(form.accessibility), entertainment: cleanList(form.entertainment),
 });
 
 const submitHotel = async () => {
   message.value = '';
   if (!form.partner) return (message.value = 'Выберите партнера');
-  if (!form.name.trim() || !form.location.trim() || !form.description.trim() || !form.content.trim()) {
-    return (message.value = 'Заполните название, локацию, описание и контент');
-  }
+  if (!form.name.trim() || !form.location.trim() || !form.description.trim() || !form.content.trim()) return (message.value = 'Заполните название, локацию, описание и контент');
+  if (!form.coordinates) return (message.value = 'Поставьте метку адреса на карте');
+
   isSubmitting.value = true;
   try {
-    const response = await api.client({ url: '/hotels/create', method: 'post', data: buildPayload() });
+    const uploaded = await uploadHotelFiles();
+    const response = await api.client({ url: '/hotels/create', method: 'post', data: buildPayload(uploaded) });
     message.value = 'Отель создан';
     const id = response?.data?._id;
     if (id) await router.push(`/admin/hotels/${id}`);
@@ -258,6 +296,7 @@ const submitHotel = async () => {
 };
 
 onMounted(loadPartners);
+onBeforeUnmount(revokeLocalPreview);
 </script>
 
 <style lang="scss" scoped>
@@ -273,10 +312,15 @@ onMounted(loadPartners);
   &__text { margin-top: 6px; color: $surface-500; line-height: 1.45; }
   &__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
   &__grid--lists { grid-template-columns: 1fr; }
-  &__stack, &__rooms { display: grid; gap: 14px; }
+  &__stack, &__rooms, &__upload-list, &__map { display: grid; gap: 14px; }
+  &__gallery { display: grid; grid-template-columns: minmax(260px, .8fr) minmax(0, 1fr); gap: 18px; }
+  &__cover { min-height: 260px; border-radius: 20px; overflow: hidden; background: $surface-150; border: 1px solid rgba($red-500,.08); }
+  &__cover-img { width: 100%; height: 100%; object-fit: cover; }
+  &__cover-empty { min-height: inherit; display: flex; align-items: center; justify-content: center; color: $surface-400; font-weight: 700; }
   &__room { display: grid; gap: 14px; padding: 16px; border-radius: 16px; border: 1px solid rgba($red-500,.12); background: rgba($red-500,.03); }
   &__room-head { display: flex; justify-content: space-between; gap: 12px; color: $surface-900; }
   &__room-head button, &__ghost { color: $red-500; font-weight: 700; }
+  &__ghost { padding: 10px 14px; border-radius: 999px; background: rgba($red-500,.06); }
   &__check { display: flex; gap: 10px; align-items: center; color: $surface-900; font-weight: 600; }
   &__summary-title { color: $surface-900; font-size: 22px; font-weight: 800; }
   &__summary-text { color: $surface-500; line-height: 1.45; }
@@ -287,5 +331,5 @@ onMounted(loadPartners);
   &__message { color: $red-500; font-weight: 700; }
 }
 @media (max-width: 1100px) { .hotel-editor { &__shell { grid-template-columns: 1fr; } &__card--sticky { position: static; } } }
-@media (max-width: 700px) { .hotel-editor { &__grid { grid-template-columns: 1fr; } &__card { padding: 18px; } } }
+@media (max-width: 700px) { .hotel-editor { &__grid, &__gallery { grid-template-columns: 1fr; } &__card { padding: 18px; } } }
 </style>
