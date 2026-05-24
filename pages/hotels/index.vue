@@ -128,7 +128,7 @@
 
           <div v-if="isLoading" class="hotels__state">Загружаем отели...</div>
           <div v-else-if="errorMessage" class="hotels__state hotels__state--error">{{ errorMessage }}</div>
-          <template v-else-if="sortedHotels.length">
+          <template v-else-if="hotels.length">
             <div v-show="selectedTab.id === 1" class="hotels__cards">
               <div
                 class="hotels__cards-inner"
@@ -160,7 +160,7 @@
             <UiPagination
               v-if="lastPage > 1"
               class="hotels__pagination"
-              :total-items="sortedHotels.length"
+              :total-items="hotels.length"
               :current-page="currentPage"
               :last-page="lastPage"
               :per-page="perPage"
@@ -252,8 +252,6 @@
 </template>
 
 <script setup>
-import placeholderImage from "@/assets/image/content/main-image.png";
-
 const { createMap } = useYandexMaps();
 const api = useApi();
 const mapContainer = ref(null);
@@ -263,6 +261,7 @@ const mobileMap = shallowRef(null);
 const isOpenFilterMobile = ref(false);
 const isOpenPartialLocationCards = ref(false);
 const hotels = ref([]);
+const allHotels = ref([]);
 const isLoading = ref(false);
 const errorMessage = ref("");
 const currentPage = ref(1);
@@ -299,6 +298,7 @@ const sortDirectionOptions = [
 const selectedSortGroup = ref("price");
 const selectedSortDirection = ref("asc");
 const mapCenter = [76.889709, 43.238949];
+let filtersTimer = null;
 
 useSeoMeta({
   title: "FlyAway - Отели",
@@ -308,16 +308,26 @@ useSeoMeta({
 });
 
 const normalizeString = (value) => String(value || "").trim();
-const stripHtml = (value) => normalizeString(value).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-const getHotelPrice = (hotel) => {
-  const roomTypes = Array.isArray(hotel?.room_types) ? hotel.room_types : [];
-  const prices = roomTypes.map((room) => Number(room?.price) || 0).filter((price) => price > 0);
-  if (prices.length) return Math.min(...prices);
-  return Number(hotel?.price) || 0;
+
+const formatQueryDate = (value) => {
+  if (!value) return "";
+  const parsed = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "";
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, "0");
+  const day = String(parsed.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 };
 
 const locationOptions = computed(() => {
-  const values = [...new Set(hotels.value.map((hotel) => normalizeString(hotel?.location).split(",")[0]).filter(Boolean))];
+  const source = allHotels.value.length ? allHotels.value : hotels.value;
+  const values = [
+    ...new Set(
+      source
+        .map((hotel) => normalizeString(hotel?.location).split(",")[0])
+        .filter(Boolean),
+    ),
+  ];
   return [{ label: "Все регионы", value: "" }, ...values.map((value) => ({ label: value, value }))];
 });
 
@@ -328,56 +338,27 @@ const ratingOptions = [
   { label: "2+", value: "2" },
 ];
 
-const filteredHotels = computed(() => {
-  const query = normalizeString(filters.search).toLowerCase();
-  const priceFrom = Math.max(0, Number(filters.priceFrom) || 0);
-  const priceTo = Math.max(0, Number(filters.priceTo) || 0);
-  const ratingFrom = Number(filters.rating) || 0;
-
-  return hotels.value.filter((hotel) => {
-    const haystack = [hotel?.name, hotel?.description, hotel?.content, hotel?.location]
-      .map((item) => stripHtml(item).toLowerCase())
-      .join(" ");
-    const hotelPrice = getHotelPrice(hotel);
-    const region = normalizeString(hotel?.location).split(",")[0];
-    const rating = Number(hotel?.rating) || 0;
-
-    const matchesQuery = !query || haystack.includes(query);
-    const matchesRegion = !filters.region || region === filters.region;
-    const matchesRating = !ratingFrom || rating >= ratingFrom;
-    const matchesPriceFrom = !priceFrom || (hotelPrice && hotelPrice >= priceFrom);
-    const matchesPriceTo = !priceTo || (hotelPrice && hotelPrice <= priceTo);
-
-    return matchesQuery && matchesRegion && matchesRating && matchesPriceFrom && matchesPriceTo;
-  });
+const sortBy = computed(() => {
+  if (selectedSortGroup.value === "price") {
+    return selectedSortDirection.value === "asc" ? "price_asc" : "price_desc";
+  }
+  if (selectedSortGroup.value === "reviews") {
+    return "reviews_desc";
+  }
+  return "popularity";
 });
 
-const sortedHotels = computed(() => {
-  const direction = selectedSortDirection.value === "asc" ? 1 : -1;
-  return [...filteredHotels.value].sort((a, b) => {
-    if (selectedSortGroup.value === "reviews") {
-      return ((Number(a?.reviewsCount || a?.reviews) || 0) - (Number(b?.reviewsCount || b?.reviews) || 0)) * direction;
-    }
-
-    if (selectedSortGroup.value === "popularity") {
-      return ((Number(a?.rating) || 0) - (Number(b?.rating) || 0)) * direction;
-    }
-
-    return (getHotelPrice(a) - getHotelPrice(b)) * direction;
-  });
-});
-
-const lastPage = computed(() => Math.max(1, Math.ceil(sortedHotels.value.length / perPage)));
+const lastPage = computed(() => Math.max(1, Math.ceil(hotels.value.length / perPage)));
 const paginatedHotels = computed(() => {
   const start = (currentPage.value - 1) * perPage;
-  return sortedHotels.value.slice(start, start + perPage);
+  return hotels.value.slice(start, start + perPage);
 });
 
 const changePage = (page) => {
   currentPage.value = Math.min(Math.max(1, Number(page) || 1), lastPage.value);
 };
 
-const resetFilters = () => {
+const resetFilters = async () => {
   filters.search = "";
   filters.checkIn = null;
   filters.checkOut = null;
@@ -388,6 +369,7 @@ const resetFilters = () => {
   selectedSortGroup.value = "price";
   selectedSortDirection.value = "asc";
   currentPage.value = 1;
+  await loadHotels();
 };
 
 const loadHotels = async () => {
@@ -401,9 +383,17 @@ const loadHotels = async () => {
         search: filters.search || undefined,
         checkIn: formatQueryDate(filters.checkIn) || undefined,
         checkOut: formatQueryDate(filters.checkOut) || undefined,
+        priceFrom: filters.priceFrom || undefined,
+        priceTo: filters.priceTo || undefined,
+        region: filters.region || undefined,
+        rating: filters.rating || undefined,
+        sortBy: sortBy.value || undefined,
       },
     });
     hotels.value = Array.isArray(res?.data) ? res.data : [];
+    if (!filters.search && !filters.region && !filters.priceFrom && !filters.priceTo && !filters.rating) {
+      allHotels.value = hotels.value;
+    }
   } catch (error) {
     errorMessage.value = error?.message || "Не удалось загрузить отели.";
     hotels.value = [];
@@ -434,10 +424,17 @@ const destroyMap = (mapRef) => {
   mapRef.value = null;
 };
 
+const getCoordinates = (hotel, index) => {
+  const x = Number(hotel?.coordinates?.x);
+  const y = Number(hotel?.coordinates?.y);
+  if (Number.isFinite(x) && Number.isFinite(y)) return [x, y];
+  return [mapCenter[0] + index * 0.02, mapCenter[1] + index * 0.01];
+};
+
 const mapMarkers = computed(() => {
   return hotels.value.map((hotel, index) => ({
     id: hotel?._id || `${index}`,
-    coordinates: [mapCenter[0] + index * 0.02, mapCenter[1] + index * 0.01],
+    coordinates: getCoordinates(hotel, index),
     title: normalizeString(hotel?.name) || "Отель",
   }));
 });
@@ -490,17 +487,33 @@ watch(mapMarkers, (markers) => {
   mobileMap.value?.setMarkers?.(markers);
 }, { deep: true });
 
-watch(filteredHotels, () => {
+watch(hotels, () => {
   if (currentPage.value > lastPage.value) currentPage.value = lastPage.value;
   if (currentPage.value < 1) currentPage.value = 1;
 });
 
-watch(() => [filters.search, filters.checkIn, filters.checkOut], async () => {
-  currentPage.value = 1;
-  await loadHotels();
-}, { deep: true });
+watch(
+  () => [
+    filters.search,
+    filters.checkIn,
+    filters.checkOut,
+    filters.priceFrom,
+    filters.priceTo,
+    filters.region,
+    filters.rating,
+    selectedSortGroup.value,
+    selectedSortDirection.value,
+  ],
+  () => {
+    currentPage.value = 1;
+    clearTimeout(filtersTimer);
+    filtersTimer = setTimeout(loadHotels, 350);
+  },
+  { deep: true },
+);
 
 onBeforeUnmount(() => {
+  clearTimeout(filtersTimer);
   destroyMap(desktopMap);
   destroyMap(mobileMap);
 });
