@@ -18,7 +18,9 @@
     </div>
 
     <div class="admin-header__actions">
-      <NuxtLink class="admin-header__site-link" to="/"> Открыть сайт </NuxtLink>
+      <NuxtLink class="admin-header__site-link" to="/">
+        Перейти в сайт
+      </NuxtLink>
 
       <div class="admin-header__profile" ref="profileRef">
         <button
@@ -500,6 +502,9 @@ onBeforeUnmount(() => {
     &__actions {
       flex-wrap: wrap;
       gap: 10px;
+    }
+    &__profile {
+      width: 100%;
     }
 
     &__menu {

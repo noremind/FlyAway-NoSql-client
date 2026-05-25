@@ -14,7 +14,11 @@
         <UiIcons icon="hot" size="size-32" color="orange-200"></UiIcons>
         <h2 class="main__title title">Горящие туры</h2>
       </div>
-      <nuxt-link v-if="hotTours?.length > 4" class="main__tours-link" to="/tours?is_hot=true">
+      <nuxt-link
+        v-if="hotTours?.length > 4"
+        class="main__tours-link"
+        to="/tours?is_hot=true"
+      >
         Все горящие туры
       </nuxt-link>
     </div>
@@ -29,18 +33,24 @@
           924: { slidesPerView: 3 },
           640: { slidesPerView: 2 },
           320: { slidesPerView: 1 },
-          0: { slidesPerView: 1 }
+          0: { slidesPerView: 1 },
         }"
       >
         <swiper-slide v-for="tour in hotTours" :key="tour._id">
-          <TheCommonTourCard :tour="tour" :view-type="'tablet'"></TheCommonTourCard>
+          <TheCommonTourCard
+            :tour="tour"
+            :view-type="'tablet'"
+          ></TheCommonTourCard>
         </swiper-slide>
       </UiSwiper>
     </div>
 
     <div v-else class="main__empty">Горящие туры скоро появятся.</div>
 
-    <div class="main__tours-slider main__tours-slider--block" v-if="hotTours?.length">
+    <div
+      class="main__tours-slider main__tours-slider--block"
+      v-if="hotTours?.length"
+    >
       <TheCommonTourCard
         v-for="tour in hotTours"
         :key="tour._id"
@@ -75,11 +85,14 @@
       <h2 class="main__title title">Отели</h2>
       <nuxt-link class="main__hotels-link" to="/hotels">Все отели</nuxt-link>
     </div>
-
-    <div class="main__hotels-cards" v-if="hotels?.length">
-      <TheMainHotelCard v-for="hotel in hotels" :key="hotel._id" :hotel="hotel"></TheMainHotelCard>
+    <div class="main__hotels-cards">
+      <TheCommonPopularBanner
+        v-for="banner in banners"
+        :key="banner._id"
+        :banner="banner"
+      ></TheCommonPopularBanner>
     </div>
-    <div v-else class="main__empty">Отели скоро появятся.</div>
+    <!-- <div v-else class="main__empty">Отели скоро появятся.</div> -->
 
     <UiButton
       class="main__hotels-link main__hotels-link--mobile"
@@ -98,7 +111,8 @@
         <h2 class="main__title title">FAQ</h2>
       </div>
       <p class="main__faq-description">
-        Ответы на частые вопросы о бронировании туров, отелей, оплате, бонусах и работе с партнерами FlyAway.
+        Ответы на частые вопросы о бронировании туров, отелей, оплате, бонусах и
+        работе с партнерами FlyAway.
       </p>
     </div>
 
@@ -109,11 +123,22 @@
         class="main__faq-item"
         :class="{ 'main__faq-item--open': activeFaqId === item._id }"
       >
-        <button class="main__faq-question" type="button" @click="toggleFaq(item._id)">
+        <button
+          class="main__faq-question"
+          type="button"
+          @click="toggleFaq(item._id)"
+        >
           <span>{{ item.question }}</span>
-          <UiIcons icon="chevron" size="size-18" color="red-500" :deg="activeFaqId === item._id ? 'top' : 'right'" />
+          <UiIcons
+            icon="chevron"
+            size="size-18"
+            color="red-500"
+            :deg="activeFaqId === item._id ? 'top' : 'right'"
+          />
         </button>
-        <p v-if="activeFaqId === item._id" class="main__faq-answer">{{ item.answer }}</p>
+        <p v-if="activeFaqId === item._id" class="main__faq-answer">
+          {{ item.answer }}
+        </p>
       </article>
     </div>
   </section>
@@ -127,7 +152,7 @@
           1240: { slidesPerView: 2.5 },
           992: { slidesPerView: 2.5 },
           720: { slidesPerView: 2 },
-          0: { slidesPerView: 1.5 }
+          0: { slidesPerView: 1.5 },
         }"
       >
         <swiper-slide v-for="review in reviews" :key="review._id">
@@ -286,7 +311,9 @@ useSeo({
   border-radius: 18px;
   background: rgba($white, 0.84);
   overflow: hidden;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 
   &--open {
     border-color: rgba($red-500, 0.3);

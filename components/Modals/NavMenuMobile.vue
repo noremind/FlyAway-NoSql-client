@@ -38,7 +38,7 @@
 
       <div class="menu__footer">
         <div class="menu__locales">
-          <TheHeaderLocale></TheHeaderLocale>
+          <!-- <TheHeaderLocale></TheHeaderLocale> -->
         </div>
         <UiButton
           class="menu__leave-btn"

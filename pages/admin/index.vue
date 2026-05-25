@@ -405,6 +405,7 @@ onMounted(loadDashboard);
     flex-direction: column;
     gap: 16px;
     padding: 18px;
+    overflow-x: scroll;
     border-radius: 20px;
     background: rgba(255, 255, 255, 0.92);
     border: 1px solid rgba($red-500, 0.08);
@@ -576,8 +577,10 @@ onMounted(loadDashboard);
   }
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1024px) {
   .admin-home {
+    display: flex;
+    flex-direction: column;
     &__summary-grid,
     &__tables {
       grid-template-columns: 1fr;

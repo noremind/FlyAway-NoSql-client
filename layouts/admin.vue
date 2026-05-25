@@ -43,7 +43,11 @@ watch(
   grid-template-columns: 286px minmax(0, 1fr);
   background:
     radial-gradient(circle at top left, rgba($red-500, 0.12), transparent 26%),
-    radial-gradient(circle at top right, rgba($orange-200, 0.12), transparent 22%),
+    radial-gradient(
+      circle at top right,
+      rgba($orange-200, 0.12),
+      transparent 22%
+    ),
     linear-gradient(180deg, #fffaf8 0%, #f8f4f2 52%, #f6f3f1 100%);
 
   &__aside {
@@ -73,7 +77,11 @@ watch(
     height: 220px;
     pointer-events: none;
     background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0)),
+      linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.72),
+        rgba(255, 255, 255, 0)
+      ),
       linear-gradient(135deg, rgba($red-500, 0.04), transparent 55%);
   }
 
@@ -170,8 +178,12 @@ watch(
 
 @media (max-width: 1024px) {
   .admin-layout {
-    grid-template-columns: 1fr;
-
+    display: flex;
+    flex-direction: column;
+    // grid-template-columns: 1fr;
+    &__aside {
+      position: absolute;
+    }
     &__content {
       padding: 16px 18px 30px;
     }

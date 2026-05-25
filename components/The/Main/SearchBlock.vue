@@ -176,6 +176,15 @@ const submitSearch = async () => {
   }
 }
 
+@media (max-width: 1024px) {
+  .search {
+    &__filter {
+      gap: 12px;
+      flex-wrap: nowrap;
+    }
+  }
+}
+
 @media (max-width: 768px) {
   .search {
     min-height: 250px;
@@ -184,6 +193,7 @@ const submitSearch = async () => {
     }
     &__filter {
       gap: 12px;
+      flex-wrap: wrap;
     }
 
     &__box-calendar {
