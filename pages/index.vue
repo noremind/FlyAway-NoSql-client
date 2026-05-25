@@ -75,8 +75,9 @@
     :autoplay="true"
     v-if="banners?.length"
   >
-    <swiper-slide v-for="banner in banners" :key="banner._id">
-      <TheCommonPopularBanner :banner="banner"></TheCommonPopularBanner>
+    <swiper-slide v-for="hotel in hotels" :key="banner._id">
+      <!-- <TheCommonPopularBanner :banner="banner"></TheCommonPopularBanner> -->
+      <TheHotelsBlock :hotel="hotel"></TheHotelsBlock>
     </swiper-slide>
   </UiSwiper>
 
@@ -86,11 +87,11 @@
       <nuxt-link class="main__hotels-link" to="/hotels">Все отели</nuxt-link>
     </div>
     <div class="main__hotels-cards">
-      <TheCommonPopularBanner
-        v-for="banner in banners"
-        :key="banner._id"
-        :banner="banner"
-      ></TheCommonPopularBanner>
+      <TheHotelsBlock
+        v-for="hotel in hotels"
+        :key="hotel._id"
+        :hotel="hotel"
+      ></TheHotelsBlock>
     </div>
     <!-- <div v-else class="main__empty">Отели скоро появятся.</div> -->
 
@@ -107,13 +108,8 @@
   <section class="main__faq" id="faq" v-if="faqItems.length">
     <div class="main__faq-head">
       <div>
-        <p class="main__eyebrow">Помощь путешественнику</p>
         <h2 class="main__title title">FAQ</h2>
       </div>
-      <p class="main__faq-description">
-        Ответы на частые вопросы о бронировании туров, отелей, оплате, бонусах и
-        работе с партнерами FlyAway.
-      </p>
     </div>
 
     <div class="main__faq-list">
