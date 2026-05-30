@@ -13,9 +13,15 @@
           <button
             type="button"
             class="hotel-card__favourite"
-            @click="goToHotel"
+            :class="{ 'hotel-card__favourite--active': isFavourite }"
+            :disabled="isTogglingFavourite"
+            @click.stop.prevent="toggleFavouriteHotel"
           >
-            <UiIcons icon="heart" size="size-28" color="white" />
+            <UiIcons
+              :icon="isFavourite ? 'heart-fill' : 'heart'"
+              size="size-28"
+              :color="isFavourite ? 'red-500' : 'white'"
+            />
           </button>
         </div>
 
@@ -146,7 +152,9 @@ const props = defineProps({
   },
 });
 
-const router = useRouter();
+const authStore = useAuthStore();
+const favouritesStore = useFavouritesStore();
+const isTogglingFavourite = ref(false);
 
 const normalizeString = (value) => String(value || "").trim();
 const stripHtml = (value) =>
@@ -160,6 +168,7 @@ const hotelId = computed(() => props.hotel?._id || props.hotel?.id || "");
 const detailLink = computed(() =>
   hotelId.value ? `/hotels/${hotelId.value}` : "/hotels",
 );
+const isFavourite = computed(() => favouritesStore.isFavouriteHotel(hotelId.value));
 const hotelTitle = computed(
   () => normalizeString(props.hotel?.name) || "Отель",
 );
@@ -253,9 +262,28 @@ const isNew = computed(() => {
   return Date.now() - date.getTime() < 1000 * 60 * 60 * 24 * 45;
 });
 
-const goToHotel = () => {
-  router.push(detailLink.value);
+const toggleFavouriteHotel = async () => {
+  if (!hotelId.value || isTogglingFavourite.value) return;
+
+  if (!authStore.isLoggedIn) {
+    authStore.openAuthModalLogin();
+    return;
+  }
+
+  isTogglingFavourite.value = true;
+
+  try {
+    await favouritesStore.toggleFavouriteHotel(props.hotel);
+  } catch (error) {
+    console.error("[HotelCard] favourite toggle error", error);
+  } finally {
+    isTogglingFavourite.value = false;
+  }
 };
+
+onMounted(() => {
+  favouritesStore.fetchFavouriteHotels();
+});
 </script>
 
 <style lang="scss" scoped>
@@ -301,6 +329,23 @@ const goToHotel = () => {
     background: rgba($white, 0.9);
   }
 
+  &__favourite {
+    transition: transform 0.2s ease, background-color 0.2s ease;
+
+    &:hover {
+      transform: scale(1.06);
+    }
+
+    &--active {
+      background: rgba($white, 0.98);
+    }
+
+    &:disabled {
+      opacity: 0.72;
+      cursor: wait;
+    }
+  }
+
   &__swiper {
     border-radius: 12px;
     position: relative;
@@ -316,260 +361,6 @@ const goToHotel = () => {
     height: 290px;
     object-fit: cover;
     border-radius: 12px;
-  }
-
-  &__content {
-    display: flex;
-    flex-direction: column;
-    padding: 16px 18px;
-    gap: 14px;
-    min-width: 0;
-  }
-
-  &__content-head {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    align-items: center;
-  }
-
-  &__partner-box {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    min-width: 0;
-  }
-
-  &__partner-logo {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    object-fit: cover;
-
-    &--empty {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      color: $white;
-      background: $red-500;
-      font-size: 12px;
-      font-weight: 700;
-    }
-  }
-
-  &__partner-name {
-    color: $surface-900;
-    font-size: 14px;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  &__reviews {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-    flex-shrink: 0;
-  }
-
-  &__reviews-text {
-    color: $surface-400;
-    font-size: 12px;
-  }
-
-  &__reviews-rating {
-    color: $surface-900;
-    font-size: 12px;
-    font-weight: 600;
-  }
-
-  &__body {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 220px;
-    gap: 18px;
-    min-width: 0;
-    height: 100%;
-  }
-
-  &__info {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    min-width: 0;
-  }
-
-  &__title {
-    color: $surface-900;
-    font-size: 32px;
-    line-height: 1.05;
-    font-weight: 800;
-  }
-
-  &__stars {
-    display: flex;
-    gap: 2px;
-    align-items: center;
-  }
-
-  &__description {
-    color: $surface-500;
-    line-height: 1.55;
-    font-size: 14px;
-  }
-
-  &__meta {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    flex-wrap: wrap;
-    margin-top: auto;
-  }
-
-  &__badge {
-    min-height: 28px;
-    padding: 0 10px;
-    border-radius: 999px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: $white;
-    font-size: 12px;
-    font-weight: 700;
-
-    &--discount {
-      background: $orange-200;
-    }
-
-    &--new {
-      background: #22c55e;
-    }
-  }
-
-  &__location {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    color: $surface-400;
-    font-size: 13px;
-  }
-
-  &__side {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 16px;
-  }
-
-  &__benefits {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  &__benefit {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    color: $surface-500;
-    font-size: 12px;
-    line-height: 1.4;
-  }
-
-  &__cta {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  &__price-wrap {
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  &__price {
-    min-height: 42px;
-    padding: 0 16px;
-    border-radius: 999px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    color: $white;
-    background: $red-500;
-    font-size: 22px;
-    font-weight: 800;
-  }
-
-  &__old-price {
-    color: rgba($surface-900, 0.9);
-    text-decoration: line-through;
-    font-size: 14px;
-    font-weight: 600;
-  }
-
-  &__btn {
-    width: 100%;
-    justify-content: center;
-  }
-  &:deep(.swiper-pagination) {
-    position: absolute;
-    z-index: 2;
-  }
-}
-
-:deep(.custom-swiper::part(pagination)) {
-  position: absolute !important;
-  z-index: 2;
-}
-
-@media (max-width: 1024px) {
-  .hotel-card {
-    &__wrapper {
-      grid-template-columns: 1fr;
-      min-height: auto;
-    }
-
-    &__preview {
-      min-height: 220px;
-    }
-
-    &__image {
-      height: 220px;
-    }
-
-    &__body {
-      grid-template-columns: 1fr;
-    }
-
-    &__side {
-      gap: 12px;
-    }
-
-    &__title {
-      font-size: 26px;
-    }
-  }
-}
-
-@media (max-width: 640px) {
-  .hotel-card {
-    &__content {
-      padding: 12px;
-    }
-
-    &__content-head {
-      align-items: flex-start;
-    }
-
-    &__title {
-      font-size: 22px;
-    }
-
-    &__price {
-      width: 100%;
-      font-size: 18px;
-    }
   }
 }
 </style>
