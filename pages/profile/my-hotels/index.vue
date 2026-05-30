@@ -58,6 +58,7 @@
 const api = useApi();
 
 const tabs = reactive([
+  { id: "new", name: "Новые" },
   { id: "active", name: "Активные" },
   { id: "completed", name: "Завершенные" },
   { id: "cancelled", name: "Отмененные" },
@@ -94,10 +95,10 @@ const sortBookings = (items = []) => {
 };
 
 const filteredBookings = computed(() => {
-  const currentTab = selectedTab.value?.id || "active";
+  const currentTab = selectedTab.value?.id || "new";
 
   return bookings.value.filter((booking) => {
-    const status = normalizeString(booking?.status) || "active";
+    const status = normalizeString(booking?.status) || "new";
     return status === currentTab;
   });
 });
@@ -112,6 +113,10 @@ const paginatedBookings = computed(() => {
 });
 
 const emptyStateText = computed(() => {
+  if (selectedTab.value?.id === "new") {
+    return "Новых заявок по отелям пока нет.";
+  }
+
   if (selectedTab.value?.id === "completed") {
     return "Завершенных заявок по отелям пока нет.";
   }
@@ -278,19 +283,8 @@ onMounted(loadBookings);
 @media (max-width: 640px) {
   .my-hotels {
     &__tabs {
-      justify-content: flex-start;
       overflow-x: auto;
-      padding-bottom: 4px;
-    }
-  }
-}
-
-@media (max-width: 375px) {
-  .my-hotels {
-    &__wrapper {
-      background-color: transparent;
-      box-shadow: none;
-      padding: 0;
+      justify-content: flex-start;
     }
   }
 }
