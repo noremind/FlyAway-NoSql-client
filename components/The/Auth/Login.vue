@@ -86,6 +86,26 @@ const toggleLoginType = () => {
   errorMessage.value = "";
 };
 
+const getLoginSuccessState = (user = {}) => {
+  const role = user?.role;
+  const isAdmin = role === "admin";
+  const isPartner = role === "partner";
+
+  if (isAdmin || isPartner) {
+    return {
+      goTo: "/admin",
+      title: isAdmin ? "Вы вошли как админ" : "Вы вошли как партнер",
+      btnLabel: "Перейти на Админ панель",
+    };
+  }
+
+  return {
+    goTo: "/profile",
+    title: "Вы вошли",
+    btnLabel: "Перейти в личный кабинет",
+  };
+};
+
 const postLogin = () => {
   if (disabledBtn.value) {
     isLoading.value = true;
@@ -102,15 +122,7 @@ const postLogin = () => {
         userStore.setToken(res.token);
         userStore.setUserData(res.user);
         isLoading.value = false;
-        emit("nextStep", {
-          goTo: res.user?.role === "partner" ? "/admin" : "/profile",
-          title:
-            res.user?.role === "partner" ? "Вы вошли как партнер" : "Вы вошли",
-          btnLabel:
-            res.user?.role === "partner"
-              ? "Перейти в админ-панель"
-              : "Перейти в личный кабинет",
-        });
+        emit("nextStep", getLoginSuccessState(res.user));
       })
       .catch((error) => {
         isLoading.value = false;
