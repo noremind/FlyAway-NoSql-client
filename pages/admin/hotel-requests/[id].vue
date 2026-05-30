@@ -1,6 +1,6 @@
 <template>
   <section class="admin-request-detail">
-    <UiGoBack label="Заявки на отели" go-back="/admin/hotel-requests" />
+    <UiGoBack label="Брони отелей" go-back="/admin/hotel-requests" />
 
     <div v-if="isLoading" class="admin-request-detail__state">Загружаем данные отеля...</div>
     <div v-else-if="errorMessage" class="admin-request-detail__state admin-request-detail__state--error">{{ errorMessage }}</div>
@@ -30,8 +30,8 @@
       <section class="admin-request-detail__panel">
         <div class="admin-request-detail__panel-head">
           <div>
-            <h2 class="admin-request-detail__section-title">Клиенты и заявки</h2>
-            <p class="admin-request-detail__section-text">Здесь отображаются пользователи, которые оставили заявку на этот отель.</p>
+            <h2 class="admin-request-detail__section-title">Клиенты и брони</h2>
+            <p class="admin-request-detail__section-text">Новые брони можно подтвердить в активные. После даты выезда статус автоматически считается завершенным.</p>
           </div>
           <UiSelect label="Статус" v-model="selectedStatus" :options="statusOptions" option-label="label" option-value="value" />
         </div>
@@ -86,7 +86,7 @@
 import hotelPlaceholder from '@/assets/image/content/main-image.png';
 
 definePageMeta({ layout: 'admin', middleware: 'admin' });
-useSeo({ title: 'Детали заявок отеля', description: 'Клиенты и заявки конкретного отеля.' });
+useSeo({ title: 'Детали броней отеля', description: 'Клиенты и брони конкретного отеля.' });
 
 const route = useRoute();
 const api = useApi();
@@ -99,10 +99,9 @@ const pendingNotes = reactive({});
 const statusOptions = [
   { label: 'Все', value: '' },
   { label: 'Новые', value: 'new' },
-  { label: 'В работе', value: 'in_progress' },
-  { label: 'Связались', value: 'contacted' },
-  { label: 'Закрыто', value: 'closed' },
-  { label: 'Отменено', value: 'cancelled' },
+  { label: 'Активные', value: 'active' },
+  { label: 'Завершенные', value: 'completed' },
+  { label: 'Отмененные', value: 'cancelled' },
 ];
 
 const normalizeString = (value) => String(value || '').trim();
@@ -127,18 +126,17 @@ const formatDateTime = (value) => {
 };
 
 const getStatusLabel = (status) => {
-  if (status === 'in_progress') return 'В работе';
-  if (status === 'contacted') return 'Связались';
-  if (status === 'closed') return 'Закрыто';
-  if (status === 'cancelled') return 'Отменено';
+  if (status === 'active') return 'Активная';
+  if (status === 'completed') return 'Завершенная';
+  if (status === 'cancelled') return 'Отмененная';
   return 'Новая';
 };
 
 const statItems = computed(() => [
-  { label: 'Всего заявок', value: group.value?.requestCount || 0 },
+  { label: 'Всего броней', value: group.value?.requestCount || 0 },
   { label: 'Новые', value: group.value?.newCount || 0 },
-  { label: 'В работе', value: group.value?.inProgressCount || 0 },
-  { label: 'Гостей', value: group.value?.guestsCount || 0 },
+  { label: 'Активные', value: group.value?.activeCount || 0 },
+  { label: 'Завершенные', value: group.value?.completedCount || 0 },
 ]);
 
 const loadGroup = async () => {
@@ -198,7 +196,7 @@ onMounted(loadGroup);
 .admin-request-detail__request { display: grid; gap: 14px; padding: 18px; border-radius: 18px; border: 1px solid rgba($red-500,.08); background: rgba($surface-75,.8); }
 .admin-request-detail__request-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
 .admin-request-detail__customer { color: $surface-900; font-size: 18px; font-weight: 900; }
-.admin-request-detail__status { padding: 8px 12px; border-radius: 999px; color: $white; background: $red-500; font-size: 12px; font-weight: 900; &--closed { background: $surface-400; } &--cancelled { background: $surface-300; color: $surface-900; } }
+.admin-request-detail__status { padding: 8px 12px; border-radius: 999px; color: $white; background: $red-500; font-size: 12px; font-weight: 900; &--active { background: $blue-500; } &--completed { background: $surface-400; } &--cancelled { background: $surface-300; color: $surface-900; } }
 .admin-request-detail__grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
 .admin-request-detail__field { display: grid; gap: 5px; padding: 12px; border-radius: 14px; background: $white; span { color: $surface-500; font-size: 12px; } strong { color: $surface-900; font-size: 14px; overflow-wrap: anywhere; } &--full { grid-column: 1 / -1; } }
 .admin-request-detail__actions { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 14px; align-items: start; }
