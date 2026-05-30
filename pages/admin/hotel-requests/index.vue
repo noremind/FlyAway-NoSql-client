@@ -2,9 +2,9 @@
   <section class="admin-hotel-requests">
     <div class="admin-hotel-requests__head">
       <div>
-        <h2 class="admin-hotel-requests__title-page">Заявки на отели</h2>
+        <h2 class="admin-hotel-requests__title-page">Брони отелей</h2>
         <p class="admin-hotel-requests__page-text">
-          Список сгруппирован по отелям. Внутри карточки отеля открывается подробная информация о клиентах и заявках.
+          Новые брони появляются после отправки пользователем. После связи с клиентом админ переводит бронь в активные. После даты выезда бронь считается завершенной.
         </p>
       </div>
       <button class="admin-hotel-requests__reload" type="button" @click="loadRequests">Обновить</button>
@@ -26,7 +26,7 @@
     <p v-if="errorMessage" class="admin-hotel-requests__error">{{ errorMessage }}</p>
 
     <div v-if="isLoading" class="admin-hotel-requests__state">Загружаем отели...</div>
-    <div v-else-if="!groups.length" class="admin-hotel-requests__state">Заявок пока нет.</div>
+    <div v-else-if="!groups.length" class="admin-hotel-requests__state">Броней пока нет.</div>
 
     <div v-else class="admin-hotel-requests__list">
       <NuxtLink
@@ -51,7 +51,7 @@
 
         <div class="admin-hotel-requests__grid">
           <div class="admin-hotel-requests__field">
-            <span class="admin-hotel-requests__label">Заявок</span>
+            <span class="admin-hotel-requests__label">Броней</span>
             <span class="admin-hotel-requests__value">{{ group.requestCount || 0 }}</span>
           </div>
           <div class="admin-hotel-requests__field">
@@ -59,16 +59,16 @@
             <span class="admin-hotel-requests__value">{{ group.newCount || 0 }}</span>
           </div>
           <div class="admin-hotel-requests__field">
-            <span class="admin-hotel-requests__label">В работе</span>
-            <span class="admin-hotel-requests__value">{{ group.inProgressCount || 0 }}</span>
+            <span class="admin-hotel-requests__label">Активные</span>
+            <span class="admin-hotel-requests__value">{{ group.activeCount || 0 }}</span>
           </div>
           <div class="admin-hotel-requests__field">
-            <span class="admin-hotel-requests__label">Связались</span>
-            <span class="admin-hotel-requests__value">{{ group.contactedCount || 0 }}</span>
+            <span class="admin-hotel-requests__label">Завершенные</span>
+            <span class="admin-hotel-requests__value">{{ group.completedCount || 0 }}</span>
           </div>
           <div class="admin-hotel-requests__field">
-            <span class="admin-hotel-requests__label">Закрытые</span>
-            <span class="admin-hotel-requests__value">{{ group.closedCount || 0 }}</span>
+            <span class="admin-hotel-requests__label">Отмененные</span>
+            <span class="admin-hotel-requests__value">{{ group.cancelledCount || 0 }}</span>
           </div>
           <div class="admin-hotel-requests__field">
             <span class="admin-hotel-requests__label">Гостей</span>
@@ -84,7 +84,7 @@
 import hotelPlaceholder from '@/assets/image/content/main-image.png';
 
 definePageMeta({ layout: 'admin', middleware: 'admin' });
-useSeo({ title: 'Заявки на отели', description: 'Группировка заявок на отели FlyAway.' });
+useSeo({ title: 'Брони отелей', description: 'Группировка броней отелей FlyAway.' });
 
 const api = useApi();
 const groups = ref([]);
@@ -95,10 +95,9 @@ const selectedStatus = ref('');
 const statusOptions = [
   { label: 'Все', value: '' },
   { label: 'Новые', value: 'new' },
-  { label: 'В работе', value: 'in_progress' },
-  { label: 'Связались', value: 'contacted' },
-  { label: 'Закрыто', value: 'closed' },
-  { label: 'Отменено', value: 'cancelled' },
+  { label: 'Активные', value: 'active' },
+  { label: 'Завершенные', value: 'completed' },
+  { label: 'Отмененные', value: 'cancelled' },
 ];
 
 const getHotelImage = (hotel) => (Array.isArray(hotel?.images) ? hotel.images.find(Boolean) : '') || hotelPlaceholder;
@@ -107,12 +106,12 @@ const statItems = computed(() => {
   const totalGroups = groups.value.length;
   const totalRequests = groups.value.reduce((sum, item) => sum + (Number(item.requestCount) || 0), 0);
   const newCount = groups.value.reduce((sum, item) => sum + (Number(item.newCount) || 0), 0);
-  const guests = groups.value.reduce((sum, item) => sum + (Number(item.guestsCount) || 0), 0);
+  const activeCount = groups.value.reduce((sum, item) => sum + (Number(item.activeCount) || 0), 0);
   return [
-    { label: 'Отелей с заявками', value: totalGroups },
-    { label: 'Всего заявок', value: totalRequests },
+    { label: 'Отелей с бронями', value: totalGroups },
+    { label: 'Всего броней', value: totalRequests },
     { label: 'Новые', value: newCount },
-    { label: 'Гостей', value: guests },
+    { label: 'Активные', value: activeCount },
   ];
 });
 
@@ -127,7 +126,7 @@ const loadRequests = async () => {
     });
     groups.value = Array.isArray(response?.data) ? response.data : [];
   } catch (error) {
-    errorMessage.value = error?.message || 'Не удалось загрузить заявки.';
+    errorMessage.value = error?.message || 'Не удалось загрузить брони.';
   } finally {
     isLoading.value = false;
   }
