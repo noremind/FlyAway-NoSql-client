@@ -1,3 +1,5 @@
+@use "./hotel-page.scss";
+
 .main {
   &__wrapper {
     margin: 0 auto;
@@ -60,7 +62,6 @@
       }
     }
     &-cards {
-      // display: grid;
       display: flex !important;
       flex-direction: column;
       grid-template-columns: repeat(1, 1fr);
