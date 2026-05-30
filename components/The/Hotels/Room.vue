@@ -1,6 +1,9 @@
 <template>
   <section class="hotel-room">
-    <article class="hotel-room__wrapper" :class="{ 'hotel-room__wrapper--selected': selected }">
+    <article
+      class="hotel-room__wrapper"
+      :class="{ 'hotel-room__wrapper--selected': selected }"
+    >
       <div class="hotel-room__preview">
         <UiSwiper class="hotel-room__swiper" :pagination="{ clickable: true }">
           <swiper-slide v-for="image in roomImages" :key="image">
@@ -13,7 +16,11 @@
         <div class="hotel-room__info">
           <h3 class="hotel-room__title">{{ roomTitle }}</h3>
           <ul class="hotel-room__list">
-            <li v-for="item in roomBenefits" :key="item" class="hotel-room__list-item">
+            <li
+              v-for="item in roomBenefits"
+              :key="item"
+              class="hotel-room__list-item"
+            >
               {{ item }}
             </li>
           </ul>
@@ -29,7 +36,11 @@
             :before-icon="selected ? 'circle-check' : ''"
             :icon-size="selected ? 'size-18' : ''"
             :icon-color="selected ? 'white' : ''"
-            :class="selected ? 'hotel-room__btn hotel-room__btn--selected' : 'hotel-room__btn button-secondary'"
+            :class="
+              selected
+                ? 'hotel-room__btn hotel-room__btn--selected'
+                : 'hotel-room__btn button-secondary'
+            "
             @click="emit('select', room)"
           />
         </div>
@@ -57,7 +68,9 @@ const props = defineProps({
 const normalizeString = (value) => String(value || "").trim();
 const roomTitle = computed(() => normalizeString(props.room?.name) || "Номер");
 const roomImages = computed(() => {
-  const images = Array.isArray(props.room?.images) ? props.room.images.filter(Boolean) : [];
+  const images = Array.isArray(props.room?.images)
+    ? props.room.images.filter(Boolean)
+    : [];
   return images.length ? images : [placeholderImage];
 });
 const roomBenefits = computed(() => {
@@ -72,7 +85,9 @@ const roomBenefits = computed(() => {
     .map((item) => item.trim())
     .filter(Boolean);
 
-  return items.length ? items.slice(0, 5) : ["Комфортный номер", "Уютное проживание"];
+  return items.length
+    ? items.slice(0, 5)
+    : ["Комфортный номер", "Уютное проживание"];
 });
 const priceLabel = computed(() => {
   const price = Number(props.room?.price) || 0;
@@ -91,6 +106,7 @@ const priceLabel = computed(() => {
     background: $white;
     box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.06);
     border: 1px solid rgba($surface-300, 0.35);
+    transition: 0.4 ease-out;
 
     &--selected {
       border-color: rgba($red-500, 0.35);
@@ -146,7 +162,7 @@ const priceLabel = computed(() => {
   &__side {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-end;
     gap: 10px;
   }
 
@@ -158,7 +174,7 @@ const priceLabel = computed(() => {
     align-items: center;
     justify-content: center;
     color: $white;
-    background: $red-500;
+    background: #137214;
     font-size: 22px;
     font-weight: 800;
   }
@@ -166,6 +182,8 @@ const priceLabel = computed(() => {
   &__btn {
     width: 100%;
     justify-content: center;
+    height: fit-content;
+    padding: 12px;
 
     &--selected {
       background: $red-500;

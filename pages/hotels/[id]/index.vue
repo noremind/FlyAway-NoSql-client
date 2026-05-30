@@ -105,7 +105,10 @@
 
                 <div v-if="partnerName" class="hotel-page__meta-block">
                   <h3 class="hotel-page__meta-title">Партнер</h3>
-                  <div class="hotel-page__partner-row">
+                  <nuxt-link
+                    :to="`/partners/${hotel?.partner?._id}`"
+                    class="hotel-page__partner-row"
+                  >
                     <img
                       v-if="partnerLogo"
                       class="hotel-page__partner-logo"
@@ -119,7 +122,7 @@
                       {{ partnerInitial }}
                     </span>
                     <span>{{ partnerName }}</span>
-                  </div>
+                  </nuxt-link>
                 </div>
               </div>
 
@@ -212,7 +215,10 @@
           <aside class="hotel-page__aside">
             <article class="hotel-page__booking-card">
               <div class="hotel-page__booking-head">
-                <div class="hotel-page__partner">
+                <nuxt-link
+                  :to="`/partners/${hotel?.partner?._id}`"
+                  class="hotel-page__partner"
+                >
                   <img
                     v-if="partnerLogo"
                     class="hotel-page__partner-logo"
@@ -226,7 +232,7 @@
                     {{ partnerInitial }}
                   </span>
                   <p class="hotel-page__partner-name">{{ partnerName }}</p>
-                </div>
+                </nuxt-link>
 
                 <span v-if="discountLabel" class="hotel-page__discount">
                   {{ discountLabel }}
@@ -1093,6 +1099,7 @@ onMounted(async () => {
     border-radius: 50%;
     object-fit: cover;
     flex: 0 0 34px;
+    color: $black;
 
     &--empty {
       display: inline-flex;

@@ -73,14 +73,17 @@
             </div>
 
             <div class="details__totals-header details__totals-header--mobile">
-              <div class="details__totals-box">
+              <nuxt-link
+                :to="`/partners/${tour?.partner?._id}`"
+                class="details__totals-box"
+              >
                 <img
                   class="details__avatar"
                   :src="partnerAvatar"
                   :alt="partnerTitle"
                 />
                 <p class="details__name">{{ partnerTitle }}</p>
-              </div>
+              </nuxt-link>
               <div
                 class="details__reviews-inner details__reviews-inner--mobile"
               >
@@ -331,14 +334,17 @@
           </section>
           <div class="details__totals">
             <div class="details__totals-header">
-              <div class="details__totals-box">
+              <nuxt-link
+                :to="`/partners/${tour?.partner?._id}`"
+                class="details__totals-box"
+              >
                 <img
                   class="details__avatar"
                   :src="partnerAvatar"
                   :alt="partnerTitle"
                 />
                 <p class="details__name">{{ partnerTitle }}</p>
-              </div>
+              </nuxt-link>
               <p class="details__baige">-{{ discountLabel }}%</p>
             </div>
 
@@ -1974,6 +1980,7 @@ const closePaymentModal = () => {
   }
   &__name {
     font-weight: 400;
+    color: $black;
   }
   &__baige {
     padding: 4px 8px;

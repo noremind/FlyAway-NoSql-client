@@ -32,6 +32,7 @@
         @input="$emit('update:modelValue', $event.target.value)"
         :placeholder="placeholder"
         :disabled="disabled"
+        :maxlength="maxLength"
       />
       <button
         v-if="showClear"
@@ -78,6 +79,7 @@ const props = defineProps({
   isError: Boolean,
   name: String,
   position: String,
+  maxLength: Number,
   clearable: {
     type: Boolean,
     default: true,
@@ -87,7 +89,11 @@ const props = defineProps({
 const emit = defineEmits(["update:modelValue", "clear"]);
 
 const hasValue = computed(() => {
-  return props.modelValue !== null && props.modelValue !== undefined && props.modelValue !== "";
+  return (
+    props.modelValue !== null &&
+    props.modelValue !== undefined &&
+    props.modelValue !== ""
+  );
 });
 
 const showClear = computed(() => {
