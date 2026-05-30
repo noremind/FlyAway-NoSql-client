@@ -1,3 +1,5 @@
+@use "@/assets/scss/variables.scss" as *;
+
 .hotel-page {
   &__wrapper {
     display: flex;
@@ -211,17 +213,9 @@
     flex-direction: column;
   }
 
-  &__list {
-    gap: 8px;
-  }
-
-  &__rooms {
-    gap: 12px;
-  }
-
-  &__icon-list {
-    gap: 10px;
-  }
+  &__list { gap: 8px; }
+  &__rooms { gap: 12px; }
+  &__icon-list { gap: 10px; }
 
   &__list-item {
     list-style: disc;
@@ -349,9 +343,7 @@
     }
   }
 
-  &__summary-discount {
-    color: $orange-200 !important;
-  }
+  &__summary-discount { color: $orange-200 !important; }
 
   &__booking-note {
     color: $surface-500;
@@ -378,9 +370,7 @@
       grid-template-columns: 1fr;
     }
 
-    &__booking-card {
-      position: static;
-    }
+    &__booking-card { position: static; }
   }
 }
 
@@ -396,16 +386,8 @@
       gap: 18px;
     }
 
-    &__gallery-image {
-      height: 260px;
-    }
-
-    &__distances {
-      grid-template-columns: 1fr;
-    }
-
-    &__head {
-      align-items: flex-start;
-    }
+    &__gallery-image { height: 260px; }
+    &__distances { grid-template-columns: 1fr; }
+    &__head { align-items: flex-start; }
   }
 }
