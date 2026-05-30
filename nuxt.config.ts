@@ -78,12 +78,6 @@ export default defineNuxtConfig({
 		},
 	},
 
-	// vue: {
-	//   compilerOptions: {
-	//     isCustomElement: (tag) => tag === 'SwiperSlide',
-	//   },
-	// },
-
 	vite: {
 		css: {
 			preprocessorOptions: {
@@ -97,7 +91,7 @@ export default defineNuxtConfig({
 		},
 	},
 
-	plugins: ["~/plugins/maska.ts"],
+	plugins: ["~/plugins/maska.ts", "~/plugins/apexcharts.client.ts"],
 
 	css: [
 		"@/assets/scss/normalize.scss",
