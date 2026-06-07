@@ -97,7 +97,7 @@ const isActive = (link) => {
     font-size: 14px;
     cursor: pointer;
     &--active {
-      background-color: $blue-200;
+      background-color: rgba($red-500, 0.06);
       color: $surface-900;
       font-weight: 600;
     }
@@ -108,6 +108,14 @@ const isActive = (link) => {
     &:last-child {
       border-bottom-left-radius: 16px;
       border-bottom-right-radius: 16px;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .nav {
+    &__wrapper {
+      width: 100%;
     }
   }
 }

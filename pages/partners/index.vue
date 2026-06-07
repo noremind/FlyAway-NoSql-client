@@ -15,9 +15,6 @@
       <div class="partners__header">
         <div>
           <h1 class="partners__title title">Партнеры</h1>
-          <p class="partners__subtitle">
-            Туристические компании и отели, которые размещают предложения на FlyAway.
-          </p>
         </div>
       </div>
 
@@ -25,7 +22,11 @@
         <div class="partners__content-left">
           <section class="partners__filters">
             <div class="partners__filters-header">
-              <UiIcons icon="filter-burger" size="size-36" color="red-500"></UiIcons>
+              <UiIcons
+                icon="filter-burger"
+                size="size-36"
+                color="red-500"
+              ></UiIcons>
               <h2 class="partners__filters-title">Фильтр</h2>
             </div>
 
@@ -46,7 +47,11 @@
         <div class="partners__block">
           <section class="partners__sort">
             <h2 class="partners__sort-title">Сортировка</h2>
-            <label v-for="option in sortOptions" :key="option.value" class="partners__sort-option">
+            <label
+              v-for="option in sortOptions"
+              :key="option.value"
+              class="partners__sort-option"
+            >
               <input
                 type="radio"
                 name="partner-sort"
@@ -58,7 +63,9 @@
             </label>
           </section>
 
-          <div v-if="isLoading" class="partners__state">Загружаем партнеров...</div>
+          <div v-if="isLoading" class="partners__state">
+            Загружаем партнеров...
+          </div>
           <div v-else-if="partners.length" class="partners__cards">
             <ThePartnersCard
               v-for="partner in partners"
@@ -89,7 +96,11 @@
 
     <div class="partners__overlay-checkboxs">
       <p class="partners__overlay-bold">Сортировка</p>
-      <label v-for="option in sortOptions" :key="option.value" class="partners__sort-option">
+      <label
+        v-for="option in sortOptions"
+        :key="option.value"
+        class="partners__sort-option"
+      >
         <input
           type="radio"
           name="partner-sort-mobile"
@@ -111,15 +122,15 @@ const isOpenFilterMobile = ref(false);
 const debounceTimer = ref(null);
 
 const filters = reactive({
-  search: '',
-  sortBy: 'rating_desc',
+  search: "",
+  sortBy: "rating_desc",
 });
 
 const sortOptions = [
-  { label: 'по рейтингу ↓', value: 'rating_desc' },
-  { label: 'по рейтингу ↑', value: 'rating_asc' },
-  { label: 'А–Я', value: 'title_asc' },
-  { label: 'Я–А', value: 'title_desc' },
+  { label: "по рейтингу ↓", value: "rating_desc" },
+  { label: "по рейтингу ↑", value: "rating_asc" },
+  { label: "А–Я", value: "title_asc" },
+  { label: "Я–А", value: "title_desc" },
 ];
 
 const openFilterMobile = () => {
@@ -131,18 +142,18 @@ const closeFilterMobile = () => {
 };
 
 useSeoMeta({
-  title: 'FlyAway - Наши партнеры',
-  ogTitle: 'FlyAway - Наши партнеры',
-  description: 'FlyAway - партнеры туристического сервиса',
-  ogDescription: 'FlyAway - партнеры туристического сервиса',
+  title: "FlyAway - Наши партнеры",
+  ogTitle: "FlyAway - Наши партнеры",
+  description: "FlyAway - партнеры туристического сервиса",
+  ogDescription: "FlyAway - партнеры туристического сервиса",
 });
 
 const getPartners = async () => {
   isLoading.value = true;
   try {
     const res = await api.client({
-      url: '/partners',
-      method: 'get',
+      url: "/partners",
+      method: "get",
       query: {
         search: filters.search || undefined,
         sortBy: filters.sortBy,
@@ -203,7 +214,7 @@ onBeforeUnmount(() => clearTimeout(debounceTimer.value));
       display: flex;
       gap: 12px;
       align-items: center;
-      background-color: rgba($red-500, 0.06);
+      // background-color: rgba($red-500, 0.06);
       padding: 20px;
       border-radius: 16px;
     }
@@ -229,7 +240,7 @@ onBeforeUnmount(() => clearTimeout(debounceTimer.value));
     flex-wrap: wrap;
     &-title {
       padding: 26px;
-      background-color: rgba($red-500, 0.06);
+      // background-color: rgba($red-500, 0.06);
       border-radius: 16px;
       color: $surface-900;
       font-size: 16px;

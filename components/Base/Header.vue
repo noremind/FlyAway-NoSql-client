@@ -22,7 +22,9 @@
             :class="{ 'header__list-item--active': isActiveLink(list.link) }"
             class="header__list-item"
           >
-            <nuxt-link :to="list.link" class="header__list-link">{{ list.name }}</nuxt-link>
+            <nuxt-link :to="list.link" class="header__list-link">{{
+              list.name
+            }}</nuxt-link>
           </li>
         </ul>
       </div>
@@ -80,7 +82,7 @@
     :full-screen="true"
     @close="closeMobileNavMenu"
   >
-    <ModalsNavMenuMobile></ModalsNavMenuMobile>
+    <ModalsNavMenuMobile @close="closeMobileNavMenu"></ModalsNavMenuMobile>
   </UiModal>
 </template>
 

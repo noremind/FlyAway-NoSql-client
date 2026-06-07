@@ -7,8 +7,15 @@
 
       <template v-else>
         <aside class="partner__info">
-          <img v-if="avatar" class="partner__avatar" :src="avatar" :alt="partnerTitle" />
-          <span v-else class="partner__avatar partner__avatar--empty">{{ partnerInitial }}</span>
+          <img
+            v-if="avatar"
+            class="partner__avatar"
+            :src="avatar"
+            :alt="partnerTitle"
+          />
+          <span v-else class="partner__avatar partner__avatar--empty">{{
+            partnerInitial
+          }}</span>
           <h1 class="partner__author">{{ partnerTitle }}</h1>
 
           <div class="partner__review">
@@ -36,7 +43,11 @@
           <template v-if="contacts.length">
             <p class="partner__bold">Контакты</p>
             <ul class="partner__contacts">
-              <li class="partner__contacts-item" v-for="item in contacts" :key="item.icon">
+              <li
+                class="partner__contacts-item"
+                v-for="item in contacts"
+                :key="item.icon"
+              >
                 <UiIcons :icon="item.icon" color="red-500" size="size-24" />
                 <p class="partner__contacts-text">{{ item.name }}</p>
               </li>
@@ -48,10 +59,19 @@
           <section class="partner__block">
             <div class="partner__block-header">
               <h2 class="title">Туры</h2>
-              <nuxt-link v-if="tours.length" class="partner__block-link" to="/tours">Все туры</nuxt-link>
+              <nuxt-link
+                v-if="tours.length"
+                class="partner__block-link"
+                to="/tours"
+                >Все туры</nuxt-link
+              >
             </div>
             <div class="partner__tours" v-if="tours.length">
-              <TheCommonTourCard v-for="tour in tours" :key="tour._id" :tour="tour" />
+              <TheCommonTourCard
+                v-for="tour in tours"
+                :key="tour._id"
+                :tour="tour"
+              />
             </div>
             <p v-else class="partner__empty">У партнера пока нет туров.</p>
           </section>
@@ -59,10 +79,20 @@
           <section class="partner__block">
             <div class="partner__block-header">
               <h2 class="title">Отели</h2>
-              <nuxt-link v-if="hotels.length" class="partner__block-link" to="/hotels">Все отели</nuxt-link>
+              <nuxt-link
+                v-if="hotels.length"
+                class="partner__block-link"
+                to="/hotels"
+                >Все отели</nuxt-link
+              >
             </div>
             <div class="partner__hotels" v-if="hotels.length">
-              <TheHotelsBlock v-for="hotel in hotels" :key="hotel._id" :hotel="hotel" view-type="list" />
+              <TheHotelsBlock
+                v-for="hotel in hotels"
+                :key="hotel._id"
+                :hotel="hotel"
+                view-type="list"
+              />
             </div>
             <p v-else class="partner__empty">У партнера пока нет отелей.</p>
           </section>
@@ -85,13 +115,29 @@ useFetchSsr({
   partner.value = res.data;
 });
 
-const partnerTitle = computed(() => normalizeString(partner.value?.title) || "Партнер FlyAway");
-const partnerInitial = computed(() => partnerTitle.value.charAt(0).toUpperCase());
-const avatar = computed(() => normalizeString(partner.value?.logo || partner.value?.avatar));
-const ratingLabel = computed(() => Number(partner.value?.rating || 0).toFixed(1).replace(".", ","));
-const reviewsCount = computed(() => Number(partner.value?.reviews_count || partner.value?.review_count || 0));
-const tours = computed(() => Array.isArray(partner.value?.tours) ? partner.value.tours : []);
-const hotels = computed(() => Array.isArray(partner.value?.hotels) ? partner.value.hotels : []);
+const partnerTitle = computed(
+  () => normalizeString(partner.value?.title) || "Партнер FlyAway",
+);
+const partnerInitial = computed(() =>
+  partnerTitle.value.charAt(0).toUpperCase(),
+);
+const avatar = computed(() =>
+  normalizeString(partner.value?.logo || partner.value?.avatar),
+);
+const ratingLabel = computed(() =>
+  Number(partner.value?.rating || 0)
+    .toFixed(1)
+    .replace(".", ","),
+);
+const reviewsCount = computed(() =>
+  Number(partner.value?.reviews_count || partner.value?.review_count || 0),
+);
+const tours = computed(() =>
+  Array.isArray(partner.value?.tours) ? partner.value.tours : [],
+);
+const hotels = computed(() =>
+  Array.isArray(partner.value?.hotels) ? partner.value.hotels : [],
+);
 const contacts = computed(() => {
   const source = partner.value?.contacts || {};
   return [
@@ -104,8 +150,10 @@ const contacts = computed(() => {
 useSeoMeta({
   title: () => `${partnerTitle.value} | FlyAway`,
   ogTitle: () => `${partnerTitle.value} | FlyAway`,
-  description: () => normalizeString(partner.value?.description) || "Партнер FlyAway",
-  ogDescription: () => normalizeString(partner.value?.description) || "Партнер FlyAway",
+  description: () =>
+    normalizeString(partner.value?.description) || "Партнер FlyAway",
+  ogDescription: () =>
+    normalizeString(partner.value?.description) || "Партнер FlyAway",
 });
 </script>
 
@@ -207,8 +255,9 @@ useSeoMeta({
     gap: 4px;
     padding: 12px;
     border-radius: 14px;
-    background: rgba($red-500, 0.05);
+    // background: rgba($red-500, 0.05);
     text-align: center;
+    font-size: 12px;
   }
 
   &__number {

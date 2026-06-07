@@ -3,7 +3,9 @@
     <article class="card__wrapper">
       <div class="card__avatar-wrap">
         <img v-if="avatar" class="card__avatar" :src="avatar" :alt="title" />
-        <span v-else class="card__avatar card__avatar--empty">{{ initial }}</span>
+        <span v-else class="card__avatar card__avatar--empty">{{
+          initial
+        }}</span>
       </div>
 
       <div class="card__box">
@@ -40,18 +42,34 @@ const props = defineProps({
 });
 
 const normalizeString = (value) => String(value || "").trim();
-const title = computed(() => normalizeString(props.partner?.title) || "Партнер FlyAway");
+const title = computed(
+  () => normalizeString(props.partner?.title) || "Партнер FlyAway",
+);
 const initial = computed(() => title.value.charAt(0).toUpperCase());
-const avatar = computed(() => normalizeString(props.partner?.logo || props.partner?.avatar));
-const detailLink = computed(() => (props.partner?._id ? `/partners/${props.partner._id}` : "/partners"));
+const avatar = computed(() =>
+  normalizeString(props.partner?.logo || props.partner?.avatar),
+);
+const detailLink = computed(() =>
+  props.partner?._id ? `/partners/${props.partner._id}` : "/partners",
+);
 const description = computed(() => {
   const text = normalizeString(props.partner?.description);
   return text.length > 86 ? `${text.slice(0, 86)}...` : text;
 });
-const toursCount = computed(() => Number(props.partner?.tour_count ?? props.partner?.tours?.length ?? 0));
-const hotelsCount = computed(() => Number(props.partner?.hotel_count ?? props.partner?.hotels?.length ?? 0));
-const reviewsCount = computed(() => Number(props.partner?.reviews_count ?? props.partner?.review_count ?? 0));
-const ratingLabel = computed(() => Number(props.partner?.rating || 0).toFixed(1).replace(".", ","));
+const toursCount = computed(() =>
+  Number(props.partner?.tour_count ?? props.partner?.tours?.length ?? 0),
+);
+const hotelsCount = computed(() =>
+  Number(props.partner?.hotel_count ?? props.partner?.hotels?.length ?? 0),
+);
+const reviewsCount = computed(() =>
+  Number(props.partner?.reviews_count ?? props.partner?.review_count ?? 0),
+);
+const ratingLabel = computed(() =>
+  Number(props.partner?.rating || 0)
+    .toFixed(1)
+    .replace(".", ","),
+);
 </script>
 
 <style lang="scss" scoped>
@@ -149,7 +167,7 @@ const ratingLabel = computed(() => Number(props.partner?.rating || 0).toFixed(1)
     gap: 4px;
     padding: 12px;
     border-radius: 14px;
-    background: rgba($red-500, 0.05);
+    // background: rgba($red-500, 0.05);
     text-align: center;
   }
 

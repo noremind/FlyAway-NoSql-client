@@ -50,6 +50,7 @@ const props = defineProps({
 <style lang="scss" scoped>
 .tabs {
   &__wrapper {
+    overflow-x: scroll;
     &--line {
       display: inline-block;
       border-bottom: 1.5px solid $surface-300;
@@ -57,6 +58,7 @@ const props = defineProps({
   }
   &__list {
     display: flex;
+    width: 100%;
     gap: 6px;
     align-items: center;
     &--line {

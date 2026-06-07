@@ -118,6 +118,9 @@
 
 @media (max-width: 768px) {
   .main {
+    &__wrapper {
+      padding: 0px 12px 12px 12px;
+    }
     &__tours {
       margin-top: 170px;
       &-carving {

@@ -128,7 +128,7 @@
                   </tr>
                   <tr class="ticket__tr">
                     <td class="ticket__td ticket__td--box">
-                      <span>4400 ... 8909</span>
+                      <!-- <span>4400 ... 8909</span> -->
                     </td>
                     <td class="ticket__td"></td>
                   </tr>
@@ -268,7 +268,7 @@ const successStatusPartialRefundModal = () => {
 };
 
 const closeStatusRefundModal = () => {
-  statusRefundModal.value = "";
+  statusRefundModal.value = false;
 };
 </script>
 

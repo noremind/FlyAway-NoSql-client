@@ -598,7 +598,7 @@ onMounted(() => {
 @media (max-width: 768px) {
   .tour {
     &__wrapper {
-      max-width: 327px;
+      max-width: 100%;
     }
     &__info {
       margin-top: 12px;
@@ -610,7 +610,7 @@ onMounted(() => {
   .tour {
     &__wrapper {
       padding: 0 6px 6px 6px;
-      // max-width: 180px;
+      max-width: 100%;
       height: 100%;
     }
     &__header {

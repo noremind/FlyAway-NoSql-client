@@ -19,11 +19,11 @@
         </button>
       </div>
 
-      <UiTabs
+      <!-- <UiTabs
         class="tours__tabs tours__tabs--mobile"
         :tabs="tabsMobile"
         v-model="selectedTabMobile"
-      />
+      /> -->
 
       <div
         class="tours__hero"
@@ -357,9 +357,9 @@ const tabs = reactive([
 ]);
 
 const tabsMobile = reactive([
-  { id: 1, name: "Плитка", icon: "tablets" },
+  // { id: 1, name: "Плитка", icon: "tablets" },
   { id: 2, name: "Список", icon: "burger-list" },
-  { id: 3, name: "Локация", icon: "location" },
+  // { id: 3, name: "Локация", icon: "location" },
 ]);
 
 const selectedTab = ref(tabs[0]);
@@ -1088,7 +1088,7 @@ onBeforeUnmount(() => {
     }
 
     &__cards {
-      grid-template-columns: 1fr;
+      grid-template-columns: 2fr;
     }
   }
 }

@@ -45,10 +45,18 @@ definePageMeta({
     gap: 18px;
   }
   &__main {
-    padding: 0 24px 24px 24px;
+    // padding: 0 24px 24px 24px;
     border-radius: 16px;
     flex-grow: 1;
     height: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .profile {
+    &__content {
+      flex-direction: column;
+    }
   }
 }
 

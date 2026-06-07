@@ -23,11 +23,11 @@
         </button>
       </div>
 
-      <UiTabs
+      <!-- <UiTabs
         class="hotels__tabs hotels__tabs--mobile"
         :tabs="tabsMobile"
         v-model="selectedTabMobile"
-      />
+      /> -->
 
       <div
         class="hotels__header"
@@ -179,7 +179,7 @@
                   v-for="hotel in paginatedHotels"
                   :key="hotel._id || hotel.id"
                   :hotel="hotel"
-                  :view-type="selectedTabMobile.id === 1 ? 'tablet' : 'list'"
+                  :view-type="selectedTabMobile.id === 1 ? 'list' : 'list'"
                 />
               </div>
             </div>
@@ -350,11 +350,7 @@ const tabs = reactive([
   { id: 2, name: "Локация", icon: "location" },
 ]);
 const selectedTab = ref(tabs[0]);
-const tabsMobile = reactive([
-  // { id: 1, name: "Плитка", icon: "tablets" },
-  { id: 2, name: "Список", icon: "burger-list" },
-  { id: 3, name: "Локация", icon: "location" },
-]);
+const tabsMobile = reactive([{ id: 2, name: "Список", icon: "burger-list" }]);
 const selectedTabMobile = ref(tabsMobile[0]);
 const sortGroups = [
   { label: "по цене", value: "price" },
@@ -892,9 +888,20 @@ onBeforeUnmount(() => {
     gap: 12px;
   }
 }
-
-@media (max-width: 1200px) {
+@media (max-width: 1200) {
   .hotels {
+    &__sort {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+@media (max-width: 1024px) {
+  .hotels {
+    &__cards-inner {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+    }
     &__sort {
       grid-template-columns: 1fr;
     }
@@ -911,6 +918,7 @@ onBeforeUnmount(() => {
     }
     &__cards-inner {
       gap: 8px;
+      grid-template-columns: repeat(2, 1fr);
       &--tablet {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
@@ -965,6 +973,7 @@ onBeforeUnmount(() => {
 
     &__cards-inner {
       gap: 8px;
+      grid-template-columns: repeat(1, minmax(0, 1fr));
       &--tablet {
         grid-template-columns: repeat(1, minmax(0, 1fr));
       }

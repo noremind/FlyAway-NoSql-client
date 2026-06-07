@@ -19,7 +19,7 @@
           >
             <UiIcons
               :icon="isFavourite ? 'heart-fill' : 'heart'"
-              size="size-28"
+              size="size-20"
               :color="isFavourite ? 'red-500' : 'white'"
             />
           </button>
@@ -168,7 +168,9 @@ const hotelId = computed(() => props.hotel?._id || props.hotel?.id || "");
 const detailLink = computed(() =>
   hotelId.value ? `/hotels/${hotelId.value}` : "/hotels",
 );
-const isFavourite = computed(() => favouritesStore.isFavouriteHotel(hotelId.value));
+const isFavourite = computed(() =>
+  favouritesStore.isFavouriteHotel(hotelId.value),
+);
 const hotelTitle = computed(
   () => normalizeString(props.hotel?.name) || "Отель",
 );
@@ -325,11 +327,13 @@ onMounted(() => {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: rgba($white, 0.9);
+    // background: rgba($white, 0.9);
   }
 
   &__favourite {
-    transition: transform 0.2s ease, background-color 0.2s ease;
+    transition:
+      transform 0.2s ease,
+      background-color 0.2s ease;
 
     &:hover {
       transform: scale(1.06);
@@ -572,6 +576,7 @@ onMounted(() => {
   .hotel-card {
     &__wrapper {
       grid-template-columns: 1fr;
+      max-width: 100%;
       min-height: auto;
     }
 

@@ -1,11 +1,12 @@
 <template>
   <section class="faq-page">
     <div class="faq-page__hero">
-      <p class="faq-page__eyebrow">FlyAway help center</p>
+      <!-- <p class="faq-page__eyebrow">FlyAway help center</p> -->
       <h1 class="faq-page__title">FAQ</h1>
-      <p class="faq-page__description">
-        Здесь собраны ответы на основные вопросы о турах, отелях, оплате, бонусах, партнерах и работе сервиса.
-      </p>
+      <!-- <p class="faq-page__description">
+        Здесь собраны ответы на основные вопросы о турах, отелях, оплате,
+        бонусах, партнерах и работе сервиса.
+      </p> -->
     </div>
 
     <div class="faq-page__layout">
@@ -15,7 +16,9 @@
           :key="category"
           type="button"
           class="faq-page__category"
-          :class="{ 'faq-page__category--active': selectedCategory === category }"
+          :class="{
+            'faq-page__category--active': selectedCategory === category,
+          }"
           @click="selectedCategory = category"
         >
           {{ category }}
@@ -24,7 +27,9 @@
 
       <div class="faq-page__content">
         <div v-if="isLoading" class="faq-page__state">Загружаем вопросы...</div>
-        <div v-else-if="!filteredItems.length" class="faq-page__state">Вопросы пока не добавлены.</div>
+        <div v-else-if="!filteredItems.length" class="faq-page__state">
+          Вопросы пока не добавлены.
+        </div>
 
         <article
           v-for="item in filteredItems"
@@ -32,11 +37,22 @@
           class="faq-page__item"
           :class="{ 'faq-page__item--open': activeId === item._id }"
         >
-          <button class="faq-page__question" type="button" @click="toggleFaq(item._id)">
+          <button
+            class="faq-page__question"
+            type="button"
+            @click="toggleFaq(item._id)"
+          >
             <span>{{ item.question }}</span>
-            <UiIcons icon="chevron" size="size-18" color="red-500" :deg="activeId === item._id ? 'top' : 'right'" />
+            <UiIcons
+              icon="chevron"
+              size="size-18"
+              color="red-500"
+              :deg="activeId === item._id ? 'top' : 'right'"
+            />
           </button>
-          <p v-if="activeId === item._id" class="faq-page__answer">{{ item.answer }}</p>
+          <p v-if="activeId === item._id" class="faq-page__answer">
+            {{ item.answer }}
+          </p>
         </article>
       </div>
     </div>
@@ -45,38 +61,44 @@
 
 <script setup>
 useSeo({
-  title: 'FAQ',
-  description: 'Часто задаваемые вопросы сервиса FlyAway.',
+  title: "FAQ",
+  description: "Часто задаваемые вопросы сервиса FlyAway.",
 });
 
 const items = ref([]);
 const isLoading = ref(true);
-const selectedCategory = ref('Все');
-const activeId = ref('');
+const selectedCategory = ref("Все");
+const activeId = ref("");
 
 const categories = computed(() => {
-  const list = [...new Set(items.value.map((item) => item.category || 'Общее'))];
-  return ['Все', ...list];
+  const list = [
+    ...new Set(items.value.map((item) => item.category || "Общее")),
+  ];
+  return ["Все", ...list];
 });
 
 const filteredItems = computed(() => {
-  if (selectedCategory.value === 'Все') return items.value;
-  return items.value.filter((item) => (item.category || 'Общее') === selectedCategory.value);
+  if (selectedCategory.value === "Все") return items.value;
+  return items.value.filter(
+    (item) => (item.category || "Общее") === selectedCategory.value,
+  );
 });
 
 const toggleFaq = (id) => {
-  activeId.value = activeId.value === id ? '' : id;
+  activeId.value = activeId.value === id ? "" : id;
 };
 
 useFetchSsr({
-  url: '/faq',
-  method: 'get',
-}).then((res) => {
-  items.value = Array.isArray(res?.data) ? res.data : [];
-  activeId.value = items.value[0]?._id || '';
-}).finally(() => {
-  isLoading.value = false;
-});
+  url: "/faq",
+  method: "get",
+})
+  .then((res) => {
+    items.value = Array.isArray(res?.data) ? res.data : [];
+    activeId.value = items.value[0]?._id || "";
+  })
+  .finally(() => {
+    isLoading.value = false;
+  });
 </script>
 
 <style lang="scss" scoped>
@@ -87,11 +109,6 @@ useFetchSsr({
   &__hero {
     padding: 42px;
     border-radius: 30px;
-    background:
-      radial-gradient(circle at top right, rgba($red-500, 0.14), transparent 34%),
-      linear-gradient(135deg, rgba($white, 0.96), rgba($white, 0.82));
-    box-shadow: 0 18px 42px rgba(32, 36, 38, 0.06);
-    border: 1px solid rgba($red-500, 0.08);
   }
 
   &__eyebrow {
@@ -135,7 +152,7 @@ useFetchSsr({
 
   &__side {
     position: sticky;
-    top: 118px;
+    top: 25px;
     display: grid;
     gap: 8px;
     padding: 14px;

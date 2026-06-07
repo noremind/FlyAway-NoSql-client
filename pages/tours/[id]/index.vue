@@ -575,7 +575,7 @@
   <UiModal
     :is-show="isOpenStatusPayment"
     max-width="600px"
-    @close="closePaymentModal"
+    @close="closeStatusPaymentModal"
   >
     <ModalsStatus
       v-if="isOpenStatusPayment === 'success'"

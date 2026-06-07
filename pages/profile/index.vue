@@ -10,16 +10,16 @@
               :src="avatar"
               alt="Avatar"
             />
-            <span v-else class="profile-main__avatar profile-main__avatar--empty">
+            <span
+              v-else
+              class="profile-main__avatar profile-main__avatar--empty"
+            >
               {{ userInitial }}
             </span>
           </div>
 
           <div class="profile-main__account-texts">
             <h2 class="profile-main__account-title">Личные данные</h2>
-            <p class="profile-main__account-subtitle">
-              Обновите фото профиля, имя и контактную информацию.
-            </p>
           </div>
         </div>
 
@@ -45,8 +45,13 @@
           </button>
         </div>
 
-        <div class="profile-main__partner-block" v-if="userStore.getUser?.role !== 'partner'">
-          <p class="profile-main__partner-title">Хотите размещать свои услуги?</p>
+        <div
+          class="profile-main__partner-block"
+          v-if="userStore.getUser?.role !== 'partner'"
+        >
+          <p class="profile-main__partner-title">
+            Хотите размещать свои услуги?
+          </p>
           <p class="profile-main__partner-text">
             Подайте заявку и подключитесь к FlyAway как партнер.
           </p>
@@ -62,7 +67,8 @@
         <div class="profile-main__section-head">
           <h2 class="profile-main__section-title">Основная информация</h2>
           <p class="profile-main__section-subtitle">
-            Эти данные используются в вашем личном кабинете и при оформлении заявок.
+            Эти данные используются в вашем личном кабинете и при оформлении
+            заявок.
           </p>
         </div>
 
@@ -335,6 +341,7 @@ watch(
   &__avatar-box {
     display: flex;
     justify-content: center;
+    width: 100%;
   }
 
   &__avatar {
@@ -361,6 +368,7 @@ watch(
     line-height: 1.2;
     font-weight: 700;
     margin: 0;
+    text-align: center;
   }
 
   &__account-subtitle,
@@ -421,6 +429,7 @@ watch(
     color: $surface-900;
     font-size: 16px;
     font-weight: 700;
+    text-align: center;
   }
 
   &__fields {
@@ -460,7 +469,7 @@ watch(
 
   &__actions {
     display: flex;
-    flex-wrap: wrap;
+    // flex-wrap: wrap;
     gap: 12px;
     padding-top: 4px;
   }
@@ -523,7 +532,7 @@ watch(
     }
 
     &__actions {
-      flex-direction: column;
+      // flex-direction: column;
     }
 
     &__btn {

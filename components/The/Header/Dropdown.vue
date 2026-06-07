@@ -145,7 +145,7 @@ const dropdownNav = [
     height: 68px;
     border-radius: 50%;
     cursor: pointer;
-    background-color: $surface-150;
+    // background-color: $surface-150;
     object-fit: cover;
 
     &--empty {
