@@ -27,7 +27,15 @@ export default defineNuxtConfig({
 
 	app: {
 		head: {
-			meta: [{ name: "robots", content: "noindex, nofollow" }],
+			titleTemplate: "%s",
+			meta: [
+				{ name: "robots", content: "index, follow" },
+				{
+					name: "description",
+					content:
+						"FlyAway - сервис для поиска туров, отелей и туристических предложений в Казахстане.",
+				},
+			],
 			script: process.env.NUXT_PUBLIC_YANDEX_MAPS_API_KEY
 				? [
 						{
@@ -39,6 +47,13 @@ export default defineNuxtConfig({
 					]
 				: [],
 		},
+	},
+
+	routeRules: {
+		"/profile/**": { ssr: false },
+		"/admin/**": { ssr: false },
+		"/ru/profile/**": { ssr: false },
+		"/ru/admin/**": { ssr: false },
 	},
 
 	components: {
