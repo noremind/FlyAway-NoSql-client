@@ -188,7 +188,7 @@ const submitSearch = async () => {
 @media (max-width: 768px) {
   .search {
     min-height: 250px;
-    top: -10px;
+    top: -50px;
     &__wrapper {
     }
     &__filter {

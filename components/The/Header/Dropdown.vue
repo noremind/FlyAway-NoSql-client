@@ -25,7 +25,7 @@
         </button>
       </div>
 
-      <div class="dropdown__auth" v-if="!userStore.isLoggedIn">
+      <div class="dropdown__auth" v-if="!userStore?.isLoggedIn">
         <UiButton
           label="Войти"
           before-icon="login"
@@ -57,12 +57,12 @@
       </ul>
 
       <UiButton
-        v-if="userStore.isLoggedIn"
+        v-if="userStore?.isLoggedIn"
         class="dropdown__leave-btn"
         label="Выйти"
         before-icon="login"
         icon-color="orange-200"
-        @click="userStore.logoutUser"
+        @click="logout()"
       ></UiButton>
     </div>
   </div>
@@ -107,6 +107,11 @@ const dropdownNav = [
     icon: "credit-card",
   },
 ];
+
+const logout = () => {
+  userStore?.logoutUser();
+  emit("closeDropdown");
+};
 </script>
 
 <style lang="scss" scoped>

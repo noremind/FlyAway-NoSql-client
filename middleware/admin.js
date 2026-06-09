@@ -60,6 +60,6 @@ export default defineNuxtRouteMiddleware(async (to) => {
 	}
 
 	if (user.role === "partner" && !canPartnerOpenAdminPath(to.path)) {
-		return navigateTo("/admin");
+		// return navigateTo("/admin");
 	}
 });

@@ -2,10 +2,15 @@
   <div class="menu">
     <div class="menu__wrapper">
       <div class="menu__avatar">
-        <button v-if="!user.avatar" class="menu__avatar-default" type="button">
+        <button v-if="!user?.avatar" class="menu__avatar-default" type="button">
           <UiIcons icon="profile-user" color="red-500" size="size-32"></UiIcons>
         </button>
-        <img v-else class="menu__avatar-user" :src="user.avatar" alt="Avatar" />
+        <img
+          v-else
+          class="menu__avatar-user"
+          :src="user?.avatar"
+          alt="Avatar"
+        />
         <p class="menu__avatar-name">{{ user?.name }}</p>
       </div>
 
