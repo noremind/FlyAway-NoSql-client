@@ -1,20 +1,5 @@
 <template>
   <section class="admin-editor-page">
-    <div class="admin-editor-page__hero">
-      <div>
-        <p class="admin-editor-page__eyebrow">Каталог туров</p>
-        <h2 class="admin-editor-page__title">Редактирование тура</h2>
-        <p class="admin-editor-page__text">
-          Обновите описание, маршрут, билеты, даты и контакты. После сохранения
-          изменения сразу применятся на витрине тура.
-        </p>
-      </div>
-
-      <NuxtLink class="admin-editor-page__back" to="/admin/tours">
-        Назад к списку
-      </NuxtLink>
-    </div>
-
     <TheAdminToursForm mode="edit" :tour-id="route.params.id" />
   </section>
 </template>
