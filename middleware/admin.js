@@ -10,20 +10,16 @@ const partnerAllowedPaths = [
 	"/admin/hotel-requests",
 ];
 
+const partnerAllowedPrefixes = [
+	"/admin/tours/",
+	"/admin/hotels/",
+	"/admin/tour-booking/",
+	"/admin/hotel-requests/",
+];
+
 const canPartnerOpenAdminPath = (path) => {
-	return partnerAllowedPaths.some((allowedPath) => {
-		if (path === allowedPath) return true;
-
-		if (allowedPath === "/admin/tours" && path.startsWith("/admin/tours/")) {
-			return true;
-		}
-
-		if (allowedPath === "/admin/hotels" && path.startsWith("/admin/hotels/")) {
-			return true;
-		}
-
-		return false;
-	});
+	if (partnerAllowedPaths.includes(path)) return true;
+	return partnerAllowedPrefixes.some((prefix) => path.startsWith(prefix));
 };
 
 export default defineNuxtRouteMiddleware(async (to) => {
@@ -60,6 +56,6 @@ export default defineNuxtRouteMiddleware(async (to) => {
 	}
 
 	if (user.role === "partner" && !canPartnerOpenAdminPath(to.path)) {
-		// return navigateTo("/admin");
+		return navigateTo("/admin");
 	}
 });
