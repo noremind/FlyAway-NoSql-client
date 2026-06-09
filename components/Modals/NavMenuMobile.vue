@@ -1,13 +1,6 @@
 <template>
   <div class="menu">
     <div class="menu__wrapper">
-      <UiButton
-        class="menu__leave-btn"
-        label="Выйти"
-        before-icon="login"
-        icon-color="orange-200"
-        @click="userStore.logoutUser"
-      ></UiButton>
       <div class="menu__avatar">
         <button v-if="!user?.avatar" class="menu__avatar-default" type="button">
           <UiIcons icon="profile-user" color="red-500" size="size-32"></UiIcons>
@@ -63,7 +56,15 @@
         </li>
       </ul>
 
-      <div class="menu__footer" v-if="userStore.isLoggedIn"></div>
+      <div class="menu__footer" v-if="userStore.isLoggedIn">
+        <UiButton
+          class="menu__leave-btn"
+          label="Выйти"
+          before-icon="login"
+          icon-color="orange-200"
+          @click="userStore.logoutUser"
+        ></UiButton>
+      </div>
     </div>
   </div>
   <UiModal
@@ -256,9 +257,10 @@ const openAuthLoginModal = () => {
     border: 1px solid $orange-200;
     margin-right: auto;
     margin-bottom: 20px;
-    position: absolute;
+    // position: absolute;
     height: fit-content;
-    top: 0;
+    margin: 0 auto;
+    margin-bottom: 90px;
   }
 }
 </style>
