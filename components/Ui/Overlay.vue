@@ -169,6 +169,7 @@ const props = defineProps({
     }
     &__btn {
       position: absolute;
+      text-align: center;
       bottom: 0;
       height: 44px;
       width: calc(100% - 32px);
@@ -181,6 +182,7 @@ const props = defineProps({
       justify-content: center;
       align-items: center;
       color: $white;
+      display: block;
     }
     &__footer {
       display: block;
