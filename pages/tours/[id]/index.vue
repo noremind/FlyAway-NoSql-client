@@ -2500,6 +2500,7 @@ const closePaymentModal = () => {
       }
     }
     &__title {
+			display: none;
       &--mobile {
         display: block;
         color: $surface-900;
