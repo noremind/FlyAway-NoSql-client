@@ -190,6 +190,14 @@ watch(
   }
 }
 
+@media (max-width: 1024px) {
+  .admin-layout {
+    &__aside {
+      position: fixed;
+    }
+  }
+}
+
 @media (max-width: 520px) {
   .admin-layout {
     &__content {

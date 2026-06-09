@@ -196,8 +196,9 @@ const toggleSection = (sectionId) => {
   min-height: 100%;
 
   &__panel {
-    position: sticky;
+    position: fixed;
     top: 14px;
+
     height: calc(100vh - 28px);
     margin: 14px 0 14px 14px;
     display: flex;
