@@ -318,6 +318,7 @@
 <script setup>
 const api = useApi();
 const router = useRouter();
+const route = useRoute();
 const { createMap } = useYandexMaps();
 
 const mapContainer = ref(null);
@@ -343,7 +344,7 @@ const pagination = reactive({
 });
 
 const filters = reactive({
-  search: "",
+  search: route.query?.search,
   dateFrom: null,
   dateTo: null,
   duration: "",

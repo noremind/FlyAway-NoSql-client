@@ -12,7 +12,6 @@
       </div>
       <div v-else-if="booking" class="qr-page__result">
         <div class="qr-page__icon qr-page__icon--success">✓</div>
-        <!-- <p class="qr-page__eyebrow">QR проверен</p> -->
         <h1>Бронь отеля найдена</h1>
         <div class="qr-page__info">
           <div>
