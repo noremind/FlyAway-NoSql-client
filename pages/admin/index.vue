@@ -1,7 +1,5 @@
 <template>
   <section class="admin-home">
-    <div class="admin-home__header"></div>
-
     <p v-if="message" class="admin-home__message">{{ message }}</p>
     <p v-if="errorMessage" class="admin-home__error">{{ errorMessage }}</p>
     <div v-if="isLoading" class="admin-home__state">Загружаем сводку...</div>
