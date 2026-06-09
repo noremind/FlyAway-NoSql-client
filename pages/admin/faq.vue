@@ -1,24 +1,35 @@
 <template>
   <section class="admin-faq">
-    <div class="admin-faq__head">
-      <div>
-        <h1 class="admin-faq__title">FAQ</h1>
-        <p class="admin-faq__text">
-          Управляйте вопросами и ответами, которые отображаются на главной странице сайта.
-        </p>
-      </div>
-    </div>
-
     <div class="admin-faq__layout">
       <form class="admin-faq__form" @submit.prevent="saveFaq">
-        <h2 class="admin-faq__form-title">{{ editingId ? 'Редактировать вопрос' : 'Новый вопрос' }}</h2>
+        <h2 class="admin-faq__form-title">
+          {{ editingId ? "Редактировать вопрос" : "Новый вопрос" }}
+        </h2>
 
-        <UiInput label="Вопрос" placeholder="Как забронировать тур?" v-model.trim="form.question" />
-        <UiTextarea label="Ответ" placeholder="Напишите понятный ответ для пользователя" :rows="5" v-model.trim="form.answer" />
+        <UiInput
+          label="Вопрос"
+          placeholder="Как забронировать тур?"
+          v-model.trim="form.question"
+        />
+        <UiTextarea
+          label="Ответ"
+          placeholder="Напишите понятный ответ для пользователя"
+          :rows="5"
+          v-model.trim="form.answer"
+        />
 
         <div class="admin-faq__grid">
-          <UiInput label="Категория" placeholder="Бронирование" v-model.trim="form.category" />
-          <UiInput label="Порядок" type="number" placeholder="1" v-model="form.order" />
+          <UiInput
+            label="Категория"
+            placeholder="Бронирование"
+            v-model.trim="form.category"
+          />
+          <UiInput
+            label="Порядок"
+            type="number"
+            placeholder="1"
+            v-model="form.order"
+          />
         </div>
 
         <label class="admin-faq__check">
@@ -30,9 +41,16 @@
 
         <div class="admin-faq__actions">
           <button class="admin-faq__submit" type="submit" :disabled="isSaving">
-            {{ isSaving ? 'Сохраняем...' : editingId ? 'Сохранить' : 'Создать' }}
+            {{
+              isSaving ? "Сохраняем..." : editingId ? "Сохранить" : "Создать"
+            }}
           </button>
-          <button v-if="editingId" class="admin-faq__ghost" type="button" @click="resetForm">
+          <button
+            v-if="editingId"
+            class="admin-faq__ghost"
+            type="button"
+            @click="resetForm"
+          >
             Отмена
           </button>
         </div>
@@ -40,15 +58,23 @@
 
       <div class="admin-faq__list">
         <div v-if="isLoading" class="admin-faq__state">Загружаем FAQ...</div>
-        <div v-else-if="!items.length" class="admin-faq__state">Пока нет вопросов.</div>
+        <div v-else-if="!items.length" class="admin-faq__state">
+          Пока нет вопросов.
+        </div>
 
         <article v-for="item in items" :key="item._id" class="admin-faq__item">
           <div>
             <div class="admin-faq__item-meta">
-              <span>{{ item.category || 'Общее' }}</span>
+              <span>{{ item.category || "Общее" }}</span>
               <span>№{{ item.order || 0 }}</span>
-              <span :class="item.isActive ? 'admin-faq__status admin-faq__status--active' : 'admin-faq__status'">
-                {{ item.isActive ? 'Активен' : 'Скрыт' }}
+              <span
+                :class="
+                  item.isActive
+                    ? 'admin-faq__status admin-faq__status--active'
+                    : 'admin-faq__status'
+                "
+              >
+                {{ item.isActive ? "Активен" : "Скрыт" }}
               </span>
             </div>
             <h3 class="admin-faq__question">{{ item.question }}</h3>
@@ -65,41 +91,45 @@
 </template>
 
 <script setup>
-definePageMeta({ layout: 'admin', middleware: 'admin' });
-useSeo({ title: 'FAQ', description: 'Управление FAQ FlyAway.' });
+definePageMeta({ layout: "admin", middleware: "admin" });
+useSeo({ title: "FAQ", description: "Управление FAQ FlyAway." });
 
 const api = useApi();
 const items = ref([]);
 const isLoading = ref(false);
 const isSaving = ref(false);
-const message = ref('');
-const editingId = ref('');
+const message = ref("");
+const editingId = ref("");
 
 const form = reactive({
-  question: '',
-  answer: '',
-  category: 'Общее',
+  question: "",
+  answer: "",
+  category: "Общее",
   order: 0,
   isActive: true,
 });
 
 const resetForm = () => {
-  editingId.value = '';
-  form.question = '';
-  form.answer = '';
-  form.category = 'Общее';
+  editingId.value = "";
+  form.question = "";
+  form.answer = "";
+  form.category = "Общее";
   form.order = 0;
   form.isActive = true;
-  message.value = '';
+  message.value = "";
 };
 
 const loadFaq = async () => {
   isLoading.value = true;
   try {
-    const res = await api.client({ url: '/faq', method: 'get', query: { all: true } });
+    const res = await api.client({
+      url: "/faq",
+      method: "get",
+      query: { all: true },
+    });
     items.value = Array.isArray(res?.data) ? res.data : [];
   } catch (error) {
-    message.value = error?.message || 'Не удалось загрузить FAQ';
+    message.value = error?.message || "Не удалось загрузить FAQ";
   } finally {
     isLoading.value = false;
   }
@@ -108,31 +138,35 @@ const loadFaq = async () => {
 const buildPayload = () => ({
   question: form.question.trim(),
   answer: form.answer.trim(),
-  category: form.category.trim() || 'Общее',
+  category: form.category.trim() || "Общее",
   order: Number(form.order) || 0,
   isActive: Boolean(form.isActive),
 });
 
 const saveFaq = async () => {
-  message.value = '';
+  message.value = "";
   if (!form.question.trim() || !form.answer.trim()) {
-    message.value = 'Заполните вопрос и ответ';
+    message.value = "Заполните вопрос и ответ";
     return;
   }
   isSaving.value = true;
   try {
     const payload = buildPayload();
     if (editingId.value) {
-      await api.client({ url: `/faq/${editingId.value}`, method: 'patch', data: payload });
-      message.value = 'FAQ обновлен';
+      await api.client({
+        url: `/faq/${editingId.value}`,
+        method: "patch",
+        data: payload,
+      });
+      message.value = "FAQ обновлен";
     } else {
-      await api.client({ url: '/faq', method: 'post', data: payload });
-      message.value = 'FAQ создан';
+      await api.client({ url: "/faq", method: "post", data: payload });
+      message.value = "FAQ создан";
     }
     resetForm();
     await loadFaq();
   } catch (error) {
-    message.value = error?.message || 'Не удалось сохранить FAQ';
+    message.value = error?.message || "Не удалось сохранить FAQ";
   } finally {
     isSaving.value = false;
   }
@@ -140,21 +174,22 @@ const saveFaq = async () => {
 
 const editFaq = (item) => {
   editingId.value = item._id;
-  form.question = item.question || '';
-  form.answer = item.answer || '';
-  form.category = item.category || 'Общее';
+  form.question = item.question || "";
+  form.answer = item.answer || "";
+  form.category = item.category || "Общее";
   form.order = item.order || 0;
   form.isActive = Boolean(item.isActive);
-  message.value = '';
+  message.value = "";
 };
 
 const deleteFaq = async (id) => {
-  if (typeof window !== 'undefined' && !window.confirm('Удалить этот вопрос?')) return;
+  if (typeof window !== "undefined" && !window.confirm("Удалить этот вопрос?"))
+    return;
   try {
-    await api.client({ url: `/faq/${id}`, method: 'delete' });
+    await api.client({ url: `/faq/${id}`, method: "delete" });
     await loadFaq();
   } catch (error) {
-    message.value = error?.message || 'Не удалось удалить FAQ';
+    message.value = error?.message || "Не удалось удалить FAQ";
   }
 };
 

@@ -433,7 +433,6 @@
           <div class="tour-editor__checklist">
             <div class="tour-editor__section-head">
               <div class="tour-editor__section-meta">
-                <p class="tour-editor__eyebrow">Готовность</p>
                 <h3 class="tour-editor__section-title">Проверка разделов</h3>
                 <p class="tour-editor__section-text">
                   Видно, какие части карточки уже наполнены.
@@ -460,7 +459,6 @@
           <div class="tour-editor__tickets">
             <div class="tour-editor__section-head">
               <div class="tour-editor__section-meta">
-                <p class="tour-editor__eyebrow">Продажи</p>
                 <h3 class="tour-editor__section-title">Билеты</h3>
                 <p class="tour-editor__section-text">
                   Правая колонка карточки.

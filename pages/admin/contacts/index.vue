@@ -1,15 +1,5 @@
 <template>
   <section class="admin-contacts-page">
-    <div class="admin-contacts-page__head">
-      <div>
-        <h2 class="admin-contacts-page__title">Контакты</h2>
-        <p class="admin-contacts-page__text">
-          Контактные данные, адрес и будущий блок карты для страницы связи с
-          FlyAway.
-        </p>
-      </div>
-    </div>
-
     <div class="admin-contacts-page__stats">
       <article class="admin-contacts-page__stat">
         <p class="admin-contacts-page__stat-value">3</p>
@@ -19,12 +9,6 @@
         <p class="admin-contacts-page__stat-value">1</p>
         <p class="admin-contacts-page__stat-label">Карта / геоблок</p>
       </article>
-    </div>
-
-    <div class="admin-contacts-page__note">
-      Сейчас это локальный экран админки без реального backend CRUD. После
-      подключения серверной части отсюда можно будет управлять контактами сайта
-      централизованно.
     </div>
 
     <form class="admin-contacts">

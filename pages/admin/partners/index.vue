@@ -1,21 +1,5 @@
 <template>
   <section class="admin-entities">
-    <div class="admin-entities__head">
-      <div>
-        <h2 class="admin-entities__title">Партнеры</h2>
-        <p class="admin-entities__text">
-          Компании и владельцы, которые размещают туры и отели в каталоге
-          FlyAway.
-        </p>
-      </div>
-
-      <div class="admin-entities__actions">
-        <button class="admin-entities__ghost" type="button" @click="loadPartners">
-          Обновить
-        </button>
-      </div>
-    </div>
-
     <div class="admin-entities__stats">
       <article
         v-for="item in statItems"
@@ -107,7 +91,8 @@ const partnerRows = computed(() => {
 const statItems = computed(() => {
   const total = partners.value.length;
   const totalTours = partners.value.reduce(
-    (sum, partner) => sum + (Number(partner.tour_count) || getCount(partner.tours)),
+    (sum, partner) =>
+      sum + (Number(partner.tour_count) || getCount(partner.tours)),
     0,
   );
   const totalHotels = partners.value.reduce(
@@ -116,8 +101,10 @@ const statItems = computed(() => {
   );
   const avgRating = total
     ? (
-        partners.value.reduce((sum, partner) => sum + (Number(partner.rating) || 0), 0) /
-        total
+        partners.value.reduce(
+          (sum, partner) => sum + (Number(partner.rating) || 0),
+          0,
+        ) / total
       ).toFixed(1)
     : "0.0";
 

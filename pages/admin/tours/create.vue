@@ -1,19 +1,5 @@
 <template>
   <section class="admin-editor-page">
-    <div class="admin-editor-page__hero">
-      <div>
-        <p class="admin-editor-page__eyebrow">Туры</p>
-        <h1 class="admin-editor-page__title">Создание тура</h1>
-        <p class="admin-editor-page__text">
-          Заполните основную информацию, даты, билеты, маршрут и условия тура.
-          После сохранения тур можно проверить и опубликовать на сайте.
-        </p>
-      </div>
-      <NuxtLink class="admin-editor-page__back" to="/admin/tours">
-        К списку туров
-      </NuxtLink>
-    </div>
-
     <TheAdminToursForm mode="create" />
   </section>
 </template>

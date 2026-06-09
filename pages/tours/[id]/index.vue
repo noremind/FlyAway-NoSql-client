@@ -345,7 +345,9 @@
                 />
                 <p class="details__name">{{ partnerTitle }}</p>
               </nuxt-link>
-              <p class="details__baige">-{{ discountLabel }}%</p>
+              <p class="details__baige" v-if="discountLabel">
+                -{{ discountLabel }}%
+              </p>
             </div>
 
             <Calendar

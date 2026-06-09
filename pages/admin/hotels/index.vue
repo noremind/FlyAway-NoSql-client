@@ -1,24 +1,5 @@
 <template>
   <section class="admin-catalog">
-    <div class="admin-catalog__head">
-      <div>
-        <h2 class="admin-catalog__title">Отели</h2>
-        <p class="admin-catalog__text">
-          Контроль гостиничного каталога, фото, рейтинга, контента и размещения
-          по партнёрам.
-        </p>
-      </div>
-
-      <div class="admin-catalog__actions">
-        <button class="admin-catalog__ghost" type="button" @click="loadHotels">
-          Обновить
-        </button>
-        <NuxtLink class="admin-catalog__primary" to="/admin/hotels/create">
-          Создать отель
-        </NuxtLink>
-      </div>
-    </div>
-
     <div class="admin-catalog__stats">
       <article
         v-for="item in statItems"
@@ -87,7 +68,11 @@
               <div class="admin-catalog__cell-main">
                 <strong>{{ hotel?.partner?.title || "—" }}</strong>
                 <span class="admin-catalog__muted">
-                  {{ hotel?.partner?.phone || hotel?.partner?.email || "Без контактов" }}
+                  {{
+                    hotel?.partner?.phone ||
+                    hotel?.partner?.email ||
+                    "Без контактов"
+                  }}
                 </span>
               </div>
             </td>
@@ -169,11 +154,13 @@ const getImagesCount = (hotel) => {
 };
 
 const partnerOptions = computed(() => {
-  const partners = [...new Map(
-    hotels.value
-      .filter((hotel) => hotel?.partner?._id)
-      .map((hotel) => [hotel.partner._id, hotel.partner]),
-  ).values()];
+  const partners = [
+    ...new Map(
+      hotels.value
+        .filter((hotel) => hotel?.partner?._id)
+        .map((hotel) => [hotel.partner._id, hotel.partner]),
+    ).values(),
+  ];
 
   return [
     { label: "Все партнеры", value: "" },
@@ -212,7 +199,9 @@ const statItems = computed(() => {
 });
 
 const filteredHotels = computed(() => {
-  const query = String(searchQuery.value || "").trim().toLowerCase();
+  const query = String(searchQuery.value || "")
+    .trim()
+    .toLowerCase();
 
   return hotels.value.filter((hotel) => {
     const matchesSearch = !query
