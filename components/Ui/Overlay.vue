@@ -113,7 +113,7 @@ const props = defineProps({
     transform: translateY(0%);
   }
 }
-@media (max-width: 375px) {
+@media (max-width: 550px) {
   .overlay {
     position: fixed;
     top: 0;
