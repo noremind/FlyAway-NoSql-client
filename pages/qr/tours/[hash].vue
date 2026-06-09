@@ -21,6 +21,17 @@
           <div><span>Телефон</span><strong>{{ booking?.customer?.phone || '—' }}</strong></div>
           <div><span>Email</span><strong>{{ booking?.customer?.email || '—' }}</strong></div>
         </div>
+
+        <button
+          v-if="canConfirm"
+          class="qr-page__confirm"
+          type="button"
+          :disabled="isConfirming"
+          @click="confirmTicket"
+        >
+          {{ isConfirming ? 'Подтверждаем...' : 'Подтвердить' }}
+        </button>
+        <p v-if="successMessage" class="qr-page__success-message">{{ successMessage }}</p>
       </div>
     </div>
   </section>
@@ -28,13 +39,16 @@
 
 <script setup>
 definePageMeta({ layout: 'default' });
-useSeo({ title: 'Проверка QR билета', description: 'Открытая проверка QR-кода билета FlyAway.' });
+useSeo({ title: 'Проверка QR билета', description: 'Проверка QR-кода билета FlyAway.' });
 
 const route = useRoute();
 const api = useApi();
 const booking = ref(null);
+const canConfirm = ref(false);
 const isLoading = ref(false);
+const isConfirming = ref(false);
 const errorMessage = ref('');
+const successMessage = ref('');
 
 const formatMoney = (value) => Number(value || 0).toLocaleString('ru-RU');
 const formatDate = (value) => {
@@ -48,14 +62,38 @@ const getStatusLabel = (status) => status === 'completed' ? 'Завершен' :
 const verifyQr = async () => {
   isLoading.value = true;
   errorMessage.value = '';
+  successMessage.value = '';
   try {
     const response = await api.client({ url: `/qr/tours/${route.params.hash}`, method: 'get' });
     booking.value = response?.data?.booking || null;
+    canConfirm.value = Boolean(response?.data?.canConfirm);
     if (!booking.value) errorMessage.value = 'Информация по билету не найдена.';
   } catch (error) {
     errorMessage.value = error?.message || 'Не удалось проверить билет.';
   } finally {
     isLoading.value = false;
+  }
+};
+
+const confirmTicket = async () => {
+  if (!canConfirm.value || isConfirming.value) return;
+  isConfirming.value = true;
+  errorMessage.value = '';
+  successMessage.value = '';
+
+  try {
+    const response = await api.client({
+      url: `/qr/tours/${route.params.hash}/confirm`,
+      method: 'patch',
+    });
+
+    booking.value = response?.data?.booking || booking.value;
+    canConfirm.value = Boolean(response?.data?.canConfirm);
+    successMessage.value = response?.message || 'Билет подтвержден, тур завершен.';
+  } catch (error) {
+    errorMessage.value = error?.message || 'Не удалось подтвердить билет.';
+  } finally {
+    isConfirming.value = false;
   }
 };
 
@@ -76,5 +114,8 @@ onMounted(verifyQr);
 .qr-page__info div { padding: 14px; border-radius: 16px; background: rgba($surface-100,.8); display: grid; gap: 5px; }
 .qr-page__info span { color: $surface-500; font-size: 12px; }
 .qr-page__info strong { color: $surface-900; overflow-wrap: anywhere; }
+.qr-page__confirm { width: 100%; min-height: 48px; margin-top: 8px; border-radius: 14px; color: $white; background: $red-500; font-weight: 900; }
+.qr-page__confirm:disabled { opacity: .65; cursor: not-allowed; }
+.qr-page__success-message { color: #20bf55 !important; font-weight: 800; }
 @media (max-width: 640px) { .qr-page__card { padding: 24px 18px; } .qr-page__info { grid-template-columns: 1fr; } .qr-page__result h1 { font-size: 28px; } }
 </style>
