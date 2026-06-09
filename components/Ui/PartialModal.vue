@@ -89,7 +89,7 @@ const closePartial = (event) => {
   }
 }
 
-@media (max-width: 375px) {
+@media (max-width: 600px) {
   .partial {
     position: fixed;
     z-index: 300;
