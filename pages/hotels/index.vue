@@ -324,6 +324,7 @@
 <script setup>
 const { createMap } = useYandexMaps();
 const api = useApi();
+const route = useRoute();
 const mapContainer = ref(null);
 const mapContainerMobile = ref(null);
 const desktopMap = shallowRef(null);
@@ -430,9 +431,9 @@ const changePage = (page) => {
 };
 
 const resetFilters = async () => {
-  filters.search = "";
-  filters.checkIn = null;
-  filters.checkOut = null;
+  filters.search = route.query?.search || "";
+  filters.checkIn = route.query?.checkIn || null;
+  filters.checkOut = route.query?.checkOut || null;
   filters.priceFrom = "";
   filters.priceTo = "";
   filters.region = "";

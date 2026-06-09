@@ -344,9 +344,9 @@ const pagination = reactive({
 });
 
 const filters = reactive({
-  search: route.query?.search,
-  dateFrom: null,
-  dateTo: null,
+  search: route.query?.search || "",
+  dateFrom: route.query?.dateFrom || null,
+  dateTo: route.query?.dateTo || null,
   duration: "",
   location: "",
   sortBy: "price_desc",
