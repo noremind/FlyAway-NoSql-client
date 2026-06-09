@@ -2427,7 +2427,7 @@ const closePaymentModal = () => {
   }
 }
 
-@media (max-width: 375px) {
+@media (max-width: 490px) {
   .details {
     &__wrapper {
       margin-top: 0;
@@ -2500,7 +2500,7 @@ const closePaymentModal = () => {
       }
     }
     &__title {
-			display: none;
+      display: none;
       &--mobile {
         display: block;
         color: $surface-900;

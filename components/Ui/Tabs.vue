@@ -50,6 +50,7 @@ const props = defineProps({
 <style lang="scss" scoped>
 .tabs {
   &__wrapper {
+    width: 100%;
     overflow-x: scroll;
     &--line {
       display: inline-block;
@@ -87,7 +88,7 @@ const props = defineProps({
   }
 }
 
-@media (max-width: 375px) {
+@media (max-width: 490px) {
   .tabs {
     &__list {
       justify-content: space-between;
