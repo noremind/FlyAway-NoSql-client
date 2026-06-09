@@ -66,10 +66,6 @@
       <section class="profile-main__card profile-main__card--form">
         <div class="profile-main__section-head">
           <h2 class="profile-main__section-title">Основная информация</h2>
-          <p class="profile-main__section-subtitle">
-            Эти данные используются в вашем личном кабинете и при оформлении
-            заявок.
-          </p>
         </div>
 
         <div class="profile-main__fields">
