@@ -52,6 +52,16 @@ const props = defineProps({
   &__wrapper {
     width: 100%;
     overflow-x: scroll;
+    // Chrome, Safari, Edge
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    // Firefox
+    scrollbar-width: none;
+
+    // IE / старый Edge
+    -ms-overflow-style: none;
     &--line {
       display: inline-block;
       border-bottom: 1.5px solid $surface-300;
